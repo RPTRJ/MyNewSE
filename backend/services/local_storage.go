@@ -60,7 +60,7 @@ func (s *LocalStorageService) UploadFile(file io.Reader, fileName string, conten
 	}
 
 	// Return the URL
-	url := fmt.Sprintf("/uploads/%s", uniqueName)
+	url := fmt.Sprintf("%s/uploads/%s", s.baseURL, uniqueName)
 
 	return url, nil
 }

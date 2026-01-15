@@ -394,12 +394,25 @@ function SectionsContent() {
 
     const fetchUserData = async () => {
         try {
-            const res = await fetch(`${API}/me`, {
+            const res = await fetch(`${API}/users/me/profile`, {
                 headers: getAuthHeaders(),
             }); 
             if (res.ok) {
                 const json = await res.json();
-                setCurrentUser(json.data || json);
+                // The endpoint returns { user: {...}, education: {...}, ... }
+                const userObj = json.user || {};
+                const eduObj = json.education || {};
+                
+                setCurrentUser({
+                    firstname: userObj.first_name_th || userObj.first_name_en || "-",
+                    lastname: userObj.last_name_th || userObj.last_name_en || "-",
+                    major: eduObj.curriculum_type?.name || "-",
+                    school: eduObj.school_name || eduObj.school?.name || "Suranaree University of Technology",
+                    profile_image: userObj.profile_image_url || "",
+                    // Add other fields if needed for profile section
+                    bio: "นักศึกษาชั้นปีที่ ...", // Placeholder or from DB if available
+                    gpa: json.academic_score?.gpax || "-"
+                });
             }
         } catch (err) {
             console.error(err);
@@ -702,6 +715,99 @@ function SectionsContent() {
     };
 
     const renderSectionContent = (section: PortfolioSection) => {
+        const isProfile = section.section_title?.toLowerCase().includes('profile') || 
+                          section.section_title?.includes('ประวัติ') ||
+                          section.section_title?.includes('แนะนำตัว');
+
+        if (isProfile) {
+             const user = currentUser || {};
+             const academic = user.academic_score || {};
+             const languageScores = user.language_scores || [];
+             const ged = user.ged_score || {};
+
+             return (
+                 <div className="h-full flex flex-col p-6 space-y-6 overflow-y-auto"
+                    style={{
+                        backgroundColor: activeTheme?.background_color || 'white',
+                        color: activeTheme?.primary_color || 'black',
+                        fontFamily: activeFont?.font_family || 'inherit',
+                    }}
+                 >
+                     <h3 className="text-2xl font-bold border-b pb-2" style={{ borderColor: activeTheme?.primary_color || theme.primary }}>
+                         ข้อมูลการศึกษา & คะแนนสอบ
+                     </h3>
+
+                     {/* 1. Academic Scores */}
+                     <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                        <h4 className="font-bold text-lg mb-3 flex items-center gap-2">
+                            📚 ผลการเรียน (GPA)
+                        </h4>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="p-3 rounded-lg bg-gray-50">
+                                <span className="text-sm text-gray-500 block">GPAX</span>
+                                <span className="text-xl font-bold" style={{ color: activeTheme?.primary_color || theme.primary }}>
+                                    {academic.gpax ? Number(academic.gpax).toFixed(2) : "-"}
+                                </span>
+                            </div>
+                            {academic.gpa_math > 0 && (
+                                <div className="p-3 rounded-lg bg-gray-50">
+                                    <span className="text-sm text-gray-500 block">คณิตศาสตร์</span>
+                                    <span className="font-bold">{Number(academic.gpa_math).toFixed(2)}</span>
+                                </div>
+                            )}
+                            {academic.gpa_science > 0 && (
+                                <div className="p-3 rounded-lg bg-gray-50">
+                                    <span className="text-sm text-gray-500 block">วิทยาศาสตร์</span>
+                                    <span className="font-bold">{Number(academic.gpa_science).toFixed(2)}</span>
+                                </div>
+                            )}
+                            {academic.gpa_english > 0 && (
+                                <div className="p-3 rounded-lg bg-gray-50">
+                                    <span className="text-sm text-gray-500 block">ภาษาอังกฤษ</span>
+                                    <span className="font-bold">{Number(academic.gpa_english).toFixed(2)}</span>
+                                </div>
+                            )}
+                        </div>
+                     </div>
+
+                     {/* 2. Language Scores */}
+                     {languageScores.length > 0 && (
+                         <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                            <h4 className="font-bold text-lg mb-3 flex items-center gap-2">
+                                🗣️ คะแนนภาษา
+                            </h4>
+                            <div className="space-y-3">
+                                {languageScores.map((score: any, idx: number) => (
+                                    <div key={idx} className="flex justify-between items-center p-2 border-b border-gray-50 last:border-0">
+                                        <div>
+                                            <span className="font-bold block text-gray-800">{score.test_type}</span>
+                                            <span className="text-xs text-gray-500">Level: {score.test_level || "-"}</span>
+                                        </div>
+                                        <span className="text-lg font-bold bg-blue-50 text-blue-600 px-3 py-1 rounded-lg">
+                                            {score.score}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                         </div>
+                     )}
+
+                     {/* 3. GED Scores (if exists) */}
+                     {ged.total_score > 0 && (
+                         <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                            <h4 className="font-bold text-lg mb-3 flex items-center gap-2">
+                                🎓 GED Scores
+                            </h4>
+                            <div className="flex justify-between items-center bg-orange-50 p-3 rounded-lg">
+                                <span className="font-bold text-orange-800">Total Score</span>
+                                <span className="text-xl font-bold text-orange-600">{ged.total_score}</span>
+                            </div>
+                         </div>
+                     )}
+                 </div>
+             );
+        }
+
         const blocks = section.section_blocks || [];
     
         return (
@@ -709,7 +815,7 @@ function SectionsContent() {
                 style={{
                     backgroundColor: activeTheme?.background_color || 'white',
                     color: activeTheme?.primary_color || 'black',
-                    fontFamily: activeFont?.font_family || 'inherit',
+                    fontFamily: activeFont?.font_family || 'inherfirstnameit',
             }}
             >
                     <motion.div 
@@ -822,13 +928,19 @@ function SectionsContent() {
                                 fontFamily: activeFont?.font_family 
                             }}
                         >
-                            <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="grid grid-cols-1 gap-6 pb-20">
-                                {sections.map((section) => {
-                                    const isProfile = section.section_title?.toLowerCase().includes('profile');
-                                    if (isProfile) return null;
+                <motion.div 
+                    variants={staggerContainer}
+                    initial="hidden"
+                    animate="visible"
+                    className="grid grid-cols-1 gap-6"
+                >
+                    {sections.map((section) => {
+                        const isProfile = section.section_title?.toLowerCase().includes('profile') || 
+                                          (section as any).layout_type === 'profile_header_left';
+                        if (isProfile) return null;
 
-                                    return (
-                                        <div key={section.ID} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col h-[500px] ring-1 ring-black/5 hover:ring-2 hover:ring-blue-100/20 transition-all">
+                        return (
+                            <div key={section.ID} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col h-[500px]">
                                             {/* Section Header */}
                                             <div className="flex-1 bg-gray-50 overflow-hidden relative border-b border-gray-200 inner-shadow">
                                                 {renderSectionContent(section)}

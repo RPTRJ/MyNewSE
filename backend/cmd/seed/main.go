@@ -17,11 +17,12 @@ func main() {
 	seed.CurriculumSeed()
 	seed.SeedTemplateBlocks()
 	seed.SeedTemplatesSections()
+	seed.SeedCategoryTemplates()
 	seed.SeedTemplates()
 	seed.SeedTypeWorkings()
 	seed.SeedActivities()
 	seed.SeedColors()
-	seed.SeedCategoryTemplates()
+	seed.SeedFonts()
 	log.Println("Seed completed successfully")
 }
 

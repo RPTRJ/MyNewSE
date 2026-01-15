@@ -5,6 +5,8 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import SubmissionService, { PortfolioSubmission } from '@/services/submission';
 import style from './page.module.css';
+import { Loader2 } from 'lucide-react';
+import ScorecardPopup from "@/components/Scorecardpopup";
 
 
 export default function TeacherPage() {
@@ -16,7 +18,21 @@ export default function TeacherPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [userName, setUserName] = useState<string>('');
-  
+  const [submissionData, setSubmissionData] = useState<Map<number, any>>(new Map());
+    const [loadingSubmissions, setLoadingSubmissions] = useState(false);
+    const [scorecardModalState, setScorecardModalState] = useState<{
+        isOpen: boolean;
+        scorecard: any;
+        feedback: any;
+        status: string;
+        portfolioID: number | null;
+    }>({
+        isOpen: false,
+        scorecard: null,
+        feedback: null,
+        status: '',
+        portfolioID: null
+    });
   
 
   // Fetch submissions from backend
@@ -35,7 +51,7 @@ export default function TeacherPage() {
   };
 
   const stats = {
-    awaiting: submissions.filter(s => s.status === 'awaiting').length,
+    awaiting: submissions.filter(s => s.status === 'awaiting_review').length,
     reviewing: submissions.filter(s => s.status === 'under_review').length,
     revisions: submissions.filter(s => s.status === 'revision_requested').length,
     approved: submissions.filter(s => s.status === 'approved').length,
@@ -43,7 +59,7 @@ export default function TeacherPage() {
 
   const getStatusText = (status: string): string => {
     switch (status) {
-      case 'awaiting': return 'รอการตรวจทาน';
+      case 'awaiting_review': return 'รอการตรวจทาน';
       case 'under_review': return 'กำลังตรวจทาน';
       case 'revision_requested': return 'ขอแก้ไข';
       case 'approved': return 'ตรวจเสร็จแล้ว';
@@ -65,31 +81,57 @@ export default function TeacherPage() {
     router.push(`/teacher/scorecard/${id}`);
   };
 
-  const handleViewSubmission = (id: number): void => {
-    router.push(`/teacher/submission/${id}`);
-  };
-
-  const handleMarkAsReviewed = async (id: number): Promise<void> => {
+  const loadSubmissionDetails = async () => {
+    setLoadingSubmissions(true);
     try {
-      await SubmissionService.markAsReviewed(id);
-      alert('บันทึกการตรวจทานเรียบร้อย');
-      fetchSubmissions();
-    } catch (err) {
-      alert('เกิดข้อผิดพลาดในการบันทึก');
-      console.error('Error:', err);
+      const map = new Map<number, any>();
+
+      for (const sub of submissions) {
+        let scorecard = null;
+        let feedback = null;
+
+        try {
+          scorecard = await SubmissionService.getScorecardBySubmissionId(sub.ID);
+        } catch {}
+
+        try {
+          feedback = await SubmissionService.getFeedbackBySubmissionId(sub.ID);
+        } catch {}
+
+        map.set(sub.ID, {
+          submission: sub,
+          scorecard,
+          feedback
+        });
+      }
+
+      setSubmissionData(map);
+    } finally {
+      setLoadingSubmissions(false);
     }
   };
 
-  const handleMarkAsApproved = async (id: number): Promise<void> => {
-    try {
-      await SubmissionService.markAsApproved(id);
-      alert('อนุมัติเรียบร้อย');
-      fetchSubmissions();
-    } catch (err) {
-      alert('เกิดข้อผิดพลาดในการอนุมัติ');
-      console.error('Error:', err);
+  useEffect(() => {
+    if (submissions.length > 0) {
+      loadSubmissionDetails();
     }
-  };
+  }, [submissions]);
+
+
+
+  const handleShowScorecard = (submissionId: number) => {
+        const data = submissionData.get(submissionId);
+        
+        if (data) {
+            setScorecardModalState({
+                isOpen: true,
+                scorecard: data.scorecard,
+                feedback: data.feedback,
+                status: data.submission.status,
+                portfolioID: data.submission.portfolio?.ID || null
+            });
+        }
+    };
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -194,7 +236,7 @@ export default function TeacherPage() {
                       className={style.filter_select}
                     >
                       <option value="all">ทั้งหมด</option>
-                      <option value="awaiting">รอการตรวจทาน</option>
+                      <option value="awaiting_review">รอการตรวจทาน</option>
                       <option value="under_review">กำลังตรวจทาน</option>
                       <option value="revision_requested">ขอแก้ไข</option>
                       <option value="approved">ตรวจเสร็จแล้ว</option>
@@ -258,11 +300,14 @@ export default function TeacherPage() {
                               </button>
                             ) : (
                               <button
-                                onClick={() => handleViewSubmission(submission.ID)}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handleShowScorecard(submission.ID);
+                                }}
                                 className={style.action_button}
                               >
                                 View Submission
-                              </button>
+                              </button>  
                             )}
                           </td>
                         </tr>
@@ -274,6 +319,21 @@ export default function TeacherPage() {
             </div>
           </div>
         </div>
+        <ScorecardPopup
+          isOpen={scorecardModalState.isOpen}
+          onClose={() => setScorecardModalState({
+            isOpen: false,
+            scorecard: null,
+            feedback: null,
+            status: '',
+            portfolioID: null
+          })}
+          scorecard={scorecardModalState.scorecard}
+          feedback={scorecardModalState.feedback}
+          status={scorecardModalState.status} onResubmit={function (): void {
+            throw new Error('Function not implemented.');
+          } } 
+      />
     </div>
   );
 }

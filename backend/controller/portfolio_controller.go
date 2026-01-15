@@ -249,21 +249,21 @@ func UseTemplate(c *gin.Context) {
 	// }
 
 	// ✅ เช็คว่ามี Portfolio สำหรับ template นี้อยู่แล้วหรือไม่
-	var existingPortfolio entity.Portfolio
-	err := config.GetDB().
-		Preload("PortfolioSections.PortfolioBlocks").
-		Where("user_id = ? AND template_id = ?", userID, template.ID).
-		First(&existingPortfolio).Error
+	// var existingPortfolio entity.Portfolio
+	// err := config.GetDB().
+	// 	Preload("PortfolioSections.PortfolioBlocks").
+	// 	Where("user_id = ? AND template_id = ?", userID, template.ID).
+	// 	First(&existingPortfolio).Error
 
-	if err == nil {
-		// ✅ มี Portfolio อยู่แล้ว - ส่งกลับไป
-		fmt.Println("✅ Found existing portfolio for template:", template.ID)
-		c.JSON(http.StatusOK, gin.H{
-			"data":    existingPortfolio,
-			"message": "Using existing portfolio with saved sections",
-		})
-		return
-	}
+	// if err == nil {
+	// 	// ✅ มี Portfolio อยู่แล้ว - ส่งกลับไป
+	// 	fmt.Println("✅ Found existing portfolio for template:", template.ID)
+	// 	c.JSON(http.StatusOK, gin.H{
+	// 		"data":    existingPortfolio,
+	// 		"message": "Using existing portfolio with saved sections",
+	// 	})
+	// 	return
+	// }
 
 	// ✅ ไม่มี Portfolio สำหรับ template นี้ - สร้างใหม่
 	fmt.Println("🆕 Creating new portfolio for template:", template.ID)

@@ -17,10 +17,13 @@ func RegisterPortfolioSubmissionRoutes(r *gin.Engine, db *gorm.DB) {
 		group.PUT("/:id", c.Update)
 		group.DELETE("/:id", c.Delete)
 
-		group.GET("/status/:status", c.GetByStatus)       
+		group.GET("/status/:status", c.GetByStatus)   
+		group.GET("/portfolio/:id", c.GetByPortfolio)
 		group.PATCH("/:id/review", c.MarkAsReviewed)      
-		group.PATCH("/:id/approve", c.MarkAsApproved)     
-		group.PUT("/:id/status", c.UpdateStatus)          
+		group.PATCH("/:id/approve", c.ApproveWithScorecard)     
+		group.PUT("/:id/status", c.UpdateStatus)       
+		
+   
 
 	}
 }

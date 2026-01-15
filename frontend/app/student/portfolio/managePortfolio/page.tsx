@@ -15,6 +15,9 @@ import { API,
         fetchWorkings,
  } from "@/services/portfolio";
 import { pre } from "framer-motion/client";
+// เพิ่มบรรทัดนี้ที่ส่วน imports
+import { Loader2 } from 'lucide-react';
+import ScorecardPopup from "@/components/Scorecardpopup";
 
 // Helper functions for color manipulation
 function lightenColor(hex: string, percent: number): string {
@@ -63,6 +66,22 @@ export default function MyPortfoliosPage() {
     const [currentUser, setCurrentUser] = useState<any>(null);
     const [activities, setActivities] = useState<any[]>([]);
     const [workings, setWorkings] = useState<any[]>([]);
+    // เฟื่อง เพิ่ม state สำหรับเก็บข้อมูล submission ของแต่ละ portfolio
+    const [submissionData, setSubmissionData] = useState<Map<number, any>>(new Map());
+    const [loadingSubmissions, setLoadingSubmissions] = useState(false);
+    const [scorecardModalState, setScorecardModalState] = useState<{
+        isOpen: boolean;
+        scorecard: any;
+        feedback: any;
+        status: string;
+        portfolioID: number | null;
+    }>({
+        isOpen: false,
+        scorecard: null,
+        feedback: null,
+        status: '',
+        portfolioID: null
+    });
     const router = useRouter();
 
     // Get theme for a specific portfolio or use default
@@ -372,6 +391,176 @@ export default function MyPortfoliosPage() {
         }
     };
 
+    // เฟื่อง เพิ่มฟังก์ชันโหลดสถานะ submission ของแต่ละ portfolio
+    const loadSubmissionStatuses = async () => {
+        setLoadingSubmissions(true);
+        try {
+            const statusMap = new Map();
+            
+            for (const portfolio of portfolios) {
+            try {
+                const latestSubmission = await SubmissionService.getLatestSubmission(portfolio.ID);
+                
+                if (latestSubmission) {
+                let scorecard = null;
+                let feedback = null;
+
+                if (latestSubmission.status === 'approved' || latestSubmission.status === 'revision_requested') {
+                    try {
+                    scorecard = await SubmissionService.getScorecardBySubmissionId(latestSubmission.ID);
+                    } catch (err) {
+                    console.log('No scorecard for submission:', latestSubmission.ID);
+                    }
+
+                    try {
+                    feedback = await SubmissionService.getFeedbackBySubmissionId(latestSubmission.ID);
+                    } catch (err) {
+                    console.log('No feedback for submission:', latestSubmission.ID);
+                    }
+                }
+
+                statusMap.set(portfolio.ID, {
+                    submission: latestSubmission,
+                    scorecard,
+                    feedback
+                });
+                }
+            } catch (err) {
+                console.log('No submission for portfolio:', portfolio.ID);
+            }
+        }
+            
+
+            setSubmissionData(statusMap);
+        } catch (err) {
+            console.error('Error loading submission statuses:', err);
+            
+        } finally {
+            setLoadingSubmissions(false);
+        }
+    };
+
+    // ฟังก์ชันส่งตรวจทาน
+    const handleSubmitForReview = async (portfolioId: number) => {
+    try {
+        await SubmissionService.createSubmission({ portfolio_id: portfolioId });
+        alert('ส่งตรวจทานเรียบร้อย');
+        await loadSubmissionStatuses();
+    } catch (error) {
+        console.error(error);
+        alert('ไม่สามารถส่งตรวจทานได้: ' + (error as Error).message);
+    }
+    };
+
+    // ฟังก์ชันแสดง Modal
+    const handleShowScorecard = (portfolioId: number) => {
+        const data = submissionData.get(portfolioId);
+        
+        if (data) {
+            setScorecardModalState({
+                isOpen: true,
+                scorecard: data.scorecard,
+                feedback: data.feedback,
+                status: data.submission.status,
+                portfolioID: data.submission.portfolio_id || null
+            });
+        }
+    };
+
+    // ฟังก์ชัน Render ปุ่ม
+    const renderSubmissionButton = (portfolio: any) => {
+        const theme = getPortfolioTheme(portfolio);
+        const data = submissionData.get(portfolio.ID);
+        const submission = data?.submission;
+
+        const canSubmit =
+            !submission ;
+
+        if (loadingSubmissions) {
+            return (
+            <button disabled className="px-4 py-2 bg-gray-200 rounded-lg">
+                ⏳ กำลังโหลด...
+            </button>
+            );
+        }
+
+        // กรณีส่งได้ (ยังไม่เคยส่ง หรือโดนขอแก้)
+        if (canSubmit) {
+            return (
+            <button
+                onClick={(e) => {
+                e.stopPropagation();
+                handleSubmitForReview(portfolio.ID);
+                }}
+                className="px-4 py-2 border-2 rounded-lg"
+                style={{ borderColor: theme.primary, color: theme.primary }}
+            >
+                📤 ส่งตรวจทาน
+            </button>
+            );
+        }
+
+        // จากตรงนี้คือ "เคยส่งแล้ว และยังไม่ถูกขอแก้"
+        switch (submission.status) {
+            case 'awaiting_review':
+            case 'submitted':
+            return (
+                <button disabled className="px-4 py-2 bg-gray-300 text-gray-600 rounded-lg">
+                ⏳ รออาจารย์ตรวจ
+                </button>
+            );
+            case 'revision_requested':
+            return (
+                <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    handleShowScorecard(portfolio.ID);   // เปิด Modal ดู feedback
+                }}
+                className="px-2 py-1 bg-amber-500 text-white rounded-lg"
+                >
+                🔄 ดูผลตรวจ & แก้ไข
+                </button>
+            );
+
+            case 'approved':
+            return (
+                <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    handleShowScorecard(portfolio.ID);
+                }}
+                className="px-4 py-2 bg-green-500 text-white rounded-lg"
+                >
+                ✓ ผ่านการตรวจแล้ว
+                </button>
+            );
+
+            default:
+            return (
+            <button disabled className="px-4 py-2 bg-gray-200 text-gray-500 rounded-lg">
+                ⚠️ {submission.status}
+            </button>
+            );
+        }
+    };
+
+    const handleResubmit = async () => {
+        if (!scorecardModalState.portfolioID) return;
+
+        try {
+            await SubmissionService.createSubmission({
+            portfolio_id: scorecardModalState.portfolioID
+            });
+
+            alert("ส่งงานแก้ไขแล้ว (Version ใหม่)");
+            setScorecardModalState(prev => ({ ...prev, isOpen: false }));
+            await loadSubmissionStatuses();
+        } catch {
+            alert("ไม่สามารถส่งได้");
+        }
+    };
+
+
     const handlePreviewTemplateClick = async (templateId: number) => {
         try {
             setLoadingPreview(true);
@@ -443,6 +632,13 @@ export default function MyPortfoliosPage() {
         loadColors();
         loadAllData();
     }, []);
+
+    // เฟื่องเพิ่มอันนี้เพื่อโหลดสถานะ submission เมื่อ portfolios ถูกโหลด
+    useEffect(() => {
+        if (portfolios.length > 0) {
+            loadSubmissionStatuses();
+        }
+    }, [portfolios]);
 
     useEffect(() => {
         if (isCreateModalOpen) {
@@ -692,25 +888,7 @@ export default function MyPortfoliosPage() {
                                             >
                                                 ดูรายละเอียด
                                             </button>
-                                            <button
-                                                onClick={async (e) => {
-                                                    e.stopPropagation();
-                                                    try{
-                                                        await SubmissionService.createSubmission({
-                                                            portfolio_id:portfolio.ID,
-                                                        });
-                                                        alert("ส่งตรวจทานเรียบร้อย")
-                                                    }
-                                                    catch (error){
-                                                        console.log(error);
-                                                        alert("ไม่สามารถส่งตรวจทานได้")
-                                                    }
-                                                }}
-                                                className="px-2 py-2 border-2 rounded-lg text-sm font-medium transition"
-                                                style={{ borderColor: portfolioTheme.primary, color: portfolioTheme.primary }}
-                                            >
-                                                ส่งตรวจทาน
-                                            </button>
+                                            {renderSubmissionButton(portfolio)}
                                             <button
                                                 onClick={async (e) => {
                                                     e.stopPropagation();
@@ -1600,6 +1778,23 @@ export default function MyPortfoliosPage() {
                     </div>
                 </div>
             )}
+            
+            <ScorecardPopup
+                isOpen={scorecardModalState.isOpen}
+                onClose={() =>
+                    setScorecardModalState({
+                    isOpen: false,
+                    scorecard: null,
+                    feedback: null,
+                    status: '',
+                    portfolioID: null
+                })
+                }
+                scorecard={scorecardModalState.scorecard}
+                feedback={scorecardModalState.feedback}
+                status={scorecardModalState.status}
+                onResubmit={handleResubmit}
+            />
         </div>
     );
 }

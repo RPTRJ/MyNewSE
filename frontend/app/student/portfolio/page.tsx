@@ -1,13 +1,16 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState, use, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { fetchMyPortfolios, 
-         fetchActivities, 
-         fetchWorkings,
-         fetchPortfolioByStatusActive,
+import { 
+    fetchMyPortfolios, 
+    fetchActivities, 
+    fetchWorkings,
+    fetchPortfolioByStatusActive,
 } from "@/services/portfolio";
-import { fetchUserProfile } from "@/services/user";
+import { fetchMyProfile } from "@/services/user";
+import type { UserDTO } from "@/services/user";
+
 
 // --- Helper Functions ---
 function lightenColor(hex: string, percent: number): string {
@@ -40,8 +43,10 @@ function parseBlockContent(content: any): any {
     return content;
 }
 
+const placeholderImage = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cuc3ZnLm9yZyI+PHJlY3Qgd2lkdGg9IjE1MCIgaGVpZ2h0PSIxNTAiIGZpbGw9IiNFNUU3RUIiLz48L3N2Zz4=";
+
 function getImageUrl(image: any): string {
-    return image?.file_path || image?.FilePath || image?.image_url || image?.ImageUrl || image?.working_image_url || '/placeholder.jpg';
+    return image?.file_path || image?.FilePath || image?.image_url || image?.ImageUrl || image?.working_image_url || placeholderImage;
 }
 
 function extractImages(data: any, type: 'activity' | 'working'): any[] {
@@ -56,7 +61,6 @@ function extractImages(data: any, type: 'activity' | 'working'): any[] {
 }
 
 export default function PortfolioPreviewPage() {
-    // const { id } = use(params);
     const router = useRouter();
     
     const [portfolio, setPortfolio] = useState<any>(null);
@@ -65,32 +69,43 @@ export default function PortfolioPreviewPage() {
     const [activities, setActivities] = useState<any[]>([]); 
     const [workings, setWorkings] = useState<any[]>([]);
     const [currentUser, setCurrentUser] = useState<any>(null);
-
-    // State ใหม่: เก็บ index ของรูปภาพแต่ละ Block (Key คือ ID ของ Block, Value คือ index รูปปัจจุบัน)
     const [imageIndices, setImageIndices] = useState<{[key: string]: number}>({});
+    
+    // --- DEBUGGING STATE ---
+    const [debugLogs, setDebugLogs] = useState<string[]>([]);
+    const log = useCallback((message: string) => {
+        // Use a function for setState to get the latest state
+        setDebugLogs(prevLogs => [...prevLogs, `[${new Date().toLocaleTimeString()}] ${message}`]);
+    }, []);
+    // --- END DEBUGGING STATE ---
 
     useEffect(() => {
         const loadData = async () => {
+            // log("---" + "Starting Data Load" + "---");
             try {
                 setLoading(true);
                 setErrorMsg(null);
+                
+                log("Fetching portfolios, activities, workings, and profile in parallel...");
                 const [activeRes, allPortfoliosRes, activitiesRes, workingsRes, userRes] = await Promise.all([
                     fetchPortfolioByStatusActive(),
                     fetchMyPortfolios({ includeBlocks: true }),
                     fetchActivities({ includeImages: true }),
                     fetchWorkings({ includeImages: true }),
-                    fetchUserProfile(),
+                    fetchMyProfile(log), // Pass logger to fetchMyProfile
                 ]);
+                // log("All fetches complete.");
+                // log(`userRes received in page: ${JSON.stringify(userRes, null, 2)}`);
 
                 let activePortfolio = activeRes.data;
 
-                // ถ้าไม่มี active portfolio ในฐานข้อมูล ให้ใช้อันล่าสุด
                 if (!activePortfolio || !activePortfolio.ID) {
+                    // log("No active portfolio found, searching latest from all portfolios.");
                     const allPortfolios = allPortfoliosRes.data || [];
                     if (allPortfolios.length > 0) {
-                        // เรียงตาม ID จากมากไปน้อย (ล่าสุด)
                         allPortfolios.sort((a: any, b: any) => (b.ID || 0) - (a.ID || 0));
                         activePortfolio = allPortfolios[0];
+                        // log(`Using latest portfolio with ID: ${activePortfolio.ID}`);
                     }
                 }
                 
@@ -99,32 +114,52 @@ export default function PortfolioPreviewPage() {
                         activePortfolio.portfolio_sections.sort((a: any, b: any) => (a.section_order || 0) - (b.section_order || 0));
                     }
                     setPortfolio(activePortfolio);
+                    // log("Portfolio state set.");
                 }
-                // ถ้าไม่มี portfolio เลย จะแสดง empty state (portfolio = null)
                 
                 setActivities(activitiesRes.data || []);
                 setWorkings(workingsRes.data || []);
+                // log("Activities and Workings state set.");
                 
-                const userData = (userRes as any).data || userRes;
-                setCurrentUser({
-                    firstname: userData.first_name_en || userData.first_name_th || "-",
-                    lastname: userData.last_name_en || userData.last_name_th || "-",
-                    major: userData.major || "Software Engineering", // ถ้า API ไม่มี field นี้อาจต้อง hardcode หรือแก้ backend
-                    gpa: userData.gpa || "4.00", 
-                    school: userData.school || "Suranaree University of Technology",
-                    profile_image: userData.profile_image_url || "" 
-                });
+                // log("Processing user profile data...");
+                const education = (userRes as UserDTO).education || {};
+                const academic_score = (userRes as UserDTO).academic_score || {};
 
-            } catch (error) {
+                const schoolName = education.school?.name || education.school_name || "Suranaree University of Technology";
+                const majorName = education.curriculum_type?.name || "-";
+                
+                const rawGpax = academic_score.GPAX || academic_score.gpax;
+                const gpax = rawGpax ? Number(rawGpax).toFixed(2) : "-";
+
+                const finalUser = {
+                    firstname: (userRes as UserDTO).first_name_th || (userRes as UserDTO).first_name_en || "-",
+                    lastname: (userRes as UserDTO).last_name_th || (userRes as UserDTO).last_name_en || "-",
+                    major: majorName,
+                    school: schoolName,
+                    profile_image: (userRes as UserDTO).profile_image_url || "",
+                    gpa: gpax,
+                    academic_score: academic_score || {},
+                };
+                
+                // log(`Final user object to be set: ${JSON.stringify(finalUser, null, 2)}`);
+                setCurrentUser(finalUser);
+                // log("currentUser state set.");
+
+            } catch (error: any) {
+                // log(`--- CATCH BLOCK: An error occurred ---`);
+                // log(`Error message: ${error.message}`);
+                // log(`Error status: ${error.status}`);
+                // log(`Full error object: ${JSON.stringify(error, null, 2)}`);
                 console.error(error);
-                setErrorMsg("เกิดข้อผิดพลาดในการโหลดข้อมูล");
+                setErrorMsg(error.message || "เกิดข้อผิดพลาดในการโหลดข้อมูลที่ไม่รู้จัก");
             } finally {
+                // log("--- Load Finished ---");
                 setLoading(false);
             }
         };
 
         loadData();
-    }, [router]);
+    }, [router]); // Add `log` to dependency array
 
     useEffect(() => {
         if (portfolio?.font?.font_url) {
@@ -136,16 +171,15 @@ export default function PortfolioPreviewPage() {
         }
     }, [portfolio]);
 
-    // ฟังก์ชันเลื่อนรูปภาพ (ถัดไป)
+    //ฟังชันเปลี่ยนรูปภาพ
     const handleNextImage = (blockId: string, totalImages: number, e: React.MouseEvent) => {
-        e.stopPropagation(); // ป้องกันไม่ให้กดแล้วไป trigger event อื่น
+        e.stopPropagation();
         setImageIndices(prev => ({
             ...prev,
             [blockId]: ((prev[blockId] || 0) + 1) % totalImages
         }));
     };
 
-    // ฟังก์ชันเลื่อนรูปภาพ (ก่อนหน้า)
     const handlePrevImage = (blockId: string, totalImages: number, e: React.MouseEvent) => {
         e.stopPropagation();
         setImageIndices(prev => ({
@@ -154,40 +188,32 @@ export default function PortfolioPreviewPage() {
         }));
     };
 
-    // --- Render Function ---
     const renderSectionContent = (section: any) => {
         const blocks = section.portfolio_blocks || [];
-        
         const isProfileLayout = section.section_title?.toLowerCase().includes('profile') || 
                                 (section as any).layout_type === 'profile_header_left';
 
-        // 1. ส่วน Profile
         if (isProfileLayout) {
             const isRight = section.section_title?.toLowerCase().includes('right') || 
                              (section as any).layout_type === 'profile_header_right';
-
              const user = currentUser || { 
                  firstname: "Loading...", lastname: "", 
-                 major: "-", gpa: "-", bio: "...", profile_image: null 
+                 major: "-", school: "-", profile_image: null,
+                 academic_score: { gpax: "0.00" }
              };
-             const cardBgColor = portfolio.colors?.background_color || '#ffffff';
+             const gpax = user.academic_score?.gpax || user.gpa || "-";
 
              return (
-                 // เพิ่ม Logic: ถ้า isRight เป็น true ให้ใช้ flex-row-reverse (สลับด้าน)
                  <div className={`flex flex-col items-center gap-6 p-6 bg-white border border-gray-100 rounded-xl shadow-sm h-full w-full 
                                  ${isRight ? 'md:flex-row-reverse text-right' : 'md:flex-row text-left'}`}>
-                     
-                     {/* รูปโปรไฟล์ */}
                      <div className="w-32 h-32 flex-shrink-0 rounded-full overflow-hidden border-4 border-blue-100 shadow-md">
                          <img 
-                            src={user.profile_image || "/placeholder.jpg"} 
+                            src={user.profile_image || placeholderImage} 
                             alt="Profile" 
                             className="w-full h-full object-cover" 
-                            onError={(e) => e.currentTarget.src = 'https://via.placeholder.com/150'}
+                            onError={(e) => e.currentTarget.src = placeholderImage}
                           />
                      </div>
-
-                     {/* ข้อมูล Text */}
                      <div className={`flex-1 w-full space-y-3 ${isRight ? 'md:items-end' : 'md:items-start'}`}>
                          <div className={`border-b pb-2 border-gray-100 ${isRight ? 'flex flex-col items-end' : ''}`}>
                              <h3 className="text-2xl font-bold text-gray-800">
@@ -199,14 +225,26 @@ export default function PortfolioPreviewPage() {
                          </div>
                          <div className={`space-y-1 text-sm text-gray-600 ${isRight ? 'flex flex-col items-end' : ''}`}>
                              <p><span className="font-bold text-gray-800">Major:</span> {user.major}</p>
-                             <p><span className="font-bold text-gray-800">GPAX:</span> <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold">{user.gpa}</span></p>
+                             <p><span className="font-bold text-gray-800">GPAX:</span> <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold">{gpax}</span></p>
+                            
+                             {user.academic_score && (user.academic_score.math || user.academic_score.eng || user.academic_score.sci || user.academic_score.lang || user.academic_score.social) && (
+                                <div className="mt-2 border-t border-gray-100 pt-2 text-xs w-full">
+                                    <p className="font-bold text-gray-700 mb-1">คะแนนรายวิชา</p>
+                                    <div className="grid grid-cols-3 gap-x-4 gap-y-1">
+                                        {user.academic_score.math && <p><span className="font-semibold">คณิต:</span> {user.academic_score.math}</p>}
+                                        {user.academic_score.eng && <p><span className="font-semibold">อังกฤษ:</span> {user.academic_score.eng}</p>}
+                                        {user.academic_score.sci && <p><span className="font-semibold">วิทย์:</span> {user.academic_score.sci}</p>}
+                                        {user.academic_score.lang && <p><span className="font-semibold">ไทย:</span> {user.academic_score.lang}</p>}
+                                        {user.academic_score.social && <p><span className="font-semibold">สังคม:</span> {user.academic_score.social}</p>}
+                                    </div>
+                                </div>
+                            )}
                          </div>
                      </div>
                  </div>
              );
         }
 
-        // 2. ส่วน Content Grid
         if (blocks.length === 0) {
             return (
                 <div className="flex flex-col items-center justify-center h-32 text-gray-400 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
@@ -227,17 +265,12 @@ export default function PortfolioPreviewPage() {
                     else if(c?.type === 'working') itemData = workings.find((w: any) => w.ID == c.data_id);
                     
                     const finalData = itemData || c?.data;
-                    
                     if(!finalData) return null;
-
                     const images = extractImages(finalData, c.type);
-                    
-                    // Slider Logic: หา index ปัจจุบัน ถ้าไม่มีให้เริ่มที่ 0
                     const uniqueKey = block.ID ? block.ID.toString() : `${section.ID}-${idx}`;
                     const currentIndex = imageIndices[uniqueKey] || 0;
-                    const currentImageSrc = images.length > 0 ? getImageUrl(images[currentIndex]) : "https://via.placeholder.com/300?text=No+Image";
+                    const currentImageSrc = images.length > 0 ? getImageUrl(images[currentIndex]) : placeholderImage;
                     
-                    // Extract Data Fields (Support both flat data and nested API response)
                     const date = finalData.activity_detail?.activity_at || finalData.working_detail?.working_at || finalData.activity_date || finalData.working_date || finalData.date;
                     const location = finalData.activity_detail?.institution || finalData.location;
                     const award = finalData.reward?.level_name || finalData.award || finalData.award_name;
@@ -247,81 +280,49 @@ export default function PortfolioPreviewPage() {
 
                     return (
                         <div key={idx} className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition flex flex-col group relative">
-                            {/* Image Container */}
                             <div className="h-64 w-full bg-gray-100 relative overflow-hidden group">
-                                <img 
-                                    src={currentImageSrc} 
-                                    className="w-full h-full object-cover transition-all duration-500" 
-                                />
-                                
-                                {/* Badge Type */}
+                                <img src={currentImageSrc} className="w-full h-full object-cover transition-all duration-500" />
                                 <span className={`absolute top-2 right-2 text-[10px] text-white px-2 py-1 rounded font-bold uppercase z-10 ${c.type === 'activity' ? 'bg-orange-400' : 'bg-blue-400'}`}>
                                     {c.type}
                                 </span>
-
-                                {/* ปุ่มเลื่อนรูป (แสดงเฉพาะเมื่อมีมากกว่า 1 รูป) */}
                                 {images.length > 1 && (
                                     <>
-                                        {/* ปุ่มซ้าย */}
-                                        <button 
-                                            onClick={(e) => handlePrevImage(uniqueKey, images.length, e)}
-                                            className="absolute top-1/2 left-2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1.5 transition-all opacity-0 group-hover:opacity-100 z-20"
-                                        >
+                                        <button onClick={(e) => handlePrevImage(uniqueKey, images.length, e)} className="absolute top-1/2 left-2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1.5 transition-all opacity-0 group-hover:opacity-100 z-20">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
                                               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
                                             </svg>
                                         </button>
-
-                                        {/* ปุ่มขวา */}
-                                        <button 
-                                            onClick={(e) => handleNextImage(uniqueKey, images.length, e)}
-                                            className="absolute top-1/2 right-2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1.5 transition-all opacity-0 group-hover:opacity-100 z-20"
-                                        >
+                                        <button onClick={(e) => handleNextImage(uniqueKey, images.length, e)} className="absolute top-1/2 right-2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1.5 transition-all opacity-0 group-hover:opacity-100 z-20">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
                                               <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                                             </svg>
                                         </button>
-
-                                        {/* จุดบอกตำแหน่ง (Dots Indicator) */}
                                         <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-10">
                                             {images.map((_: any, i: number) => (
-                                                <div 
-                                                    key={i}
-                                                    className={`w-1.5 h-1.5 rounded-full transition-all ${i === currentIndex ? 'bg-white scale-125' : 'bg-white/50'}`}
-                                                />
+                                                <div key={i} className={`w-1.5 h-1.5 rounded-full transition-all ${i === currentIndex ? 'bg-white scale-125' : 'bg-white/50'}`} />
                                             ))}
                                         </div>
                                     </>
                                 )}
                             </div>
-
                             <div className="p-4 flex flex-col flex-1 h-full">
                                 <h4 className="font-bold text-gray-800 text-sm mb-1 line-clamp-1">
                                     {c.type === 'activity' ? finalData.activity_name : finalData.working_name}
                                 </h4>
                                 <div className="flex flex-wrap gap-2 mb-3">
-                                    
-                                    {/* Tag: ระดับ (สีม่วง) */}
                                     {level && (
                                         <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-purple-100 text-purple-700 text-xs font-medium">
                                             {level}
                                         </span>
                                     )}
-
-                                    {/* Tag: หมวดหมู่ (สีส้ม) */}
                                     {category && (
                                         <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-orange-100 text-orange-700 text-xs font-medium">
                                             {category}
                                         </span>
                                     )}
-
                                 </div>
-                                <p className="text-xs text-gray-500 line-clamp-2">
-                                    {description}
-                                </p>
+                                <p className="text-xs text-gray-500 line-clamp-2">{description}</p>
                                <div className="mt-auto pt-3 border-t border-gray-50 flex flex-col gap-1.5">
-                                    
-                                    {/* รางวัล (ไอคอนถ้วยรางวัล) - Displayed at bottom as requested */}
                                     {award && (
                                         <div className="flex items-center gap-2 text-xs text-gray-500">
                                             <div className="bg-yellow-50 p-1 rounded">
@@ -332,20 +333,14 @@ export default function PortfolioPreviewPage() {
                                             <span className="font-medium text-gray-700">{award}</span>
                                         </div>
                                     )}
-
-                                    {/* วันที่ (ไอคอนปฏิทินสีฟ้า) */}
                                     <div className="flex items-center gap-2 text-xs text-gray-500">
                                         <div className="bg-blue-50 p-1 rounded">
                                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-blue-500">
                                                 <path fillRule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75z" clipRule="evenodd" />
                                             </svg>
                                         </div>
-                                        <span className="font-medium text-gray-600">
-                                            {formatDateTH(date)}
-                                        </span>
+                                        <span className="font-medium text-gray-600">{formatDateTH(date)}</span>
                                     </div>
-
-                                    {/* สถานที่ (ไอคอนหมุดสีชมพูแดง) */}
                                     {location && (
                                         <div className="flex items-center gap-2 text-xs text-gray-500">
                                             <div className="bg-rose-50 p-1 rounded">
@@ -356,7 +351,6 @@ export default function PortfolioPreviewPage() {
                                             <span className="font-medium text-gray-600 line-clamp-1">{location}</span>
                                         </div>
                                     )}
-
                                 </div>
                             </div>
                         </div>
@@ -366,31 +360,54 @@ export default function PortfolioPreviewPage() {
         );
     };
 
-    if (loading) return <div className="p-10 text-center">กำลังโหลด...</div>;
+    // --- DEBUG RENDER ---
+    // const renderDebugLogs = () => (
+    //     <div className="p-4 bg-gray-800 text-white rounded-lg mb-6">
+    //         <h3 className="font-bold text-lg mb-2">Diagnostic Log</h3>
+    //         {/* <pre className="text-xs whitespace-pre-wrap break-all">
+    //             {debugLogs.join('\n')}
+    //         </pre> */}
+    //     </div>
+    // );
+    // --- END DEBUG RENDER ---
+
+    if (loading) {
+        return (
+            <div className="p-10 text-center">
+                {/* {renderDebugLogs()} */}
+                <p>กำลังโหลด...</p>
+            </div>
+        );
+    }
     
-    // แสดง Empty State เมื่อไม่มี Portfolio
+    if (errorMsg) {
+        return (
+            <div className="p-10 text-center">
+                {/* {renderDebugLogs()} */}
+                <div className="p-10 text-center text-red-700 bg-red-100 rounded-lg border border-red-200">
+                    <p className="text-lg font-bold mb-2">พบข้อผิดพลาด</p>
+                    <p>{errorMsg}</p>
+                </div>
+            </div>
+        );
+    }
+    
     if (!portfolio) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-orange-50 to-white flex items-center justify-center p-6">
+            <div className="min-h-screen bg-white flex items-center justify-center p-6">
                 <div className="text-center max-w-md">
-                    {/* Icon */}
                     <div className="w-32 h-32 mx-auto mb-6 bg-orange-100 rounded-full flex items-center justify-center">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-16 h-16 text-orange-500">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m3.75 9v6m3-3H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                         </svg>
                     </div>
-                    
-                    {/* Title & Description */}
                     <h2 className="text-2xl font-bold text-gray-800 mb-3">ยังไม่มีแฟ้มสะสมผลงาน</h2>
                     <p className="text-gray-500 mb-8">
                         เริ่มสร้างแฟ้มสะสมผลงานของคุณเพื่อรวบรวมกิจกรรมและผลงานต่างๆ ไว้ในที่เดียว
                     </p>
-                    
-                    {/* Create Button */}
                     <button 
                         onClick={() => router.push('/student/portfolio/managePortfolio')}
-                        className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-lg font-semibold rounded-xl shadow-lg hover:from-orange-600 hover:to-orange-700 transform hover:scale-105 transition-all duration-200"
-                    >
+                        className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-lg font-semibold rounded-xl shadow-lg hover:from-orange-600 hover:to-orange-700 transform hover:scale-105 transition-all duration-200">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                         </svg>
@@ -408,17 +425,12 @@ export default function PortfolioPreviewPage() {
     return (
         <div className="min-h-screen bg-white p-6 pb-20"
              style={{ backgroundColor: lightenColor(backgroundColor, 100), fontFamily }}>
+            
+            {/* {renderDebugLogs()} */}
+
             <div className="mx-auto" style={{ maxWidth: 1500 }}>
                 <div className="flex justify-end items-center mb-6">
-                    {/* <button 
-                        onClick={() => router.back()} 
-                        className="px-4 py-2 bg-white rounded-lg shadow-sm text-gray-600 hover:text-gray-900 flex items-center gap-2 hover:bg-gray-50 transition"
-                    >
-                        ← ย้อนกลับ
-                    </button> */}
-
                     <button 
-                        // onClick={() => router.push(`/student/portfolio/section?portfolio_id=${id}`)}
                         onClick={() => router.push(`/student/portfolio/managePortfolio`)}
                         className="px-4 py-2 text-white rounded-lg shadow-sm flex items-center gap-2 transition font-medium hover:opacity-90"
                         style={{ backgroundColor: primaryColor }}

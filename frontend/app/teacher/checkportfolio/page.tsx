@@ -20,7 +20,7 @@ export default function CheckPortfolioPage() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const data = await SubmissionService.fetchSubmissionsByStatus("awaiting");
+        const data = await SubmissionService.fetchSubmissionsByStatus("awaiting_review");
         console.log("Fetched submissions:", data);
         setPortfolioSubmissions(data);
       } catch (error) {
@@ -34,7 +34,7 @@ export default function CheckPortfolioPage() {
 
   // Filter เฉพาะ is_current_version = true
   const pendingSubmissions = portfolioSubmissions.filter(
-    item => item.status === 'awaiting' && item.is_current_version
+    item => item.status === 'awaiting_review' 
   );
 
   const categories = [
@@ -126,7 +126,7 @@ export default function CheckPortfolioPage() {
                   {/* Header */}
                   <div className="p-4 flex items-center gap-3">
                     <div className="bg-white/10 backdrop-blur-sm p-2 rounded-full">
-                      <img src={item.user.profile_image_url || ""} alt="Profile" className="w-10 h-10 rounded-full" />
+                      <img src={item.user.profile_image_url || " "} alt="Profile" className="w-10 h-10 rounded-full" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-black font-medium text-l truncate">

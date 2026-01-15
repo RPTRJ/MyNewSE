@@ -367,35 +367,3 @@ export async function updateProfileImage(
 
   return data.user;
 }
-
-// Teacher approve student profile
-export async function approveStudentProfile(
-  token: string,
-  studentId: number
-): Promise<{ message: string; data: { user_id: number; profile_completed: boolean } }> {
-  const data = await authorizedFetch<{ message: string; data: { user_id: number; profile_completed: boolean } }>(
-    `/teacher/users/${studentId}/approve-profile`,
-    token,
-    "ไม่สามารถอนุมัติโปรไฟล์ได้",
-    {
-      method: "PUT",
-    }
-  );
-  return data;
-}
-
-// Teacher revoke student profile approval
-export async function revokeStudentProfileApproval(
-  token: string,
-  studentId: number
-): Promise<{ message: string; data: { user_id: number; profile_completed: boolean } }> {
-  const data = await authorizedFetch<{ message: string; data: { user_id: number; profile_completed: boolean } }>(
-    `/teacher/users/${studentId}/revoke-approval`,
-    token,
-    "ไม่สามารถยกเลิกการอนุมัติได้",
-    {
-      method: "PUT",
-    }
-  );
-  return data;
-}

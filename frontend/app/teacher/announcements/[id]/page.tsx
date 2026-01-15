@@ -104,32 +104,7 @@ const AnnouncementDetailPage = () => {
     return `${baseUrl}${path}`;
   };
 
-  const handleDownload = async (attachment: Attachment) => {
-    try {
-      const fileUrl = getFileUrl(attachment.file_path);
-      console.log('Downloading from:', fileUrl);
-      
-      // ใช้ fetch เพื่อดาวน์โหลดไฟล์
-      const response = await fetch(fileUrl);
-      
-      if (!response.ok) {
-        throw new Error('Failed to download file');
-      }
-      
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = attachment.file_name;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Download error:', error);
-      alert('ไม่สามารถดาวน์โหลดไฟล์ได้ กรุณาลองใหม่อีกครั้ง');
-    }
-  };
+
 
   const handleViewFile = (attachment: Attachment) => {
     const fileUrl = getFileUrl(attachment.file_path);
@@ -313,13 +288,6 @@ const AnnouncementDetailPage = () => {
                           title="ดูไฟล์"
                         >
                           <Eye size={18} />
-                        </button>
-                        <button 
-                          onClick={() => handleDownload(attachment)}
-                          className="p-2 rounded hover:bg-white group-hover:text-orange-600 transition-colors"
-                          title="ดาวน์โหลด"
-                        >
-                          <Download size={18} />
                         </button>
                       </div>
                     </div>

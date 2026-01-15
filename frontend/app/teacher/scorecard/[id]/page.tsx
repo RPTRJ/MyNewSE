@@ -1,12 +1,11 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { ChevronDown, CheckCircle, Loader2 } from 'lucide-react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { Mail, Phone, Calendar, MapPin, GraduationCap, Briefcase, Award } from 'lucide-react';
 import submissionService from '@/services/submission';
 import { fetchMyProfile, fetchUserProfileByTeacher } from '@/services/profile';
 import {getActivitiesByUser} from '@/services/activity';
-
 import { getWorkings } from '@/services/working';
 
 // ===================== Component =====================
@@ -33,6 +32,7 @@ const PortfolioReview = () => {
   const [workings, setWorkings] = useState<any[]>([]);
   const [status, setStatus] = useState('under_review');
   const isLocked = status === 'approved';
+  const router = useRouter();
 
   const sections = [
     { id: 'introduction', label: 'ข้อมูลส่วนตัว', icon: '📄' },
@@ -50,7 +50,7 @@ const PortfolioReview = () => {
   if (!scorecard?.score_criteria) return;
 
   const total = scorecard.score_criteria.reduce((sum: number, c: any) => {
-    return sum + (c.score * c.weight_percent) / 100;
+    return sum + c.score ;
   }, 0);
 
   setScorecard((prev: any) => ({
@@ -202,10 +202,10 @@ const PortfolioReview = () => {
         setScorecard(savedScorecard);
       }
 
-      // 3️⃣ อัพเดต status
-      await submissionService.updateSubmissionStatus(submission.ID, status);
 
       alert('บันทึกสำเร็จ!');
+      router.push("/teacher");
+      router.refresh();
     } catch (err) {
       console.error(err);
       alert('เกิดข้อผิดพลาดในการบันทึก');
@@ -216,21 +216,31 @@ const PortfolioReview = () => {
 
 
   const handleApprove = async () => {
-    if (!confirm('ยืนยันการอนุมัติ? หลังจากนี้จะไม่สามารถแก้คะแนนได้')) return;
-    try {
-      await submissionService.updateSubmissionStatus(submission.ID, 'approved');
+  if (!confirm('ยืนยันการอนุมัติ? หลังจากนี้จะไม่สามารถแก้คะแนนได้')) return;
+  try {
+    setSaving(true);
+    await handleSave();   
+    await submissionService.updateSubmissionStatus(submission.ID, 'approved');
+
       setStatus('approved');
-      alert('อนุมัติสำเร็จ!');
+      router.push("/teacher");
+      router.refresh();
     } catch (err) {
+      console.error(err);
       alert('เกิดข้อผิดพลาด');
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleRequestRevision = async () => {
     try {
+      await handleSave();
       await submissionService.updateSubmissionStatus(submission.ID, 'revision_requested');
       setStatus('revision_requested');
       alert('ส่งคำขอแก้ไขแล้ว');
+      router.push("/teacher");
+      router.refresh();
     } catch (err) {
       alert('เกิดข้อผิดพลาด');
     }
@@ -626,8 +636,8 @@ const PortfolioReview = () => {
                           min="0"
                           max={Criteria.max_score}
                           step="0.5"
-                          value={Criteria.score}
-                          onChange={(e) =>updateScoreCriteria(Criteria.criteria_number, Number(e.target.value))}
+                          value={Criteria.score === 0 ? '' : Criteria.score}
+                          onChange={(e) =>updateScoreCriteria(Criteria.criteria_number, e.target.value === '' ? 0 : Number(e.target.value))}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>

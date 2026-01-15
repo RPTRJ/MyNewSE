@@ -7,7 +7,7 @@ import (
 	"github.com/sut68/team14/backend/entity"
 )
 
-func FontSeed() {
+func SeedFonts() {
 	db := config.GetDB()
 	fonts := []entity.Font{
 		{

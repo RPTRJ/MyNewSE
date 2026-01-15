@@ -14,60 +14,57 @@ type ScorecardController struct {
 }
 
 func (c *ScorecardController) Create(ctx *gin.Context) {
-	userIDAny, exists := ctx.Get("user_id")
-	if !exists {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
-		return
-	}
-	userID := userIDAny.(uint)
+    userIDAny, _ := ctx.Get("user_id")
+    userID := userIDAny.(uint)
 
-	var scorecard entity.Scorecard
-	if err := ctx.ShouldBindJSON(&scorecard); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+    var body struct {
+        PortfolioSubmissionID uint                     `json:"portfolio_submission_id"`
+        GeneralComment        string                   `json:"general_comment"`
+        ScoreCriteria         []entity.ScoreCriteria   `json:"score_criteria"`
+    }
 
-	scorecard.ID = 0
-	scorecard.UserID = userID
-	for i := range scorecard.ScoreCriteria {
-		scorecard.ScoreCriteria[i].ID = 0
-	}
+    if err := ctx.ShouldBindJSON(&body); err != nil {
+        ctx.JSON(400, gin.H{"error": err.Error()})
+        return
+    }
 
-	// คำนวณ total_score
-	var totalScore float64
-	for _, c := range scorecard.ScoreCriteria {
-		totalScore += (c.Score * c.Weight_Percent) / 100.0
-	}
-	scorecard.Total_Score = totalScore
-	scorecard.Max_Score = 100
+    scorecard := entity.Scorecard{
+        PortfolioSubmissionID: body.PortfolioSubmissionID,
+        General_Comment:       body.GeneralComment,
+        UserID:               userID,
+        Max_Score:            100,
+    }
 
-	// ✅ ใช้ Transaction
-	tx := c.DB.Begin()
-	
-	if err := tx.Omit("ScoreCriteria.*").Create(&scorecard).Error; err != nil {
-		tx.Rollback()
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+    // calc total
+    var total float64
+    for _, c := range body.ScoreCriteria {
+        total += c.Score
+    }
+    scorecard.Total_Score = total
 
-	// สร้าง Criteria แต่ละตัว
-	for i := range scorecard.ScoreCriteria {
-		scorecard.ScoreCriteria[i].ID = 0
-		scorecard.ScoreCriteria[i].ScorecardID = scorecard.ID
+    tx := c.DB.Begin()
 
-		if err := tx.Create(&scorecard.ScoreCriteria[i]).Error; err != nil {
-			tx.Rollback()
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-	}
+    if err := tx.Create(&scorecard).Error; err != nil {
+        tx.Rollback()
+        ctx.JSON(500, gin.H{"error": err.Error()})
+        return
+    }
 
-	tx.Commit()
+    for i := range body.ScoreCriteria {
+        body.ScoreCriteria[i].ScorecardID = scorecard.ID
+        body.ScoreCriteria[i].ID = 0
+        if err := tx.Create(&body.ScoreCriteria[i]).Error; err != nil {
+            tx.Rollback()
+            return
+        }
+    }
 
-	// Reload พร้อม criteria
-	c.DB.Preload("ScoreCriteria").First(&scorecard, scorecard.ID)
-	ctx.JSON(http.StatusCreated, scorecard)
+    tx.Commit()
+
+    c.DB.Preload("ScoreCriteria").First(&scorecard, scorecard.ID)
+    ctx.JSON(201, scorecard)
 }
+
 
 func (c *ScorecardController) Update(ctx *gin.Context) {
 	id, _ := strconv.Atoi(ctx.Param("id"))
@@ -92,7 +89,7 @@ func (c *ScorecardController) Update(ctx *gin.Context) {
 	// คำนวณ total_score
 	var totalScore float64
 	for _, c := range body.ScoreCriteria {
-		totalScore += (c.Score * c.Weight_Percent) / 100.0
+		totalScore += c.Score
 	}
 	scorecard.Total_Score = totalScore
 

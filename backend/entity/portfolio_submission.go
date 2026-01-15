@@ -13,7 +13,6 @@ type PortfolioSubmission struct {
 	Submission_at      time.Time  `json:"submission_at" valid:"required~Submission_at is required"`
 	ReviewedAt         *time.Time `json:"reviewed_at" `
 	ApprovedAt         *time.Time `json:"approved_at" `
-	Is_current_version bool       `json:"is_current_version" `
 
 	PortfolioID uint       `json:"portfolio_id" valid:"required~PortfolioID is required"`
 	Portfolio   *Portfolio `gorm:"foreignKey:PortfolioID" json:"portfolio" `

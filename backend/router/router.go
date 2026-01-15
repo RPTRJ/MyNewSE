@@ -29,6 +29,7 @@ func CacheControlMiddleware() gin.HandlerFunc {
 func SetupRoutes() *gin.Engine {
 
 	r := gin.Default()
+	
 
 	// ✅ Enable Gzip Compression - reduces bandwidth significantly
 	r.Use(gzip.Gzip(gzip.DefaultCompression))
@@ -125,8 +126,6 @@ func SetupRoutes() *gin.Engine {
 	teacher := protectedOnboarded.Group("/teacher")
 	{
 		teacher.GET("/users/:id/profile", profileController.GetUserProfile)
-		teacher.PUT("/users/:id/approve-profile", profileController.ApproveStudentProfile)
-		teacher.PUT("/users/:id/revoke-approval", profileController.RevokeStudentProfileApproval)
 	}
 
 	userController.RegisterRoutes(protectedOnboarded)

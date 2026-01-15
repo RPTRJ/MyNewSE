@@ -280,7 +280,10 @@ class SubmissionService {
     const response = await fetch(`${API_URL}/scorecards/${id}`, {
       method: 'PUT',
       headers: this.getAuthHeaders(),
-      body: JSON.stringify({scorecard}),
+      body: JSON.stringify({
+        general_comment: scorecard.general_comment,
+        score_criteria: scorecard.score_criteria
+      }),
     });
 
     if (!response.ok) {
@@ -288,6 +291,43 @@ class SubmissionService {
     }
 
     return response.json();
+  }
+
+
+    // ===================== Get Submissions by Portfolio =====================
+  async fetchSubmissionsByPortfolio(portfolioId: number): Promise<PortfolioSubmission[]> {
+    const response = await fetch(`${API_URL}/submissions/portfolio/${portfolioId}`, {
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch submissions by portfolio');
+    }
+
+    const text = await response.text();
+
+    if (!text) {
+      throw new Error("Empty response from server");
+    }
+
+    return JSON.parse(text);
+  }
+
+
+  // ===================== Get Latest Submission for Portfolio =====================
+  async getLatestSubmission(portfolioId: number): Promise<PortfolioSubmission | null> {
+    try {
+      const submissions = await this.fetchSubmissionsByPortfolio(portfolioId);
+      if (submissions.length === 0) return null;
+      
+      // เรียงตาม submission_at ล่าสุด
+      return submissions.sort((a, b) => 
+        new Date(b.submission_at).getTime() - new Date(a.submission_at).getTime()
+      )[0];
+    } catch (error) {
+      console.error('Error fetching latest submission:', error);
+      return null;
+    }
   }
 }
 

@@ -19,7 +19,6 @@ func TestPortfolioSubmissionValidation(t *testing.T) {
 			Version:            1,
 			Status:             "under_review",
 			Submission_at:      now,
-			Is_current_version: true,
 			PortfolioID:        1,
 			UserID:             1,
 		}

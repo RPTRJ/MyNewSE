@@ -512,7 +512,7 @@ export default function EditLanguageScoresPage() {
                                   cursor-pointer"
                               />
                               <p className="mt-1 text-xs text-gray-500">
-                                รองรับเฉพาะไฟล์ PDF (ขนาดไม่เกิน 5MB)
+                                รองรับเฉพาะไฟล์ PDF (ขนาดไม่เกิน 10MB)
                               </p>
                               {uploading === index && (
                                 <div className="mt-2 flex items-center text-sm text-orange-600">
