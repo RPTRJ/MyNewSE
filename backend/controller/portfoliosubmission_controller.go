@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -17,68 +18,60 @@ type PortfolioSubmissionController struct {
 // ===================== CRUD พื้นฐาน =====================
 
 func (c *PortfolioSubmissionController) Create(ctx *gin.Context) {
-	var body struct {
-		PortfolioID uint `json:"portfolio_id"`
-	}
+    var body struct {
+        PortfolioID uint `json:"portfolio_id"`
+    }
 
-	if err := ctx.ShouldBindJSON(&body); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+    if err := ctx.ShouldBindJSON(&body); err != nil {
+        ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
 
-	userIDAny, _ := ctx.Get("user_id")
-	userID := userIDAny.(uint)
+    userIDAny, _ := ctx.Get("user_id")
+    userID := userIDAny.(uint)
 
-	// 🔒 STEP 1: เช็คว่ามี submission ปัจจุบันที่ยังไม่ถูกขอแก้ไหม
-	tx := c.DB.Begin()
+    err := c.DB.Transaction(func(tx *gorm.DB) error {
+        // หา current submission ล่าสุดของ portfolio นี้
+        var current entity.PortfolioSubmission
+        err := tx.
+            Where("portfolio_id = ? AND user_id = ?", body.PortfolioID, userID).
+            Order("version desc").
+            First(&current).Error
+        if errors.Is(err, gorm.ErrRecordNotFound) {
+            // ไม่มี submission เก่า สร้างใหม่ version 1
+            submission := entity.PortfolioSubmission{
+                PortfolioID:   body.PortfolioID,
+                UserID:        userID,
+                Status:        "awaiting_review",
+                Version:       1,
+                Submission_at: time.Now(),
+            }
+            return tx.Create(&submission).Error
+        }
+        if err != nil {
+            return err
+        }
 
-	var current entity.PortfolioSubmission
-	err := tx.
-		Where("portfolio_id = ? AND user_id = ? AND is_current_version = ?", body.PortfolioID, userID, true).
-		First(&current).Error
+        // อัพเดต status และ version ของ submission ล่าสุด
+        current.Status = "awaiting_review"
+        current.Version = current.Version + 1
+        current.Submission_at = time.Now()
 
-	if err == nil && current.Status != "revision_requested" {
-		tx.Rollback()
-		ctx.JSON(http.StatusConflict, gin.H{
-			"error": "This portfolio is already under review",
-		})
-		return
-	}
+        return tx.Save(&current).Error
+    })
 
-	// หา version
-	var last entity.PortfolioSubmission
-	version := 1
-	if err := tx.
-		Where("portfolio_id = ? AND user_id = ?", body.PortfolioID, userID).
-		Order("version desc").
-		First(&last).Error; err == nil {
-		version = last.Version + 1
-	}
+    if err != nil {
+        ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
 
-	// ปิด current
-	tx.Model(&entity.PortfolioSubmission{}).
-		Where("portfolio_id = ? AND user_id = ? AND is_current_version = ?", body.PortfolioID, userID, true).
-		Update("is_current_version", false)
-
-	// สร้างใหม่
-	submission := entity.PortfolioSubmission{
-		PortfolioID: body.PortfolioID,
-		UserID: userID,
-		Status: "awaiting_review",
-		Version: version,
-		Submission_at: time.Now(),
-	}
-
-	if err := tx.Create(&submission).Error; err != nil {
-		tx.Rollback()
-		ctx.JSON(500, gin.H{"error": err.Error()})
-		return
-	}
-
-	tx.Commit()
-	ctx.JSON(201, submission)
-
+    // ส่ง response ว่าอัพเดทสำเร็จ (ไม่มี submission object ใหม่ให้ return)
+    ctx.JSON(201, gin.H{
+        "message": "Portfolio submission updated successfully",
+    })
 }
+
+
 
 
 func (c *PortfolioSubmissionController) GetAll(ctx *gin.Context) {
@@ -132,7 +125,7 @@ func (c *PortfolioSubmissionController) GetByStatus(ctx *gin.Context) {
 	status := ctx.Param("status")
 	var submissions []entity.PortfolioSubmission
 	if err := c.DB.Preload("User").Preload("Portfolio").
-		Where("status = ? AND is_current_version = ?", status, true).Find(&submissions).Error; err != nil {
+		Where("status = ? ", status, true).Find(&submissions).Error; err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -291,4 +284,21 @@ func (c *PortfolioSubmissionController) UpdateStatus(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, submission)
+}
+
+func (c *PortfolioSubmissionController) GetPending(ctx *gin.Context) {
+    var submissions []entity.PortfolioSubmission
+    err := c.DB.
+        Where("status = ?", "awaiting_review").
+        Preload("User").
+        Preload("Portfolio").
+        Order("submission_at desc").
+        Find(&submissions).Error
+    
+    if err != nil {
+        ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+    
+    ctx.JSON(http.StatusOK, submissions)
 }

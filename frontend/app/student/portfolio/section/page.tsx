@@ -320,9 +320,10 @@ function SectionsContent() {
 
     const [isEditingItem, setIsEditingItem] = useState(false);
 
-    const [selectedDataType, setSelectedDataType] = useState<'activity' | 'working' |'profile'>('activity');
+    const [selectedDataType, setSelectedDataType] = useState<'activity' | 'working' |'profile' | 'text'>('activity');
     const [selectedDataId, setSelectedDataId] = useState<string>("");
     const [currentBlock, setCurrentBlock] = useState<any>(null);
+    const [customText, setCustomText] = useState("");
 
     const [imageIndices, setImageIndices] = useState<{ [blockId: number]: number }>({});
     const [currentUser, setCurrentUser] = useState<any>(null);
@@ -336,11 +337,20 @@ function SectionsContent() {
     const [activeFont, setActiveFont] = useState<FontTheme | null>(null); 
     const [initialTheme, setInitialTheme] = useState<ColorTheme | null>(null);
     const [initialFont, setInitialFont] = useState<FontTheme | null>(null);
+    const [introText, setIntroText] = useState("");
     const router = useRouter();
+    const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+    const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
+        setNotification({ message, type });
+        setTimeout(() => {
+            setNotification(null);
+        }, 3000);
+    };
 
     const handleSaveAndExit = async () => {
         if (!currentPortfolioID) {
-            alert("ไม่พบ Portfolio ID");
+            showNotification("ไม่พบ Portfolio ID", "error");
             return;
         }
 
@@ -357,15 +367,17 @@ function SectionsContent() {
                 payload.font_id = activeFont?.ID;
             }
 
+            payload.content_description = introText;
+
             if (Object.keys(payload).length > 0) {
                  await updatePortfolio(currentPortfolioID, payload);
             }
             
-            alert("บันทึกการแก้ไขเรียบร้อย!");
-            router.push("/student/portfolio"); 
+            showNotification("บันทึกการแก้ไขเรียบร้อย!", "success");
+            setTimeout(() => router.push("/student/portfolio"), 1500); 
         } catch (error) {
              console.error("Save error:", error);
-             alert("เกิดข้อผิดพลาดในการบันทึก");
+             showNotification("เกิดข้อผิดพลาดในการบันทึก", "error");
         }
     };
 
@@ -480,7 +492,9 @@ function SectionsContent() {
                 if (savedFont) {
                     setActiveFont(savedFont);
                     setInitialFont(savedFont);
+   
                 }
+                setIntroText(targetPortfolio.content_description || targetPortfolio.ContentDescription || "");
                 // --- ดึงข้อมูล Theme และ Font เดิมมาแสดง ---
                 // if (targetPortfolio.Color) {
                 //     setActiveTheme(targetPortfolio.Color);
@@ -526,7 +540,7 @@ function SectionsContent() {
 
     const handleCreateSection = async () => {
         if (!currentPortfolioID) {
-            alert("ไม่พบ Portfolio กรุณาสร้าง Portfolio ก่อน");
+            showNotification("ไม่พบ Portfolio กรุณาสร้าง Portfolio ก่อน", "error");
             return;
         }
         const name = prompt("ชื่อ Section ใหม่:");
@@ -540,11 +554,11 @@ function SectionsContent() {
                 section_order: sections.length + 1,
                 is_enabled: true
             });
-            alert("สร้าง Section สำเร็จ!");
+            showNotification("สร้าง Section สำเร็จ!", "success");
             loadAll();
         } catch (e) {
             console.error(e);
-            alert("เกิดข้อผิดพลาด");
+            showNotification("เกิดข้อผิดพลาด", "error");
         }
     };
 
@@ -559,10 +573,10 @@ function SectionsContent() {
             // โหลดข้อมูลใหม่
             await loadAll();
 
-            alert(!currentStatus ? "เปิดใช้งาน Section แล้ว" : "ปิดการใช้งาน Section");
+            showNotification(!currentStatus ? "เปิดใช้งาน Section แล้ว" : "ปิดการใช้งาน Section", "success");
         } catch (err) {
             console.error(err);
-            alert("เกิดข้อผิดพลาด");
+            showNotification("เกิดข้อผิดพลาด", "error");
         }
     };
 
@@ -571,11 +585,11 @@ function SectionsContent() {
 
         try {
             await deleteSection(id);
-            alert("ลบ Section สำเร็จ!");
+            showNotification("ลบ Section สำเร็จ!", "success");
             loadAll();
         } catch (err) {
             console.error(err);
-            alert("เกิดข้อผิดพลาดในการลบ Section");
+            showNotification("เกิดข้อผิดพลาดในการลบ Section", "error");
         }
     };
  
@@ -589,10 +603,17 @@ function SectionsContent() {
 
     const openForm = (block: any | null) => {
         setCurrentBlock(block);
+        setCustomText(block?.custom_text || "");
         if (block) {
             const c = parseBlockContent(block.content);
             setSelectedDataType(c?.type || 'activity');
-            setSelectedDataId(c?.data_id?.toString() || "");
+            if (c?.type === 'text') {
+                setCustomText(c.detail || "");
+                setSelectedDataId("");
+            } else {
+                setSelectedDataId(c?.data_id?.toString() || "");
+            }
+            // setSelectedDataId(c?.data_id?.toString() || "");
         } else {
             setSelectedDataType('activity');
             setSelectedDataId("");
@@ -612,7 +633,7 @@ function SectionsContent() {
     };
 
     const handleSaveItem = async () => {
-        if (!selectedSection || (selectedDataType !== 'profile' && !selectedDataId)) {
+        if (!selectedSection || (selectedDataType !== 'profile' && selectedDataType !== 'text' && !selectedDataId)) {
             alert("กรุณาเลือกข้อมูลก่อน");
             return;
         }
@@ -624,7 +645,17 @@ function SectionsContent() {
                     type: 'profile',
                     title: 'My Profile'
                 };
-            } else {
+            } else if (selectedDataType === 'text') {
+                if (!customText.trim()) {
+                    alert("กรุณากรอกข้อความ");
+                    return;
+                }
+                contentData = {
+                    type: 'text',
+                    title: 'ข้อความ', // หรือจะตัดคำแรกๆ มาเป็น title ก็ได้
+                    detail: customText // เก็บข้อความไว้ใน key ชื่อ detail
+                };
+            }else {
                 let dataItem: any = null;
                 let dataName = "";
                 
@@ -809,6 +840,153 @@ function SectionsContent() {
         }
 
         const blocks = section.section_blocks || [];
+        // const isProfile = section.section_title?.toLowerCase().includes('profile') || 
+        //                   section.section_title?.includes('ประวัติ') ||
+        //                   section.section_title?.includes('แนะนำตัว');
+
+        if (isProfile) {
+             const user = currentUser || {};
+             const academic = user.academic_score || {};
+             const languageScores = user.language_scores || [];
+             const ged = user.ged_score || {};
+
+             return (
+                 <div className="h-full flex flex-col p-6 space-y-6 overflow-y-auto"
+                    style={{
+                        backgroundColor: activeTheme?.background_color || 'white',
+                        color: activeTheme?.primary_color || 'black',
+                        fontFamily: activeFont?.font_family || 'inherit',
+                    }}
+                 >
+                     <h3 className="text-2xl font-bold border-b pb-2" style={{ borderColor: activeTheme?.primary_color || theme.primary }}>
+                         แนะนำตัว เพิ่มเติม
+                     </h3>
+
+                     {/* 1. Academic Scores */}
+                     {/* <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                        <h4 className="font-bold text-lg mb-3 flex items-center gap-2">
+                            📚 ผลการเรียน (GPA)
+                        </h4>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="p-3 rounded-lg bg-gray-50">
+                                <span className="text-sm text-gray-500 block">GPAX</span>
+                                <span className="text-xl font-bold" style={{ color: activeTheme?.primary_color || theme.primary }}>
+                                    {academic.gpax ? Number(academic.gpax).toFixed(2) : "-"}
+                                </span>
+                            </div>
+                            {academic.gpa_math > 0 && (
+                                <div className="p-3 rounded-lg bg-gray-50">
+                                    <span className="text-sm text-gray-500 block">คณิตศาสตร์</span>
+                                    <span className="font-bold">{Number(academic.gpa_math).toFixed(2)}</span>
+                                </div>
+                            )}
+                            {academic.gpa_science > 0 && (
+                                <div className="p-3 rounded-lg bg-gray-50">
+                                    <span className="text-sm text-gray-500 block">วิทยาศาสตร์</span>
+                                    <span className="font-bold">{Number(academic.gpa_science).toFixed(2)}</span>
+                                </div>
+                            )}
+                            {academic.gpa_english > 0 && (
+                                <div className="p-3 rounded-lg bg-gray-50">
+                                    <span className="text-sm text-gray-500 block">ภาษาอังกฤษ</span>
+                                    <span className="font-bold">{Number(academic.gpa_english).toFixed(2)}</span>
+                                </div>
+                            )}
+                        </div>
+                     </div> */}
+
+                     {/* 2. Language Scores */}
+                     {/* {languageScores.length > 0 && (
+                         <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                            <h4 className="font-bold text-lg mb-3 flex items-center gap-2">
+                                🗣️ คะแนนภาษา
+                            </h4>
+                            <div className="space-y-3">
+                                {languageScores.map((score: any, idx: number) => (
+                                    <div key={idx} className="flex justify-between items-center p-2 border-b border-gray-50 last:border-0">
+                                        <div>
+                                            <span className="font-bold block text-gray-800">{score.test_type}</span>
+                                            <span className="text-xs text-gray-500">Level: {score.test_level || "-"}</span>
+                                        </div>
+                                        <span className="text-lg font-bold bg-blue-50 text-blue-600 px-3 py-1 rounded-lg">
+                                            {score.score}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                         </div>
+                     )} */}
+
+                     {/* 3. GED Scores (if exists) */}
+                     {/* {ged.total_score > 0 && (
+                         <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                            <h4 className="font-bold text-lg mb-3 flex items-center gap-2">
+                                🎓 GED Scores
+                            </h4>
+                            <div className="flex justify-between items-center bg-orange-50 p-3 rounded-lg">
+                                <span className="font-bold text-orange-800">Total Score</span>
+                                <span className="text-xl font-bold text-orange-600">{ged.total_score}</span>
+                            </div>
+                         </div>
+                     )} */}
+                    {/* <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mt-4">
+                          <h4 className="font-bold text-lg mb-3 flex items-center gap-2">
+                              📝 แนะนำตัวเพิ่มเติม
+                          </h4>
+                          <textarea
+                              className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 min-h-[150px]"
+                              placeholder="พิมพ์แนะนำตัวของคุณที่นี่..."
+                              value={introText} 
+                              onChange={(e) => setIntroText(e.target.value)}
+                          />
+                    </div> */}
+                    <div className="mt-1 space-y-4">
+                          {/* <h4 className="font-bold text-gray-400 text-sm">ข้อมูลอื่นๆ ที่เพิ่มเข้ามา</h4> */}
+                          
+                          {blocks.map((block: any, idx: number) => {
+                              const c = parseBlockContent(block.content);
+                              if (!c) return null;
+
+                              // แสดงผลถ้าเป็น Text
+                              if (c.type === 'text') {
+                                  return (
+                                      <div key={block.ID || idx} className="flex items-start justify-between p-4 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition">
+                                          <div className="flex items-start gap-4 w-full">
+                                              <div className="flex-1 min-w-0">
+                                                  <h4 className="font-bold text-gray-800">{c.title || 'ข้อความ'}</h4>
+                                                  <div className="text-sm text-gray-600 whitespace-pre-wrap break-words mt-1">{c.detail}</div>
+                                              </div>
+                                          </div>
+                                          <div className="flex gap-2 ml-4 flex-shrink-0">
+                                                <button 
+                                                    onClick={(e) => { 
+                                                        e.stopPropagation(); // กันไม่ให้กดทะลุไปโดนการ์ด
+                                                        handleDirectEdit(section, block); 
+                                                    }} 
+                                                    className="px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition"
+                                                >
+                                                    แก้ไข
+                                                </button>
+                                                <button 
+                                                    onClick={(e) => { 
+                                                        e.stopPropagation(); 
+                                                        handleDeleteBlock(block.ID); 
+                                                    }} 
+                                                    className="px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition"
+                                                >
+                                                    ลบ
+                                                </button>
+                                            </div>
+                                      </div>
+                                  );
+                              }
+                              // ถ้าอยากให้แสดง Activity/Working ในหน้านี้ด้วย ก็เพิ่ม case ตรงนี้ได้
+                              return null;
+                          })}
+                      </div>
+                 </div>
+             );
+        }
     
         return (
             <div className="h-full bg-white p-4 overflow-y-auto w-full no-arrow"
@@ -829,6 +1007,48 @@ function SectionsContent() {
                     {blocks.map((block: any, idx: number) => {
                         const c = parseBlockContent(block.content);
                         if(c?.type === 'profile') return null;
+
+                        if (c?.type === 'text') {
+                            return (
+                                <div className="flex items-start gap-4 w-full">
+                                    <div className="w-10 h-10 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-xl flex-shrink-0">
+                                        📝
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className="font-bold text-gray-800 text-lg mb-2">
+                                            {c.title || "ข้อความ"}
+                                        </h4>
+                                        <div className="text-gray-600 whitespace-pre-wrap leading-relaxed break-words">
+                                            {c.detail || c.content}
+                                        </div>
+                                    </div>
+                                
+
+                                    {/* ✅✅✅ 2. ส่วนปุ่มกด (ขวา) ที่คุณต้องการ ใส่ตรงนี้ครับ ✅✅✅ */}
+                                    <div className="flex gap-2 ml-4 flex-shrink-0">
+                                        <button 
+                                            onClick={(e) => { 
+                                                e.stopPropagation(); // กันไม่ให้กดทะลุไปโดนการ์ด
+                                                handleDirectEdit(section, block); 
+                                            }} 
+                                            className="px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition"
+                                        >
+                                            แก้ไข
+                                        </button>
+                                        <button 
+                                            onClick={(e) => { 
+                                                e.stopPropagation(); 
+                                                handleDeleteBlock(block.ID); 
+                                            }} 
+                                            className="px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition"
+                                        >
+                                            ลบ
+                                        </button>
+                                    </div>
+
+                                </div>
+                            );
+                        }
 
                         let itemData = null;
                         if(c?.type === 'activity') itemData = activities.find(a => a.ID == c.data_id);
@@ -876,7 +1096,20 @@ function SectionsContent() {
 
     return (
     <div className="min-h-screen bg-white flex flex-col overflow-hidden font-sans text-slate-800">
-            
+            <AnimatePresence>
+            {notification && (
+                <motion.div
+                    initial={{ opacity: 0, y: -50, x: '-50%' }}
+                    animate={{ opacity: 1, y: 20, x: '-50%' }}
+                    exit={{ opacity: 0, y: -50, x: '-50%' }}
+                    className={`fixed top-0 left-1/2 -translate-x-1/2 p-4 rounded-lg shadow-lg text-white z-50 ${
+                        notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'
+                    }`}
+                >
+                    {notification.message}
+                </motion.div>
+            )}
+            </AnimatePresence>
             {/* 1. Top Navigation Bar */}
             <header className="h-16 bg-white border-b border-gray-200 flex items-center px-6 justify-between flex-shrink-0 z-20 shadow-sm">
                 <div className="flex items-center gap-4">
@@ -995,7 +1228,7 @@ function SectionsContent() {
             {/* --- Modals (ยังคงอยู่เหมือนเดิม) --- */}
             <AnimatePresence>
                 {selectedSection && (
-                    <motion.div variants={backdropVariants} initial="hidden" animate="visible" exit="exit" className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setSelectedSection(null)}>
+                    <motion.div variants={backdropVariants} initial="hidden" animate="visible" exit="exit" className="fixed inset-0 bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setSelectedSection(null)}>
                         {/* ... (Code Modal เดิม ใส่ตรงนี้) ... */}
                         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
                             <div className="p-5 border-b flex justify-between items-center bg-gray-50">
@@ -1006,16 +1239,132 @@ function SectionsContent() {
                                 {isEditingItem ? (
                                     /* Form View */
                                     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 space-y-5">
-                                        <div className="flex justify-between items-center border-b pb-4"><h4 className="font-bold text-lg text-gray-800 flex items-center gap-2">{currentBlock ? '✏️ แก้ไขข้อมูล' : '➕ เพิ่มข้อมูลใหม่'}</h4></div>
-                                        <div><label className="block text-sm font-medium text-gray-700 mb-1">ประเภทข้อมูล</label><select className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-orange-200 outline-none" value={selectedDataType} onChange={e => { setSelectedDataType(e.target.value as any); setSelectedDataId(""); }}><option value="activity">🏆 กิจกรรม (Activity)</option><option value="working">💼 ผลงาน (Working)</option></select></div>
-                                        {selectedDataType !== 'profile' && (<div><label className="block text-sm font-medium text-gray-700 mb-1">เลือกรายการ</label><select className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-orange-200 outline-none" value={selectedDataId} onChange={e => setSelectedDataId(e.target.value)}><option value="">-- กรุณาเลือกรายการ --</option>{selectedDataType === 'activity' && activities.map(a => <option key={a.ID} value={a.ID}>{a.activity_name}</option>)}{selectedDataType === 'working' && workings.map(w => <option key={w.ID} value={w.ID}>{w.working_name}</option>)}</select></div>)}
-                                        <div className="flex gap-3 pt-4"><button onClick={() => { setIsEditingItem(false); setViewMode('list'); }} className="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-lg hover:bg-gray-200 font-medium transition">ยกเลิก</button><button onClick={handleSaveItem} className="flex-1 text-white py-2.5 rounded-lg font-medium transition shadow-sm hover:opacity-90" style={{ backgroundColor: currentPrimaryColor }}>บันทึก</button></div>
+                                        <div className="flex justify-between items-center border-b pb-4">
+                                            <h4 className="font-bold text-lg text-gray-800 flex items-center gap-2">
+                                                {currentBlock ? '✏️ แก้ไขข้อมูล' : '➕ เพิ่มข้อมูลใหม่'}
+                                            </h4>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">ประเภทข้อมูล</label>
+                                            <select 
+                                                className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-orange-200 outline-none" 
+                                                value={selectedDataType} 
+                                                onChange={e => { 
+                                                    setSelectedDataType(e.target.value as any); 
+                                                    setSelectedDataId(""); 
+                                                    }}
+                                                >
+                                                    <option value="activity">🏆 กิจกรรม (Activity)</option>
+                                                    <option value="working">💼 ผลงาน (Working)</option>
+                                                    <option value="text">📝 ข้อความ / แนะนำตัว (Text)</option>
+                                            </select>
+                                        </div>
+                                        {selectedDataType === 'text' ? (
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">รายละเอียดข้อความ</label>
+                                                <textarea
+                                                    className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-orange-200 outline-none min-h-[150px]"
+                                                    placeholder="พิมพ์ข้อความแนะนำตัว หรือรายละเอียดที่ต้องการแสดง..."
+                                                    value={customText}
+                                                    onChange={(e) => setCustomText(e.target.value)}
+                                                />
+                                            </div>
+                                        ) : selectedDataType !== 'profile' ? (
+                                            // === กรณีเลือก Activity หรือ Working ===
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">เลือกรายการ</label>
+                                                <select 
+                                                    className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-orange-200 outline-none" 
+                                                    value={selectedDataId} 
+                                                    onChange={e => setSelectedDataId(e.target.value)}
+                                                >
+                                                    <option value="">-- กรุณาเลือกรายการ --</option>
+                                                    {selectedDataType === 'activity' && activities.map(a => <option key={a.ID} value={a.ID}>{a.activity_name}</option>)}
+                                                    {selectedDataType === 'working' && workings.map(w => <option key={w.ID} value={w.ID}>{w.working_name}</option>)}
+                                                </select>
+                                            </div>
+                                        ) : null}
+
+                                        {/* 4. ปุ่มบันทึก/ยกเลิก */}
+                                        <div className="flex gap-3 pt-4">
+                                            <button onClick={() => { setIsEditingItem(false); setViewMode('list'); }} className="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-lg hover:bg-gray-200 font-medium transition">
+                                                ยกเลิก
+                                            </button>
+                                            <button onClick={handleSaveItem} className="flex-1 text-white py-2.5 rounded-lg font-medium transition shadow-sm hover:opacity-90" style={{ backgroundColor: currentPrimaryColor }}>
+                                                บันทึก
+                                            </button>
+                                        </div>
+                                        {/* } */}
+                                        {/* {selectedDataType !== 'profile' && (<div><label className="block text-sm font-medium text-gray-700 mb-1">เลือกรายการ</label><select className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-orange-200 outline-none" value={selectedDataId} onChange={e => setSelectedDataId(e.target.value)}><option value="">-- กรุณาเลือกรายการ --</option>{selectedDataType === 'activity' && activities.map(a => <option key={a.ID} value={a.ID}>{a.activity_name}</option>)}{selectedDataType === 'working' && workings.map(w => <option key={w.ID} value={w.ID}>{w.working_name}</option>)}</select></div>)} */}
+                                        {/* <div className="flex gap-3 pt-4"><button onClick={() => { setIsEditingItem(false); setViewMode('list'); }} className="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-lg hover:bg-gray-200 font-medium transition">ยกเลิก</button><button onClick={handleSaveItem} className="flex-1 text-white py-2.5 rounded-lg font-medium transition shadow-sm hover:opacity-90" style={{ backgroundColor: currentPrimaryColor }}>บันทึก</button></div> */}
                                     </motion.div>
                                 ) : (
                                     /* List View */
                                     <div className="space-y-4">
                                         <button onClick={() => openForm(null)} className="w-full border-2 border-dashed border-orange-300 bg-orange-50 text-orange-600 py-4 rounded-xl font-bold hover:bg-orange-100 transition flex items-center justify-center gap-2"><span className="text-xl">+</span> เพิ่มข้อมูลลงใน Section นี้</button>
-                                        <div className="grid grid-cols-1 gap-3">{(selectedSection.section_blocks || []).length === 0 ? (<div className="text-center py-10 text-gray-400">ยังไม่มีข้อมูล</div>) : ((selectedSection.section_blocks || []).map((block: any) => { const c = parseBlockContent(block.content); return (<div key={block.ID} className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition"><div className="flex items-center gap-4"><div className={`w-10 h-10 rounded-lg flex items-center justify-center text-white text-lg shadow-sm ${c.type === 'activity' ? 'bg-orange-500' : 'bg-blue-500'}`}>{c.type === 'activity' ? '🏆' : '💼'}</div><div><h4 className="font-bold text-gray-800">{c.title || 'Untitled'}</h4><p className="text-xs text-gray-500 uppercase font-medium bg-gray-100 px-2 py-0.5 rounded-full inline-block mt-1">{c.type}</p></div></div><div className="flex gap-2"><button onClick={() => openForm(block)} className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition" title="แก้ไข">✏️</button><button onClick={() => handleDeleteBlock(block.ID)} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition" title="ลบ">🗑️</button></div></div>); }))}</div>
+                                        <div className="grid grid-cols-1 gap-3">
+                                            {(selectedSection.section_blocks || []).length === 0 ? (
+                                                <div className="text-center py-10 text-gray-400">ยังไม่มีข้อมูล</div>) : 
+                                            ((selectedSection.section_blocks || []).map((block: any) => { 
+                                                const c = parseBlockContent(block.content);
+                                                if (c?.type === 'profile') return null;
+                                                if (c?.type === 'text') {
+                                                    return (
+                                                        <div key={block.ID} className="flex items-start justify-between p-4 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition">
+                                                            <div className="flex items-start gap-4 w-full">
+                                                                {/* ไอคอนสำหรับ Text */}
+                                                               
+                                                                <div className="flex-1 min-w-0"> {/* min-w-0 ช่วยเรื่อง truncate */}
+                                                                    <h4 className="font-bold text-gray-800">
+                                                                        {c.title || 'ข้อความ'} 
+                                                                    </h4>
+                                                                    <p className="text-xs text-gray-500 uppercase font-medium bg-gray-100 px-2 py-0.5 rounded-full inline-block mt-1 mb-2">
+                                                                        Text / Description
+                                                                    </p>
+                                                                    <p className="text-sm text-gray-600 whitespace-pre-wrap break-words line-clamp-3">
+                                                                        {c.detail || c.content || "- ไม่มีข้อความ -"}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            {/* ปุ่มจัดการ */}
+                                                            <div className="flex gap-2 ml-4 flex-shrink-0">
+                                                                <button 
+                                                                    onClick={() => { openForm(block); }} 
+                                                                    className="px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition"
+                                                                >
+                                                                    แก้ไข
+                                                                </button>
+                                                                <button 
+                                                                    onClick={() => handleDeleteBlock(block.ID)} 
+                                                                    className="px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition"
+                                                                >
+                                                                    ลบ
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                }
+                                                let itemData = null;
+                                                if (c?.type === 'activity') itemData = activities.find(a => a.ID == c.data_id);
+                                                else if (c?.type === 'working') itemData = workings.find(w => w.ID == c.data_id);
+                                                
+                                                const finalData = itemData || c?.data;
+                                                if (!finalData) return null; // ถ้าหาข้อมูลไม่เจอ ไม่ต้องแสดง
+                                                return (
+                                                    <div key={block.ID} className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition">
+                                                        <div className="flex items-center gap-4">
+                                                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-white text-lg shadow-sm ${c.type === 'activity' ? 'bg-orange-500' : 'bg-blue-500'}`}>
+                                                                {c.type === 'activity' ? '🏆' : '💼'}
+                                                            </div>
+                                                            <div>
+                                                                <h4 className="font-bold text-gray-800">{c.title || 'Untitled'}</h4>
+                                                                <p className="text-xs text-gray-500 uppercase font-medium bg-gray-100 px-2 py-0.5 rounded-full inline-block mt-1">{c.type}</p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex gap-2">
+                                                            <button onClick={() => openForm(block)} className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition" title="แก้ไข">✏️</button>
+                                                            <button onClick={() => handleDeleteBlock(block.ID)} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition" title="ลบ">🗑️</button></div></div>); }))}</div>
                                     </div>
                                 )}
                             </div>

@@ -1,5 +1,5 @@
 // services/submission.ts
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
+const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080') + '/api';
 
 export interface User {
   ID: number;
@@ -17,11 +17,11 @@ export interface Portfolio {
 }
 
 export interface PortfolioSubmission {
+  portfolio_id: any;
   ID: number;
   version: number;
   status: string;
   submission_at: string;
-  is_current_version: boolean;
   user: {
     ID: number;
     first_name_th: string;
@@ -84,21 +84,21 @@ class SubmissionService {
   // ===================== Portfolio Submissions =====================
 
 
-    async createSubmission(data: {
-      portfolio_id: number;
-      }): Promise<PortfolioSubmission> {
-      const response = await fetch(`${API_URL}/submissions`, {
-        method: 'POST',
-        headers: this.getAuthHeaders(),
-        body: JSON.stringify(data),
-      });
+  async createSubmission(data: {
+    portfolio_id: number;
+  }): Promise<PortfolioSubmission> {
+    const response = await fetch(`${API_URL}/submissions`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
 
-      if (!response.ok) {
-        throw new Error('Failed to create submission');
-      }
-
-      return response.json();
+    if (!response.ok) {
+      throw new Error('Failed to create submission');
     }
+
+    return response.json();
+  }
 
   async fetchAllSubmissions(): Promise<PortfolioSubmission[]> {
     const response = await fetch(`${API_URL}/submissions`, {
@@ -135,6 +135,19 @@ class SubmissionService {
 
     return response.json();
   }
+
+  async fetchPendingSubmissions(): Promise<PortfolioSubmission[]> {
+    const response = await fetch(`${API_URL}/submissions/pending`, {
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch pending submissions');
+    }
+
+    return response.json();
+  }
+
 
   async markAsReviewed(id: number): Promise<void> {
     const response = await fetch(`${API_URL}/submissions/${id}/reviewe`, {
@@ -223,7 +236,7 @@ class SubmissionService {
 
   // ===================== Scorecard =====================
 
-  
+
 
   async createScorecard(scorecard: {
     portfolio_submission_id: number;
@@ -294,7 +307,7 @@ class SubmissionService {
   }
 
 
-    // ===================== Get Submissions by Portfolio =====================
+  // ===================== Get Submissions by Portfolio =====================
   async fetchSubmissionsByPortfolio(portfolioId: number): Promise<PortfolioSubmission[]> {
     const response = await fetch(`${API_URL}/submissions/portfolio/${portfolioId}`, {
       headers: this.getAuthHeaders(),
@@ -319,9 +332,9 @@ class SubmissionService {
     try {
       const submissions = await this.fetchSubmissionsByPortfolio(portfolioId);
       if (submissions.length === 0) return null;
-      
+
       // เรียงตาม submission_at ล่าสุด
-      return submissions.sort((a, b) => 
+      return submissions.sort((a, b) =>
         new Date(b.submission_at).getTime() - new Date(a.submission_at).getTime()
       )[0];
     } catch (error) {

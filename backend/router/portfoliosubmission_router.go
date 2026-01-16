@@ -22,7 +22,7 @@ func RegisterPortfolioSubmissionRoutes(r *gin.Engine, db *gorm.DB) {
 		group.PATCH("/:id/review", c.MarkAsReviewed)      
 		group.PATCH("/:id/approve", c.ApproveWithScorecard)     
 		group.PUT("/:id/status", c.UpdateStatus)       
-		
+		group.GET("/pending",c.GetPending)
    
 
 	}

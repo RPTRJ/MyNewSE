@@ -1,5 +1,6 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
+// ✅ 1. เพิ่ม start_date / end_date ใน normalize
 function normalizeCurriculum(raw: any): CurriculumDTO {
   return {
     ...raw,
@@ -12,6 +13,12 @@ function normalizeCurriculum(raw: any): CurriculumDTO {
     status: raw.status ?? raw.Status,
     quota: raw.quota ?? raw.Quota,
     application_period: raw.application_period ?? raw.ApplicationPeriod,
+    
+    // เพิ่มการ map วันที่ (รองรับทั้ง snake_case และ PascalCase)
+    start_date: raw.start_date ?? raw.StartDate,
+    end_date: raw.end_date ?? raw.EndDate,
+    announcement_date: raw.announcement_date ?? raw.AnnouncementDate,
+
     faculty: raw.faculty ? normalizeFaculty(raw.faculty) : (raw.Faculty ? normalizeFaculty(raw.Faculty) : undefined),
     program: raw.program ? normalizeProgram(raw.program) : (raw.Program ? normalizeProgram(raw.Program) : undefined),
     required_documents: raw.required_documents ?? raw.RequiredDocuments ?? [],
@@ -59,6 +66,7 @@ export type CurriculumRequiredDocumentDTO = {
   document_type?: DocumentTypeDTO;
 };
 
+// ✅ 2. เพิ่ม Type วันที่ใน CurriculumDTO
 export type CurriculumDTO = {
   id: number;
   code: string;
@@ -71,6 +79,12 @@ export type CurriculumDTO = {
   faculty?: FacultyDTO;
   program?: ProgramDTO;
   application_period?: string;
+  
+  // เพิ่ม field วันที่
+  start_date?: string;
+  end_date?: string;
+  announcement_date?: string;
+
   quota?: number;
   required_documents?: CurriculumRequiredDocumentDTO[];
   is_notified?: boolean;
@@ -159,7 +173,7 @@ export async function fetchAdminCurricula(search: string) {
   return raw.map(normalizeCurriculum) as CurriculumDTO[];
 }
 
-// payload กลางที่ใช้ทั้งสร้าง/แก้ไข
+// ✅ 3. เพิ่ม start_date / end_date ใน Payload เพื่อให้ TS ไม่ Error ตอน save
 export type CurriculumPayload = {
   code: string;
   name: string;
@@ -173,6 +187,10 @@ export type CurriculumPayload = {
   user_id: number;
   application_period: string;
   quota: number;
+  
+  // เพิ่มตรงนี้
+  start_date?: string | null;
+  end_date?: string | null;
 };
 
 export async function createCurriculum(payload: CurriculumPayload) {
@@ -187,7 +205,7 @@ export async function createCurriculum(payload: CurriculumPayload) {
   }
 
   const json = await res.json();
-  return json.data as CurriculumDTO;
+  return normalizeCurriculum(json.data); // ใช้ normalize ขากลับด้วย
 }
 
 export async function updateCurriculum(
@@ -205,7 +223,7 @@ export async function updateCurriculum(
   }
 
   const json = await res.json();
-  return json.data as CurriculumDTO;
+  return normalizeCurriculum(json.data);
 }
 
 export async function deleteCurriculum(id: number) {
@@ -245,10 +263,9 @@ export async function toggleSelectionAPI(userId: number, curriculumId: number) {
   return await res.json();
 }
 
-// ✅ แก้ไขฟังก์ชันนี้ให้ Map ข้อมูลออกมาถูกต้อง
 export async function fetchMySelections(userId: number): Promise<CurriculumDTO[]> {
   const res = await fetch(`${API_URL}/selections?user_id=${userId}`, {
-    cache: "no-store", // ✅ เพิ่มตรงนี้ด้วย
+    cache: "no-store",
   });
   
   if (!res.ok) throw new Error("Failed to fetch selections");
@@ -257,24 +274,21 @@ export async function fetchMySelections(userId: number): Promise<CurriculumDTO[]
   
   if (json.data && Array.isArray(json.data)) {
     return json.data
-      .filter((s: any) => s.curriculum || s.Curriculum) // กรองตัวที่ไม่มีข้อมูลวิชา
+      .filter((s: any) => s.curriculum || s.Curriculum) 
       .map((s: any) => {
-        // ดึง curriculum ออกมา (รองรับทั้งตัวเล็กตัวใหญ่จาก GORM)
         const rawCurriculum = s.curriculum ?? s.Curriculum;
-        
-        // สำคัญ: ต้อง normalize เหมือนตอน fetch ปกติ เพื่อให้ field id, application_period ฯลฯ ครบ
         return {
           ...normalizeCurriculum(rawCurriculum),
-          is_notified: s.is_notified ?? s.IsNotified ?? false // Map ค่าตรงนี้
+          is_notified: s.is_notified ?? s.IsNotified ?? false 
         };
       }) as CurriculumDTO[];
   }
   
   return [];
 }
-// กดกระดิ่ง
+
 export async function toggleNotificationAPI(userId: number, curriculumId: number) {
-  const res = await fetch(`${API_URL}/selections/notify`, { // แก้ path ตาม router ที่ตั้ง
+  const res = await fetch(`${API_URL}/selections/notify`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ user_id: userId, curriculum_id: curriculumId }),
@@ -283,7 +297,6 @@ export async function toggleNotificationAPI(userId: number, curriculumId: number
   return await res.json();
 }
 
-// อัปเดตคำแนะนำหลักสูตร
 export async function updateCurriculumRecommendation(
   curriculumId: number,
   recommendation: string
@@ -302,13 +315,13 @@ export async function updateCurriculumRecommendation(
   return normalizeCurriculum(json.data);
 }
 
-// ดึงข้อความแจ้งเตือน (Polling)
 export async function fetchNotificationsAPI(userId: number) {
   const res = await fetch(`${API_URL}/notifications?user_id=${userId}`);
   if (!res.ok) return [];
   const json = await res.json();
   return json.data || [];
 }
+
 export async function markNotificationReadAPI(notiId: number) {
   try {
     await fetch(`${API_URL}/notifications/${notiId}/read`, {
@@ -318,18 +331,17 @@ export async function markNotificationReadAPI(notiId: number) {
     console.error("Failed to mark notification as read", error);
   }
 }
-// ✅ เพิ่ม type สำหรับข้อมูลสถิติ
+
 export interface StatsDTO {
   faculty_stats: { name: string; value: number }[];
   program_stats: { name: string; value: number; group_name: string }[];
 }
 
-// ✅ เพิ่มฟังก์ชันดึงสถิติ
 export async function fetchSelectionStats() {
   const res = await fetch(`${API_URL}/admin/curricula/stats`, {
     cache: "no-store",
     headers: {
-      Authorization: `Bearer ${localStorage.getItem("token")}`, // ส่ง Token ด้วยถ้ามีการ Login
+      Authorization: `Bearer ${localStorage.getItem("token")}`, 
     },
   });
   if (!res.ok) throw new Error("Failed to fetch stats");

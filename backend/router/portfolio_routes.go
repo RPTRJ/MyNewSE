@@ -14,6 +14,7 @@ func PortfolioRoutes(r *gin.RouterGroup) {
 		group.PATCH("/:id", controller.UpdatePortfolio) // ✅ NEW: Update Portfolio (Cover)
 		group.GET("/my", controller.GetMyPortfolio)
 		group.GET("", controller.GetPortfolioByStatusActive)
+		group.GET("/:id", controller.GetPortfolioById) 
 		
 		// Template
 		group.POST("/template", controller.CreateTemplate)

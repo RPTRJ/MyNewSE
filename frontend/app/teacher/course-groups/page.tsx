@@ -899,11 +899,14 @@ export default function AdminCourseGroupsPage() {
                 <p className="text-sm text-gray-500">{managingGroup.name}</p>
               </div>
               <button
+                type="button"
                 onClick={() => {
                   setShowSkillsManageModal(false);
                   setManagingGroup(null);
                 }}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                aria-label="ปิดหน้าต่าง"
+                title="ปิด"
               >
                 <IconX />
               </button>

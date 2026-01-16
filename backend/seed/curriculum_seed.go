@@ -1,6 +1,7 @@
 package seed
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -9,6 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// Main function สำหรับเรียก Seed นี้
 func CurriculumSeed() {
 	db := config.GetDB()
 
@@ -23,11 +25,11 @@ func CurriculumSeed() {
 		return
 	}
 
-	// 1. Seed ข้อมูลคณะและสาขาวิชาก่อน (เพราะหลักสูตรต้องอ้างอิงสิ่งเหล่านี้)
+	// 1. Seed ข้อมูลคณะและสาขาวิชา
 	seedFaculties(db)
 	seedPrograms(db)
 
-	// 2. Seed ข้อมูลหลักสูตร
+	// 2. Seed ข้อมูลหลักสูตร (ที่อัปเดตใหม่)
 	seedCurriculums(db, seedUserID)
 }
 
@@ -51,7 +53,6 @@ func seedFaculties(db *gorm.DB) {
 		log.Println("seed faculties error:", err)
 		return
 	}
-
 	log.Println("seed faculties completed")
 }
 
@@ -66,42 +67,54 @@ func seedPrograms(db *gorm.DB) {
 		return
 	}
 
-	progs := []entity.Program{
-		{
-			Name:      "วิศวกรรมคอมพิวเตอร์",
-			ShortName: "CPE",
+	programsData := []struct {
+		Name      string
+		ShortName string
+	}{
+		{"วิศวกรรมอิเล็กทรอนิกส์", "EL"},
+		{"วิศวกรรมขนส่งและโลจิสติกส์", "TL"},
+		{"วิศวกรรมการผลิต", "PM"},
+		{"วิศวกรรมคอมพิวเตอร์", "CPE"},
+		{"วิศวกรรมพอลิเมอร์", "PEM"},
+		{"วิศวกรรมยานยนต์", "AE"},
+		{"วิศวกรรมสิ่งแวดล้อม", "ENV"},
+		{"วิศวกรรมอุตสาหการ", "IE"},
+		{"วิศวกรรมเกษตรและอาหาร", "AFE"},
+		{"วิศวกรรมเคมี", "ChE"},
+		{"วิศวกรรมเครื่องกล", "ME"},
+		{"วิศวกรรมเซรามิก", "CME"},
+		{"วิศวกรรมโทรคมนาคม", "TC"},
+		{"วิศวกรรมโยธา", "CE"},
+		{"วิศวกรรมโลหการ", "MET"},
+		{"วิศวกรรมไฟฟ้า", "EE"},
+		{"สาขาวิชาเทคโนโลยีธรณี", "GT"},
+		{"วิศวกรรมออกแบบผลิตภัณฑ์", "PD"},
+		{"วิศวกรรมเมคาทรอนิกส์", "MT"},
+		{"วิศวกรรมธรณี", "GE"},
+		{"วิศวกรรมอากาศยาน", "AERO"},
+	}
+
+	var progs []entity.Program
+	for _, p := range programsData {
+		progs = append(progs, entity.Program{
+			Name:      p.Name,
+			ShortName: p.ShortName,
 			FacultyID: eng.ID,
-		},
-		{
-			Name:      "วิศวกรรมไฟฟ้า",
-			ShortName: "EEE",
-			FacultyID: eng.ID,
-		},
-		{
-			Name:      "วิศวกรรมเครื่องกล",
-			ShortName: "ME",
-			FacultyID: eng.ID,
-		},
+		})
 	}
 
 	if err := db.Create(&progs).Error; err != nil {
 		log.Println("seed programs error:", err)
 		return
 	}
-
 	log.Println("seed programs completed")
 }
+
+// --- ส่วนที่อัปเดตใหม่ ---
 
 // ฟังก์ชันสำหรับ Seed หลักสูตร
 func seedCurriculums(db *gorm.DB, userID uint) {
 	if skipIfSeededDefault(db, &entity.Curriculum{}, "curriculums") {
-		return
-	}
-
-	// ค้นหาข้อมูล Program และ Faculty เพื่อนำมาเชื่อมโยง (Foreign Keys)
-	var cpeProg entity.Program
-	if err := db.Where("short_name = ?", "CPE").First(&cpeProg).Error; err != nil {
-		log.Println("seed curriculum error: cannot find CPE program")
 		return
 	}
 
@@ -111,59 +124,91 @@ func seedCurriculums(db *gorm.DB, userID uint) {
 		return
 	}
 
-	// สร้างข้อมูลหลักสูตรตัวอย่าง
-	curriculums := []entity.Curriculum{
-		{
-			Code:              "CPE67",
-			Name:              "วิศวกรรมคอมพิวเตอร์ 2567",
-			Description:       "หลักสูตรสำหรับนักศึกษาที่สนใจด้านการพัฒนาซอฟต์แวร์, AI และระบบคอมพิวเตอร์",
-			Link:              "https://cpe.sut.ac.th",
-			GPAXMin:           2.75,
-			PortfolioMaxPages: 10,
-			Status:            "published", // สถานะ published จะทำให้นักเรียนเห็นทันที
-			RoundName:         "Portfolio 1/2567",
-			AcademicYear:      "2567",
-			StartDate:         time.Now(),                  // วันเปิดรับสมัคร (วันนี้)
-			EndDate:           time.Now().AddDate(0, 1, 0), // วันปิดรับสมัคร (อีก 1 เดือน)
-			AnnouncementDate:  time.Now().AddDate(0, 1, 15),
-			ApplicationPeriod: "1 - 31 มกราคม 2567",
-			Quota:             40,
-
-			FacultyID: engFac.ID,
-			ProgramID: cpeProg.ID,
-			UserID:    userID,
-		},
-		{
-			Code:              "CPE68-Quata",
-			Name:              "วิศวกรรมคอมพิวเตอร์ (โควตา) 2568",
-			Description:       "รอบโควตาสำหรับนักเรียนเรียนดีจากโรงเรียนเครือข่าย",
-			Link:              "https://cpe.sut.ac.th/quota",
-			GPAXMin:           3.00,
-			PortfolioMaxPages: 10,
-			Status:            "draft", // สถานะ draft นักเรียนจะไม่เห็น (เห็นเฉพาะ Admin)
-			RoundName:         "Quota 2/2568",
-			AcademicYear:      "2568",
-			StartDate:         time.Now().AddDate(0, 2, 0),
-			EndDate:           time.Now().AddDate(0, 3, 0),
-			AnnouncementDate:  time.Now().AddDate(0, 3, 15),
-			ApplicationPeriod: "กุมภาพันธ์ 2568",
-			Quota:             20,
-
-			FacultyID: engFac.ID,
-			ProgramID: cpeProg.ID,
-			UserID:    userID,
-		},
-	}
-
-	if err := db.Create(&curriculums).Error; err != nil {
-		log.Println("seed curriculums error:", err)
+	var programs []entity.Program
+	if err := db.Where("faculty_id = ?", engFac.ID).Find(&programs).Error; err != nil {
+		log.Println("seed curriculum error: cannot find programs")
 		return
 	}
 
-	log.Println("seed curriculums completed")
+	programCodeMap := map[string]string{
+		"EL": "25530171102731", "TL": "25540171102078", "PM": "25460171101067",
+		"CPE": "25410171100026", "PEM": "25380171100023", "AE": "25480171104096",
+		"ENV": "25360171100054", "IE": "25370171100033", "AFE": "25500171100419",
+		"ChE": "25360171100019", "ME": "25360171100021", "CME": "25360171100032",
+		"TC": "25450171101123", "CE": "25450171101134", "MET": "25370171100022",
+		"EE": "25360171100043", "GT": "25380171100034", "PD": "25560171102431",
+		"MT": "25490171108259", "GE": "25380171100563", "AERO": "25500171105527",
+	}
+
+	// 1. ตั้งค่า StartDate และ EndDate ที่นี่จุดเดียว
+	startDate := time.Date(2026, time.January, 15, 0, 0, 0, 0, time.Local)
+	endDate := time.Date(2026, time.February, 14, 23, 59, 0, 0, time.Local)
+	announceDate := endDate.AddDate(0, 1, 0)
+
+	// 2. สร้างข้อความภาษาไทยอัตโนมัติจากวันที่ด้านบน
+	periodThaiString := formatThaiDateRange(startDate, endDate) 
+
+	var curriculums []entity.Curriculum
+
+	for _, prog := range programs {
+		if code, ok := programCodeMap[prog.ShortName]; ok {
+			curriculums = append(curriculums, entity.Curriculum{
+				Code:              code,
+				Name:              "PORTFOLIO",
+				Description:       "ใบแสดงผลการเรียน/ปพ.1 ,แฟ้มผลงาน",
+				Link:              "https://sut.ac.th",
+				GPAXMin:           2.50,
+				PortfolioMaxPages: 10,
+				Status:            "published",
+				RoundName:         "Portfolio 1/2569",
+				AcademicYear:      "2567",
+				
+				// ใช้ค่าวันที่เพื่อคำนวณ Status
+				StartDate:         startDate,
+				EndDate:           endDate,
+				AnnouncementDate:  announceDate,
+				
+				// ใช้ข้อความที่เจนอัตโนมัติมาแสดงผล
+				ApplicationPeriod: periodThaiString,
+				
+				Quota:             50,
+				FacultyID:         engFac.ID,
+				ProgramID:         prog.ID,
+				UserID:            userID,
+			})
+		}
+	}
+
+	if len(curriculums) > 0 {
+		if err := db.Create(&curriculums).Error; err != nil {
+			log.Println("seed curriculums error:", err)
+			return
+		}
+		log.Println("seed curriculums completed:", len(curriculums), "rows")
+	} else {
+		log.Println("seed curriculums skipped: no matching programs found")
+	}
 }
 
-// firstUserID returns the first user id to satisfy curriculum user_id FK requirement.
+// ฟังก์ชันช่วยแปลงวันที่เป็นภาษาไทย (Ex: "15 มกราคม - 14 กุมภาพันธ์ 2569")
+func formatThaiDateRange(start, end time.Time) string {
+	thaiMonths := []string{"", "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"}
+
+	startDay := start.Day()
+	startMonth := thaiMonths[start.Month()]
+
+	endDay := end.Day()
+	endMonth := thaiMonths[end.Month()]
+	endYear := end.Year() + 543 // แปลง ค.ศ. เป็น พ.ศ.
+
+	// กรณีเดือนเดียวกัน (1 - 15 มกราคม 2569)
+	if start.Month() == end.Month() {
+		return fmt.Sprintf("%d - %d %s %d", startDay, endDay, endMonth, endYear)
+	}
+	// กรณีคนละเดือน (15 มกราคม - 14 กุมภาพันธ์ 2569)
+	return fmt.Sprintf("%d %s - %d %s %d", startDay, startMonth, endDay, endMonth, endYear)
+}
+
 func firstUserID(db *gorm.DB) uint {
 	var u entity.User
 	if err := db.Order("id asc").First(&u).Error; err != nil {

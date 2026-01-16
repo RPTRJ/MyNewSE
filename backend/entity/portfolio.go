@@ -17,6 +17,7 @@ type Portfolio struct {
 	Status         string         `json:"status" valid:"required~Status is required,in(draft|active|archived)~Status must be draft, active, or archived"`
 	PortfolioStyle datatypes.JSON `json:"portfolio_style"`
 	CoverImage     string         `json:"cover_image" valid:"optional"`
+	ContentDescription string     `json:"content_description"`
 
 	// FK
 	TemplateID *uint     `json:"template_id"`

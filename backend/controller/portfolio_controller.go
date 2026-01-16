@@ -702,3 +702,54 @@ func GetPortfolioByStatusActive(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"data": portfolio})
 }
+
+
+// GetPortfolioById - ดึง Portfolio ตาม ID (สำหรับ Teacher / Viewer)
+// Query params: ?include_blocks=true
+func GetPortfolioById(c *gin.Context) {
+	// 🔐 ต้อง login เท่านั้น
+	_, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
+	idParam := c.Param("id")
+	portfolioID, err := strconv.Atoi(idParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid portfolio id"})
+		return
+	}
+
+	includeBlocks := c.DefaultQuery("include_blocks", "true") == "true"
+
+	var portfolio entity.Portfolio
+
+	query := config.GetDB().
+		Preload("Colors").
+		Preload("Font")
+
+	// ✅ preload sections & blocks แบบ optional
+	if includeBlocks {
+		query = query.
+			Preload("PortfolioSections", func(db *gorm.DB) *gorm.DB {
+				return db.Order("section_order ASC")
+			}).
+			Preload("PortfolioSections.PortfolioBlocks", func(db *gorm.DB) *gorm.DB {
+				return db.Order("block_order ASC")
+			})
+	} else {
+		query = query.Preload("PortfolioSections")
+	}
+
+	if err := query.First(&portfolio, portfolioID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Portfolio not found"})
+			return
+		}
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": portfolio})
+}

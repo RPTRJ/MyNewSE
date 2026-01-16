@@ -16,6 +16,7 @@ func validPortfolio() entity.Portfolio {
 	return entity.Portfolio{
 		PortfolioName: "My Portfolio",
 		Decription:    "A sample portfolio description",
+		ContentDescription: "Additional content description",
 		Status:        "draft",
 		ColorsID:      1,
 		FontID:        1,

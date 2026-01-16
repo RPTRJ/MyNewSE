@@ -384,6 +384,8 @@ func (pc *ProfileController) GetOnboardingStatus(ctx *gin.Context) {
 func (pc *ProfileController) getUser(userID uint) (*entity.User, error) {
 	var user entity.User
 	err := pc.DB.
+		Preload("IDDocType").
+		Preload("AccountType").
 		First(&user, userID).Error
 	return &user, err
 }
@@ -403,16 +405,21 @@ func (pc *ProfileController) buildUserProfile(userID uint, user *entity.User) (g
 		return nil, err
 	}
 
-	if acad, err := pc.getAcademicScore(userID); err == nil {
-		profile["academic_score"] = acad
-	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, err
-	}
-
-	if ged, err := pc.getGEDScore(userID); err == nil {
-		profile["ged_score"] = ged
-	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, err
+	// ตรวจสอบประเภทเอกสารของ user เพื่อ query เฉพาะคะแนนที่ตรงกับประเภท
+	// IDDocTypeID: 2 = G-Code, 3 = Passport (นักเรียนต่างชาติ → ged_score)
+	// IDDocTypeID: 1 = บัตรประชาชน หรืออื่นๆ (นักเรียนไทย → academic_score)
+	if user.IDDocTypeID == 2 || user.IDDocTypeID == 3 {
+		if ged, err := pc.getGEDScore(userID); err == nil {
+			profile["ged_score"] = ged
+		} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err
+		}
+	} else {
+		if acad, err := pc.getAcademicScore(userID); err == nil {
+			profile["academic_score"] = acad
+		} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err
+		}
 	}
 
 	return profile, nil

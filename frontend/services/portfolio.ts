@@ -28,7 +28,7 @@ export interface FetchOptions {
 export async function fetchMyPortfolios(options: FetchOptions = {}) {
   const { page = 1, limit = 10, includeBlocks = true } = options;
   const token = localStorage.getItem("token");
-  
+
   const params = new URLSearchParams({
     page: page.toString(),
     limit: limit.toString(),
@@ -48,24 +48,24 @@ export async function fetchMyPortfolios(options: FetchOptions = {}) {
     throw new Error("Failed to fetch portfolios");
   }
   const result = await response.json();
-  
+
   // Normalize image URLs
-  if(result.data && Array.isArray(result.data)){
-      result.data = result.data.map((p: any) => ({
-          ...p,
-          cover_image: getImageUrl(p.cover_image),
-          CoverImage: getImageUrl(p.CoverImage)
-      }));
+  if (result.data && Array.isArray(result.data)) {
+    result.data = result.data.map((p: any) => ({
+      ...p,
+      cover_image: getImageUrl(p.cover_image),
+      CoverImage: getImageUrl(p.CoverImage)
+    }));
   }
-  
+
   return result;
 }
 
 function getImageUrl(url: string) {
-    if (!url) return null;
-    if (url.startsWith("http")) return url;
-    if (url.startsWith("/")) return `${API}${url}`;
-    return `${API}/${url}`;
+  if (!url) return null;
+  if (url.startsWith("http")) return url;
+  if (url.startsWith("/")) return `${API}${url}`;
+  return `${API}/${url}`;
 }
 
 // Use a template (create portfolio from template)
@@ -120,7 +120,7 @@ export async function createTemplate(data: { template_name: string }) {
 export async function fetchActivities(options: FetchOptions = {}) {
   const { page = 1, limit = 20, includeImages = false } = options;
   const token = localStorage.getItem("token");
-  
+
   const params = new URLSearchParams({
     page: page.toString(),
     limit: limit.toString(),
@@ -143,7 +143,7 @@ export async function fetchActivities(options: FetchOptions = {}) {
 export async function fetchWorkings(options: FetchOptions = {}) {
   const { page = 1, limit = 20, includeImages = false } = options;
   const token = localStorage.getItem("token");
-  
+
   const params = new URLSearchParams({
     page: page.toString(),
     limit: limit.toString(),
@@ -252,37 +252,37 @@ export async function deleteBlock(blockId: number) {
 }
 
 export async function uploadImage(file: File) {
-    const formData = new FormData();
-    formData.append("file", file);
-    const token = localStorage.getItem("token");
-    const response = await fetch(`${API}/upload`, {
-        method: "POST",
-        headers: {
-           "Authorization": `Bearer ${token}`,
-        },
-        body: formData,
-    });
-    if (!response.ok) throw new Error("Failed to upload image");
-    return response.json();
+  const formData = new FormData();
+  formData.append("file", file);
+  const token = localStorage.getItem("token");
+  const response = await fetch(`${API}/upload`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+    },
+    body: formData,
+  });
+  if (!response.ok) throw new Error("Failed to upload image");
+  return response.json();
 }
 
 export async function updatePortfolio(id: number, data: any) {
-    const response = await fetch(`${API}/portfolio/${id}`, {
-        method: "PATCH",
-        headers: getAuthHeaders(),
-        body: JSON.stringify(data),
-    });
-    if (!response.ok) throw new Error("Failed to update portfolio");
-    return response.json();
+  const response = await fetch(`${API}/portfolio/${id}`, {
+    method: "PATCH",
+    headers: getAuthHeaders(),
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) throw new Error("Failed to update portfolio");
+  return response.json();
 }
 
 export async function deletePortfolio(id: number) {
-    const response = await fetch(`${API}/portfolio/${id}`, {
-        method: "DELETE",
-        headers: getAuthHeaders(),
-    });
-    if (!response.ok) throw new Error("Failed to delete portfolio");
-    return response.json();
+  const response = await fetch(`${API}/portfolio/${id}`, {
+    method: "DELETE",
+    headers: getAuthHeaders(),
+  });
+  if (!response.ok) throw new Error("Failed to delete portfolio");
+  return response.json();
 }
 
 
@@ -309,10 +309,61 @@ export const createPortfolioFromTemplate = async (portfolioName: string, templat
 };
 
 export async function fetchPortfolioByStatusActive() {
-    const response = await fetch(`${API}/portfolio`, {
-        method: "GET",
-        headers: getAuthHeaders(),
-    });
-    if (!response.ok) throw new Error("Failed to fetch portfolio");
-    return response.json();
+  const response = await fetch(`${API}/portfolio`, {
+    method: "GET",
+    headers: getAuthHeaders(),
+  });
+  if (!response.ok) throw new Error("Failed to fetch portfolio");
+  return response.json();
 }
+
+
+
+
+
+
+
+export const fetchPortfolioById = async (portfolioId: number) => {
+  const token = localStorage.getItem("token") || "";
+
+  console.log(`[fetchPortfolioById] Fetching portfolio ${portfolioId} from ${API}/portfolio/${portfolioId}`);
+
+  // Use the same pattern as other portfolio endpoints
+  const response = await fetch(`${API}/portfolio/${portfolioId}?include_blocks=true`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  console.log(`[fetchPortfolioById] Response status: ${response.status}`);
+
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => '');
+    console.error(`[fetchPortfolioById] Error response: ${response.status} - ${errorText}`);
+    // Return null for 404 (not found) instead of throwing - allows graceful fallback
+    if (response.status === 404) {
+      console.warn(`[fetchPortfolioById] Portfolio ${portfolioId} not found`);
+      return null;
+    }
+    throw new Error(`Failed to fetch portfolio (${response.status}): ${errorText}`);
+  }
+
+  const text = await response.text();
+  console.log(`[fetchPortfolioById] Response body length: ${text?.length || 0}`);
+
+  if (!text) {
+    // Return null instead of throwing for empty response - allows graceful fallback
+    console.warn(`[fetchPortfolioById] Empty response for portfolio ${portfolioId}`);
+    return null;
+  }
+
+  try {
+    const result = JSON.parse(text);
+    return result.data || result;
+  } catch (e) {
+    console.error('[fetchPortfolioById] Invalid JSON response:', text);
+    throw new Error("Invalid JSON response from server");
+  }
+};

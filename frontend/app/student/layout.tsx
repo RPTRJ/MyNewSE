@@ -63,7 +63,16 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
           return;
         }
 
-        const completed = !!(user.profile_completed && user.pdpa_consent);
+        // Check if onboarding is completed:
+        // - Must have PDPA consent
+        // - AND (profile_completed = true OR has required basic info)
+        const hasPDPA = !!user.pdpa_consent;
+        const hasBasicInfo = !!(
+          (user.first_name_th || user.first_name_en) &&
+          (user.last_name_th || user.last_name_en)
+        );
+        const completed = hasPDPA && (user.profile_completed || hasBasicInfo);
+        
         localStorage.setItem("user", JSON.stringify(user));
 
         const name = user.first_name_th || user.first_name_en || "Student";

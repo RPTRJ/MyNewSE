@@ -12,9 +12,11 @@ import (
 func main() {
 	loadEnv()
 	config.ConnectionDatabase()
+	seed.SeedCourseGroups()
 	seed.SeedProfileReference()
 	seed.SeedUsers()
 	seed.CurriculumSeed()
+	seed.SeedCurriculumRecommendations()
 	seed.SeedTemplateBlocks()
 	seed.SeedTemplatesSections()
 	seed.SeedCategoryTemplates()

@@ -189,63 +189,93 @@ export default function PortfolioPreviewPage() {
     };
 
     const renderSectionContent = (section: any) => {
+        if (section.section_title?.includes("แนะนำตัวเพิ่มเติม")) {
+            const blocks = section.portfolio_blocks || [];
+            const textBlocks = blocks.filter((block: any) => {
+                const c = parseBlockContent(block.content);
+                return c?.type === 'text';
+            });
+
+            if (textBlocks.length > 0) {
+                return (
+                    <div className="space-y-4">
+                        {textBlocks.map((block: any, idx: number) => {
+                            const c = parseBlockContent(block.content);
+                            return (
+                                <div key={block.ID || idx} className="p-4 bg-white rounded-lg shadow-inner">
+                                    <h3 className="font-bold text-gray-800 mb-2">{c.title || 'ข้อความแนะนำตัว'}</h3>
+                                    <p className="text-gray-700 whitespace-pre-wrap">{c.detail}</p>
+                                </div>
+                            );
+                        })}
+                    </div>
+                );
+            }
+            
+            // Fallback if no text blocks but content_description exists or if both are empty
+            const description = portfolio?.content_description || "ยังไม่มีข้อมูลแนะนำตัวเพิ่มเติม";
+            return (
+                <div className="p-4 bg-white rounded-lg shadow-inner">
+                    <p className="text-gray-700 whitespace-pre-wrap">{description}</p>
+                </div>
+            );
+        }
+
         const blocks = section.portfolio_blocks || [];
         const isProfileLayout = section.section_title?.toLowerCase().includes('profile') || 
                                 (section as any).layout_type === 'profile_header_left';
 
-        if (isProfileLayout) {
-            const isRight = section.section_title?.toLowerCase().includes('right') || 
-                             (section as any).layout_type === 'profile_header_right';
-             const user = currentUser || { 
-                 firstname: "Loading...", lastname: "", 
-                 major: "-", school: "-", profile_image: null,
-                 academic_score: { gpax: "0.00" }
-             };
-             const gpax = user.academic_score?.gpax || user.gpa || "-";
-
-             return (
-                 <div className={`flex flex-col items-center gap-6 p-6 bg-white border border-gray-100 rounded-xl shadow-sm h-full w-full 
-                                 ${isRight ? 'md:flex-row-reverse text-right' : 'md:flex-row text-left'}`}>
-                     <div className="w-32 h-32 flex-shrink-0 rounded-full overflow-hidden border-4 border-blue-100 shadow-md">
-                         <img 
-                            src={user.profile_image || placeholderImage} 
-                            alt="Profile" 
-                            className="w-full h-full object-cover" 
-                            onError={(e) => e.currentTarget.src = placeholderImage}
-                          />
-                     </div>
-                     <div className={`flex-1 w-full space-y-3 ${isRight ? 'md:items-end' : 'md:items-start'}`}>
-                         <div className={`border-b pb-2 border-gray-100 ${isRight ? 'flex flex-col items-end' : ''}`}>
-                             <h3 className="text-2xl font-bold text-gray-800">
-                                 {user.firstname} {user.lastname}
-                             </h3>
-                             <p className="text-blue-500 font-medium">
-                                 {user.school || "Suranaree University of Technology"}
-                             </p>
-                         </div>
-                         <div className={`space-y-1 text-sm text-gray-600 ${isRight ? 'flex flex-col items-end' : ''}`}>
-                             <p><span className="font-bold text-gray-800">Major:</span> {user.major}</p>
-                             <p><span className="font-bold text-gray-800">GPAX:</span> <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold">{gpax}</span></p>
-                            
-                             {user.academic_score && (user.academic_score.math || user.academic_score.eng || user.academic_score.sci || user.academic_score.lang || user.academic_score.social) && (
-                                <div className="mt-2 border-t border-gray-100 pt-2 text-xs w-full">
-                                    <p className="font-bold text-gray-700 mb-1">คะแนนรายวิชา</p>
-                                    <div className="grid grid-cols-3 gap-x-4 gap-y-1">
-                                        {user.academic_score.math && <p><span className="font-semibold">คณิต:</span> {user.academic_score.math}</p>}
-                                        {user.academic_score.eng && <p><span className="font-semibold">อังกฤษ:</span> {user.academic_score.eng}</p>}
-                                        {user.academic_score.sci && <p><span className="font-semibold">วิทย์:</span> {user.academic_score.sci}</p>}
-                                        {user.academic_score.lang && <p><span className="font-semibold">ไทย:</span> {user.academic_score.lang}</p>}
-                                        {user.academic_score.social && <p><span className="font-semibold">สังคม:</span> {user.academic_score.social}</p>}
-                                    </div>
-                                </div>
-                            )}
-                         </div>
-                     </div>
-                 </div>
-             );
-        }
-
-        if (blocks.length === 0) {
+                        if (isProfileLayout) {
+                            const isRight = section.section_title?.toLowerCase().includes('right') || 
+                                             (section as any).layout_type === 'profile_header_right';
+                             const user = currentUser || { 
+                                 firstname: "Loading...", lastname: "", 
+                                 major: "-", school: "-", profile_image: null,
+                                 academic_score: { gpax: "0.00" }
+                             };
+                             const gpax = user.academic_score?.gpax || user.gpa || "-";
+                
+                             return (
+                                 <div className={`flex flex-col items-center gap-6 p-6 bg-white border border-gray-100 rounded-xl shadow-sm h-full w-full 
+                                                 ${isRight ? 'md:flex-row-reverse text-right' : 'md:flex-row text-left'}`}>
+                                     <div className="w-32 h-32 flex-shrink-0 rounded-full overflow-hidden border-4 border-blue-100 shadow-md">
+                                         <img 
+                                            src={user.profile_image || placeholderImage} 
+                                            alt="Profile" 
+                                            className="w-full h-full object-cover" 
+                                            onError={(e) => e.currentTarget.src = placeholderImage}
+                                          />
+                                     </div>
+                                     <div className={`flex-1 w-full space-y-3 ${isRight ? 'md:items-end' : 'md:items-start'}`}>
+                                         <div className={`border-b pb-2 border-gray-100 ${isRight ? 'flex flex-col items-end' : ''}`}>
+                                             <h3 className="text-2xl font-bold text-gray-800">
+                                                 {user.firstname} {user.lastname}
+                                             </h3>
+                                             <p className="text-blue-500 font-medium">
+                                                 {user.school || "Suranaree University of Technology"}
+                                             </p>
+                                         </div>
+                                         <div className={`space-y-1 text-sm text-gray-600 ${isRight ? 'flex flex-col items-end' : ''}`}>
+                                             <p><span className="font-bold text-gray-800">Major:</span> {user.major}</p>
+                                             <p><span className="font-bold text-gray-800">GPAX:</span> <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold">{gpax}</span></p>
+                                            
+                                             {user.academic_score && (user.academic_score.math || user.academic_score.eng || user.academic_score.sci || user.academic_score.lang || user.academic_score.social) && (
+                                                <div className="mt-2 border-t border-gray-100 pt-2 text-xs w-full">
+                                                    <p className="font-bold text-gray-700 mb-1">คะแนนรายวิชา</p>
+                                                    <div className="grid grid-cols-3 gap-x-4 gap-y-1">
+                                                        {user.academic_score.math && <p><span className="font-semibold">คณิต:</span> {user.academic_score.math}</p>}
+                                                        {user.academic_score.eng && <p><span className="font-semibold">อังกฤษ:</span> {user.academic_score.eng}</p>}
+                                                        {user.academic_score.sci && <p><span className="font-semibold">วิทย์:</span> {user.academic_score.sci}</p>}
+                                                        {user.academic_score.lang && <p><span className="font-semibold">ไทย:</span> {user.academic_score.lang}</p>}
+                                                        {user.academic_score.social && <p><span className="font-semibold">สังคม:</span> {user.academic_score.social}</p>}
+                                                    </div>
+                                                </div>
+                                            )}
+                                         </div>
+                                     </div>
+                                 </div>
+                             );
+                        }        if (blocks.length === 0) {
             return (
                 <div className="flex flex-col items-center justify-center h-32 text-gray-400 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
                     <div className="text-2xl mb-2">📭</div>
