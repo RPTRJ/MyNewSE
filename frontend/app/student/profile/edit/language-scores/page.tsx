@@ -174,9 +174,9 @@ export default function EditLanguageScoresPage() {
       return;
     }
 
-    // Validate file size (max 10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      alert("ขนาดไฟล์ต้องไม่เกิน 10MB");
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("ขนาดไฟล์ต้องไม่เกิน 5MB");
       return;
     }
 

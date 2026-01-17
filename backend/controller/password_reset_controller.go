@@ -17,7 +17,7 @@ func NewPasswordResetController(service *services.PasswordResetService) *Passwor
 	return &PasswordResetController{service: service}
 }
 
-// ✅ Request Reset with Rate Limiting Error Handling
+// Request Reset with Rate Limiting Error Handling
 func (pc *PasswordResetController) RequestReset(c *gin.Context) {
 	var payload struct {
 		Email string `json:"email" binding:"required,email"`
@@ -37,7 +37,7 @@ func (pc *PasswordResetController) RequestReset(c *gin.Context) {
 	// เรียก service
 	err := pc.service.RequestPasswordReset(payload.Email, baseURL)
 
-	// ✅ จัดการ rate limiting error
+	//จัดการ rate limiting error
 	if err != nil {
 		// ถ้าเป็น rate limiting error
 		if strings.Contains(err.Error(), "too many reset requests") {
@@ -60,7 +60,7 @@ func (pc *PasswordResetController) RequestReset(c *gin.Context) {
 	})
 }
 
-// ✅ Reset Password with Detailed Error Messages
+// Reset Password with Detailed Error Messages
 func (pc *PasswordResetController) ResetPassword(c *gin.Context) {
 	var payload struct {
 		Token       string `json:"token" binding:"required"`

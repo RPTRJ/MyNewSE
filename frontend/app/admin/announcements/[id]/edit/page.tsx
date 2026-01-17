@@ -398,7 +398,7 @@ const EditAnnouncementForm: React.FC = () => {
                     <span className="text-gray-600"> หรือลากไฟล์มาวางที่นี่</span>
                   </label>
                   <p className="text-sm text-gray-500 mt-2">
-                    PNG, JPG, GIF สูงสุด 10MB (แนะนำ 1920x1080px)
+                    PNG, JPG, GIF สูงสุด 5MB (แนะนำ 1920x1080px)
                   </p>
                   {featuredImage && (
                     <div className="mt-4 text-sm text-gray-700">

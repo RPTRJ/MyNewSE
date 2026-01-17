@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 import { HttpError, ProfileResponse, fetchMyProfile, upsertGEDScore } from "@/services/profile";
 import { uploadFile } from "@/services/upload";
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 export default function EditGEDScorePage() {
   const router = useRouter();
@@ -71,7 +71,7 @@ export default function EditGEDScorePage() {
       return;
     }
     if (file.size > MAX_FILE_SIZE) {
-      toast.error(`ขนาดไฟล์ต้องไม่เกิน 10MB (ไฟล์ที่เลือก: ${(file.size / 1024 / 1024).toFixed(2)}MB)`);
+      toast.error(`ขนาดไฟล์ต้องไม่เกิน 5MB (ไฟล์ที่เลือก: ${(file.size / 1024 / 1024).toFixed(2)}MB)`);
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
@@ -104,7 +104,7 @@ export default function EditGEDScorePage() {
 
       if (certFile) {
         if (certFile.size > MAX_FILE_SIZE) {
-          throw new Error(`ขนาดไฟล์ต้องไม่เกิน 10MB (ไฟล์ที่เลือก: ${(certFile.size / 1024 / 1024).toFixed(2)}MB)`);
+          throw new Error(`ขนาดไฟล์ต้องไม่เกิน 5MB (ไฟล์ที่เลือก: ${(certFile.size / 1024 / 1024).toFixed(2)}MB)`);
         }
         if (certFile.type !== "application/pdf") {
           throw new Error("รองรับเฉพาะไฟล์ PDF เท่านั้น");
@@ -297,7 +297,7 @@ export default function EditGEDScorePage() {
                     เลือกไฟล์
                   </button>
                   
-                  <p className="text-xs text-gray-500">รองรับเฉพาะไฟล์ PDF (ขนาดไม่เกิน 10MB)</p>
+                  <p className="text-xs text-gray-500">รองรับเฉพาะไฟล์ PDF (ขนาดไม่เกิน 5MB)</p>
 
                   {/* Uploading state */}
                   {uploading && (

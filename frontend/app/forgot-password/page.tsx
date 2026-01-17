@@ -25,7 +25,17 @@ export default function ForgotPasswordPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "เกิดข้อผิดพลาด");
+        //Handle rate limiting (429)
+        if (response.status === 429) {
+          throw new Error("คุณส่งคำขอบ่อยเกินไป กรุณารอ 15 นาทีแล้วลองใหม่อีกครั้ง");
+        }
+        
+        //Handle other rate limit errors
+        if (data.error?.includes("too many")) {
+          throw new Error("คุณส่งคำขอรีเซ็ตรหัสผ่านหลายครั้งเกินไป กรุณารอ 15 นาที");
+        }
+        
+        throw new Error(data.error || "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
       }
 
       setIsSubmitted(true);
@@ -34,7 +44,7 @@ export default function ForgotPasswordPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+};
 
   if (isSubmitted) {
     return (

@@ -24,7 +24,7 @@ func NewPasswordResetService(db *gorm.DB, emailService *EmailService) *PasswordR
 	}
 }
 
-// ✅ Rate Limiting Check
+// Rate Limiting Check
 func (s *PasswordResetService) checkRateLimit(email string) error {
 	var recentResets []entity.PasswordReset
 
@@ -47,9 +47,9 @@ func (s *PasswordResetService) checkRateLimit(email string) error {
 	return nil
 }
 
-// ✅ Request Password Reset with Rate Limiting + Timing Attack Prevention
+// Request Password Reset with Rate Limiting + Timing Attack Prevention
 func (s *PasswordResetService) RequestPasswordReset(email string, baseURL string) error {
-	// 🔒 เริ่มจับเวลา (สำหรับ timing attack prevention)
+	//เริ่มจับเวลา (สำหรับ timing attack prevention)
 	start := time.Now()
 	defer func() {
 		// Ensure constant response time (min 500ms)
@@ -60,8 +60,28 @@ func (s *PasswordResetService) RequestPasswordReset(email string, baseURL string
 		}
 	}()
 
-	// 🔒 Rate Limiting Check
+	//Rate Limiting Check
 	if err := s.checkRateLimit(email); err != nil {
+		return err
+	}
+
+	// สร้าง token (ทำก่อนเสมอ เพื่อให้ timing เหมือนกัน)
+	token, err := utils.GenerateRandomToken(32)
+	if err != nil {
+		log.Printf("[ERROR] Failed to generate token for %s: %v", email, err)
+		return err
+	}
+
+	//บันทึก record ก่อนเสมอ (เพื่อ rate limiting)
+	resetRecord := entity.PasswordReset{
+		Email:     email,
+		Token:     token,
+		ExpiresAt: time.Now().Add(15 * time.Minute),
+		Used:      false,
+	}
+
+	if err := s.db.Create(&resetRecord).Error; err != nil {
+		log.Printf("[ERROR] Failed to save reset token for %s: %v", email, err)
 		return err
 	}
 
@@ -69,7 +89,7 @@ func (s *PasswordResetService) RequestPasswordReset(email string, baseURL string
 	var user entity.User
 	userExists := true
 
-	err := s.db.Where("email = ?", email).First(&user).Error
+	err = s.db.Where("email = ?", email).First(&user).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			userExists = false
@@ -82,44 +102,24 @@ func (s *PasswordResetService) RequestPasswordReset(email string, baseURL string
 
 	// ถ้า user มีจริง ส่ง email
 	if userExists {
-		// สร้าง token
-		token, err := utils.GenerateRandomToken(32)
-		if err != nil {
-			log.Printf("[ERROR] Failed to generate token for %s: %v", email, err)
-			return err
-		}
-
-		// บันทึก token ในฐานข้อมูล
-		resetRecord := entity.PasswordReset{
-			Email:     email,
-			Token:     token,
-			ExpiresAt: time.Now().Add(15 * time.Minute),
-			Used:      false,
-		}
-
-		if err := s.db.Create(&resetRecord).Error; err != nil {
-			log.Printf("[ERROR] Failed to save reset token for %s: %v", email, err)
-			return err
-		}
-
 		// สร้าง reset link
 		resetLink := fmt.Sprintf("%s/reset-password?token=%s", baseURL, token)
 
 		// ส่ง email
 		log.Printf("[EMAIL] Attempting to send password reset to: %s", email)
 		if err := s.emailService.SendPasswordResetEmail(email, resetLink); err != nil {
-			log.Printf("[EMAIL] ❌ Failed to send to %s: %v", email, err)
+			log.Printf("[EMAIL] Failed to send to %s: %v", email, err)
 			return err
 		}
 
-		log.Printf("[EMAIL] ✅ Successfully sent to: %s", email)
+		log.Printf("[EMAIL] Successfully sent to: %s", email)
 	}
 
-	// 🔒 เสมอ return nil (ไม่เปิดเผยว่า email มีหรือไม่)
+	//เสมอ return nil (ไม่เปิดเผยว่า email มีหรือไม่)
 	return nil
 }
 
-// ✅ Validate Token
+// Validate Token
 func (s *PasswordResetService) validateToken(token string) (*entity.PasswordReset, error) {
 	var reset entity.PasswordReset
 
@@ -147,7 +147,7 @@ func (s *PasswordResetService) validateToken(token string) (*entity.PasswordRese
 	return &reset, nil
 }
 
-// ✅ Reset Password with Validation + Logging
+// Reset Password with Validation + Logging
 func (s *PasswordResetService) ResetPassword(token, newPassword string) error {
 	// Validate password length
 	if len(newPassword) < 6 {
@@ -157,6 +157,16 @@ func (s *PasswordResetService) ResetPassword(token, newPassword string) error {
 	// Validate token
 	reset, err := s.validateToken(token)
 	if err != nil {
+		return err
+	}
+
+	// ตรวจสอบว่า email มีในระบบหรือไม่
+	var user entity.User
+	if err := s.db.Where("email = ?", reset.Email).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			log.Printf("[SECURITY] Password reset attempted for non-existent email: %s", reset.Email)
+			return errors.New("user not found")
+		}
 		return err
 	}
 
@@ -185,7 +195,6 @@ func (s *PasswordResetService) ResetPassword(token, newPassword string) error {
 	return nil
 }
 
-// Helper function for min
 func min(a, b int) int {
 	if a < b {
 		return a
