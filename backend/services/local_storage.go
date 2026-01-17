@@ -21,9 +21,11 @@ func InitLocalStorage() error {
 		uploadDir = "./uploads"
 	}
 
+	// For production/VM deployment, use relative path instead of absolute URL
+	// This allows nginx to handle the routing properly
 	baseURL := os.Getenv("BASE_URL")
 	if baseURL == "" {
-		baseURL = "http://localhost:8080"
+		baseURL = "" // Empty means relative path
 	}
 
 	// Create upload directory if not exists
@@ -59,8 +61,14 @@ func (s *LocalStorageService) UploadFile(file io.Reader, fileName string, conten
 		return "", fmt.Errorf("failed to write file: %v", err)
 	}
 
-	// Return the URL
-	url := fmt.Sprintf("%s/uploads/%s", s.baseURL, uniqueName)
+	// Return relative path for nginx to handle routing
+	// This works with both localhost and production VM
+	var url string
+	if s.baseURL != "" {
+		url = fmt.Sprintf("%s/uploads/%s", s.baseURL, uniqueName)
+	} else {
+		url = fmt.Sprintf("/uploads/%s", uniqueName)
+	}
 
 	return url, nil
 }

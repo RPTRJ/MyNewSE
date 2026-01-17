@@ -34,11 +34,20 @@ export default function NotificationSocket() {
         return;
       }
 
-      // 2. Connect
-      const baseUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8080/ws";
-      const wsUrl = `${baseUrl}?user_id=${currentUserId}`;
+      // 2. Connect - use relative WebSocket path that works with both localhost and VM
+      // Automatically detect protocol (ws:// for http://, wss:// for https://)
+      let wsUrl: string;
+      if (typeof window !== 'undefined') {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const host = window.location.host;
+        wsUrl = `${protocol}//${host}/api/ws?user_id=${currentUserId}`;
+      } else {
+        // Fallback for SSR (should not be used since WebSocket is client-only)
+        const baseUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost/api/ws";
+        wsUrl = `${baseUrl}?user_id=${currentUserId}`;
+      }
 
-      console.log(`Connecting to WebSocket: ${baseUrl} (User: ${currentUserId})`);
+      console.log(`Connecting to WebSocket: ${wsUrl} (User: ${currentUserId})`);
 
       socket = new WebSocket(wsUrl);
       socketRef.current = socket;

@@ -17,7 +17,7 @@ import { ProfileImageUploader } from "@/components/ProfileImageUploader";
 
 type Option = { id: number; name: string };
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
 
 const getFileUrl = (filePath?: string | null): string | null => {
   if (!filePath) return null;
@@ -29,12 +29,8 @@ const getFileUrl = (filePath?: string | null): string | null => {
   // Ensure path starts with /
   const path = normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`;
 
-  // Static files are usually served from the root, not from /api
-  // If the API URL ends with /api, we remove it for static file access
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-  const rootUrl = apiBaseUrl.endsWith('/api') ? apiBaseUrl.slice(0, -4) : apiBaseUrl;
-
-  return `${rootUrl}${path}`;
+  // Use relative path for static files - works with both localhost and VM
+  return path;
 };
 
 const formatDate = (dateString?: string) => {

@@ -97,7 +97,9 @@ services:
       - .env
     environment:
       NODE_ENV: production
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost/api}
+      # Use relative paths for API - nginx will route them correctly
+      NEXT_PUBLIC_API_URL: /api
+      NEXT_PUBLIC_WS_URL: ws://localhost/api/ws
     networks:
       - app_network
     depends_on:

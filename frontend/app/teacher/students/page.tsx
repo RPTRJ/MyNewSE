@@ -15,7 +15,7 @@ import {
 } from "@/services/profile";
 
 // ============= Helper Functions =============
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
 
 // Helper function to get file URL
 const getFileUrl = (path: string | null | undefined): string | null => {

@@ -96,13 +96,10 @@ const AnnouncementDetailPage = () => {
       return filePath;
     }
 
-    // ถ้าไม่มี ให้เพิ่ม base URL
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-
-    // ตรวจสอบว่า filePath ขึ้นต้นด้วย / หรือไม่
+    // Use relative path for static files - works with both localhost and VM
     const path = filePath.startsWith('/') ? filePath : `/${filePath}`;
 
-    return `${baseUrl}${path}`;
+    return path;
   };
 
 
@@ -163,6 +160,7 @@ const AnnouncementDetailPage = () => {
           <button
             onClick={() => setPreviewImage(null)}
             className="absolute top-4 right-4 text-white hover:text-gray-300 z-10"
+            aria-label="ปิดตัวอย่างรูปภาพ"
           >
             <X size={32} />
           </button>
@@ -181,6 +179,7 @@ const AnnouncementDetailPage = () => {
           <button
             onClick={() => router.back()}
             className="flex items-left gap-2 text-gray-600 hover:text-gray-900 mb-4 "
+            aria-label="กลับไปหน้าประกาศ"
           >
             <ArrowLeftIcon size={20} />
             กลับไปหน้าประกาศ
@@ -290,6 +289,7 @@ const AnnouncementDetailPage = () => {
                           onClick={() => handleViewFile(attachment)}
                           className="p-2 rounded hover:bg-white group-hover:text-orange-600 transition-colors"
                           title="ดูไฟล์"
+                          aria-label={`ดูไฟล์ ${attachment.file_name}`}
                         >
                           <Eye size={18} />
                         </button>
