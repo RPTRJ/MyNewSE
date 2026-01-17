@@ -66,6 +66,38 @@ func SeedFonts() {
 			FontURL:      "https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;700&display=swap",
 			IsActive:     true,
 		},
+		{
+            FontFamily:   "'IBM Plex Sans Thai', sans-serif",
+            FontName:     "IBM Plex Sans (TH)",
+            FontCategory: "Sans-serif",
+            FontVariant:  "300,400,600",
+            FontURL:      "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;600&display=swap",
+            IsActive:     true,
+        },
+        {
+            FontFamily:   "'Noto Sans Thai', sans-serif",
+            FontName:     "Noto Sans (TH)",
+            FontCategory: "Sans-serif",
+            FontVariant:  "300,400,700",
+            FontURL:      "https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;700&display=swap",
+            IsActive:     true,
+        },
+		{
+            FontFamily:   "'Charmonman', cursive",
+            FontName:     "Charmonman (TH)",
+            FontCategory: "Handwriting",
+            FontVariant:  "400,700",
+            FontURL:      "https://fonts.googleapis.com/css2?family=Charmonman:wght@400;700&display=swap",
+            IsActive:     true,
+        },
+        {
+            FontFamily:   "'Srisakdi', cursive",
+            FontName:     "Srisakdi (TH)",
+            FontCategory: "Display",
+            FontVariant:  "400,700",
+            FontURL:      "https://fonts.googleapis.com/css2?family=Srisakdi:wght@400;700&display=swap",
+            IsActive:     true,
+        },
 
 	}
 	for _, font := range fonts {

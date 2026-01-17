@@ -295,9 +295,11 @@ export default function EditEducationPage() {
       school_id: null,
       school_name: "",
       is_project_based: null,
+      curriculum_type_id: null,
     }));
     setSchoolQuery("");
     setShowSchoolList(false);
+    setCurriculumQuery("");
   };
 
   const handleSchoolTypeChange = (value: number | null) => {
@@ -307,9 +309,11 @@ export default function EditEducationPage() {
       school_id: null,
       school_name: "",
       is_project_based: null,
+      curriculum_type_id: null,
     }));
     setSchoolQuery("");
     setShowSchoolList(false);
+    setCurriculumQuery("");
   };
 
   const handleSchoolChange = (value: string) => {
@@ -318,8 +322,10 @@ export default function EditEducationPage() {
       ...prev,
       school_name: value,
       school_id: null,
+      curriculum_type_id: null,
     }));
     setShowSchoolList(true);
+    setCurriculumQuery("");
   };
 
   const handleSelectSchool = (school: SchoolOption) => {
@@ -329,6 +335,7 @@ export default function EditEducationPage() {
       school_name: school.name,
       is_project_based: school.is_project_based ?? prev.is_project_based,
       school_type_id: school.school_type_id ?? prev.school_type_id,
+      curriculum_type_id: null,
     }));
     setSchoolQuery(school.name);
     setShowSchoolList(false);
@@ -337,6 +344,7 @@ export default function EditEducationPage() {
       delete updated.school_name;
       return updated;
     });
+    setCurriculumQuery("");
   };
 
   const handleCurriculumChange = (value: string) => {
@@ -460,6 +468,8 @@ export default function EditEducationPage() {
               </label>
               <select
                 value={form.education_level_id ?? ""}
+                title="เลือกระดับการศึกษา"
+                aria-label="ระดับการศึกษา"
                 onChange={(e) => handleEducationLevelChange(coerceId(e.target.value))}
                 className={`w-full py-3 px-4 rounded-xl border-2 text-gray-900 focus:outline-none focus:ring-0 transition-colors ${
                   errors.education_level_id ? "border-red-400 bg-red-50" : "border-gray-200 focus:border-orange-500"
@@ -483,6 +493,8 @@ export default function EditEducationPage() {
               </label>
               <select
                 value={form.school_type_id ?? ""}
+                title="เลือกประเภทโรงเรียน"
+                aria-label="ประเภทโรงเรียน"
                 onChange={(e) => handleSchoolTypeChange(coerceId(e.target.value))}
                 disabled={!isSchoolTypeEnabled}
                 className={`w-full py-3 px-4 rounded-xl border-2 text-gray-900 focus:outline-none focus:ring-0 transition-colors ${

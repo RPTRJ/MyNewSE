@@ -365,6 +365,9 @@ export default function EditPersonalPage() {
                     type="date"
                     value={form.birthday}
                     onChange={(e) => setForm((prev) => ({ ...prev, birthday: e.target.value }))}
+                    title="เลือกวันเกิด"
+                    aria-label="วันเกิด"
+                    placeholder="YYYY-MM-DD"
                     className="w-full py-3 px-4 rounded-xl border-2 border-gray-200 text-gray-900 focus:outline-none focus:border-orange-500 transition-colors"
                   />
                 </div>

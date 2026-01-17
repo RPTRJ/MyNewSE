@@ -361,6 +361,30 @@ async createNotificationForStudents(data: {
 
   return response.json();
 }
+async getMyNotifications(): Promise<Notification[]> {
+  const response = await fetch(`${API_URL}/notification`, {
+    method: "GET",
+    headers: this.getAuthHeaders(),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch notifications");
+  }
+
+  const data = await response.json();
+
+  // 🔥 map ชื่อ field จาก backend → frontend
+  return data.map((n:any) => ({
+    ID: n.ID,
+    notification_title: n.Notification_Title,
+    notification_message: n.Notification_Message,
+    notification_type: n.Notification_Type,
+    is_read: n.Is_Read,
+    sent_at: n.Sent_At,
+    announcement_id: n.AnnouncementID,
+  }));
+}
+
 
 
 

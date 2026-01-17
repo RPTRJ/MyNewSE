@@ -1,13 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import AnnounceService, { Announcement } from "@/services/announcement";
+import AnnounceService, { Announcement,Notification } from "@/services/announcement";
 import { getActivitiesWithMeta } from "@/services/activity";
 import { getWorkingsByUserWithMeta } from "@/services/working";
 import { Loader2, Trophy, Briefcase, FileText, Calendar, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import announcement from "@/services/announcement";
 
 export default function HomePage() {
   const router = useRouter();
@@ -16,6 +15,8 @@ export default function HomePage() {
   const [activityCount, setActivityCount] = useState(0);
   const [workingCount, setWorkingCount] = useState(0);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+
 
   useEffect(() => {
     const loadData = async () => {
@@ -34,10 +35,11 @@ export default function HomePage() {
           console.error("User ID not found");
         }
 
-        const [activitiesRes, workingsRes, announcementsRes] = await Promise.all([
+        const [activitiesRes, workingsRes, announcementsRes, notificationsRes] = await Promise.all([
           getActivitiesWithMeta({ limit: 1 }), // We only need meta.total
           userId ? getWorkingsByUserWithMeta(userId) : { total: 0 },
           AnnounceService.getStudentAnnouncements(),
+          AnnounceService.getMyNotifications(),
         ]);
 
         setActivityCount((activitiesRes as any).total || 0);
@@ -46,6 +48,9 @@ export default function HomePage() {
         // Take latest 5 announcements and strictly type check
         const newsList = Array.isArray(announcementsRes) ? announcementsRes : [];
         setAnnouncements(newsList.slice(0, 5));
+
+        const notiList = Array.isArray(notificationsRes) ? notificationsRes : [];
+        setNotifications(notiList.slice(0, 5));
 
       } catch (error) {
         console.error("Failed to load dashboard data", error);
@@ -237,6 +242,7 @@ export default function HomePage() {
           )}
         </div>
       </div>
+      
     </div>
   );
 }

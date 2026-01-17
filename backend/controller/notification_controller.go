@@ -12,7 +12,7 @@ func CreateNotificationForStudents(c *gin.Context) {
 		NotificationTitle   string `json:"notification_title"`
 		NotificationMessage string `json:"notification_message"`
 		NotificationType    string `json:"notification_type"`
-		AnnouncementID      uint   `json:"announcement_id"`
+		AnnouncementID      *uint   `json:"announcement_id"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -40,7 +40,7 @@ func CreateNotificationForStudents(c *gin.Context) {
 			Notification_Type:    req.NotificationType,
 			Is_Read:              false,
 			UserID:              &student.ID,
-			AnnouncementID:      &req.AnnouncementID,
+			AnnouncementID:      req.AnnouncementID,
 		}
 
 		if err := db.Create(&notif).Error; err != nil {
@@ -58,12 +58,20 @@ func CreateNotificationForStudents(c *gin.Context) {
 
 func GetNotifications(c *gin.Context) {
 	db := config.GetDB()
+
+	userID := c.MustGet("user_id").(uint)
+
 	var notifs []entity.Notification
-	if err := db.Preload("User").Preload("Announcement").Find(&notifs).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch"})
+	if err := db.Where("user_id = ?", userID).
+		Preload("Announcement").
+		Order("created_at DESC").
+		Find(&notifs).Error; err != nil {
+
+		c.JSON(500, gin.H{"error": "Failed"})
 		return
 	}
-	c.JSON(http.StatusOK, notifs)
+
+	c.JSON(200, notifs)
 }
 
 func GetNotificationByID(c *gin.Context) {

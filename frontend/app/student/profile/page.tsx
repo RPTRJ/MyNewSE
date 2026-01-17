@@ -406,17 +406,8 @@ export default function ProfilePage() {
                 <p className="mt-3 text-xs text-gray-500 text-center w-full">คลิกเพื่อเปลี่ยนรูป</p>
               </div>
 
-              {/* Personal Details */}
               <div className="flex-1">
-                {/* Name Display - Large */}
                 <div className="mb-6">
-                  <h3 className="text-2xl font-bold text-gray-900">
-                    {nameLanguage === "thai"
-                      ? `${user.first_name_th || ""} ${user.last_name_th || ""}`.trim() || "ไม่ระบุชื่อ"
-                      : `${user.first_name_en || ""} ${user.last_name_en || ""}`.trim() || "No Name"
-                    }
-                  </h3>
-                  <p className="text-gray-500 text-sm">{user.email}</p>
                 </div>
 
                 {/* Info Grid */}
@@ -726,8 +717,15 @@ export default function ProfilePage() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-2xl font-bold text-purple-600">{score.score || "-"}</div>
-                        <div className="text-xs text-gray-500">คะแนน</div>
+                        <div className="text-2xl font-bold text-purple-600">
+                          {score.test_type === "CEFR" 
+                            ? (score.test_level?.split(' ')[0] || score.test_level || "-")
+                            : (score.score || "-")
+                          }
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {score.test_type === "CEFR" ? "ระดับ" : "คะแนน"}
+                        </div>
                       </div>
                     </div>
                     <div className="mt-3 pt-3 border-t border-purple-100 flex items-center justify-between">

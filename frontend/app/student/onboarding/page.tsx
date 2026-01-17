@@ -534,8 +534,10 @@ By accepting, you acknowledge that you have read and understood this Personal Da
       ...prev,
       SchoolName: value,
       SchoolID: undefined,
+      CurriculumTypeID: undefined,
     }));
     setIsProjectBasedDisplay(null);
+    setCurriculumQuery("");
   };
 
   // ============= Handle Curriculum Selection =============

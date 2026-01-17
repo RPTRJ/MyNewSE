@@ -745,6 +745,10 @@ function SectionsContent() {
             }
 
             await loadAll();
+            
+            // รอให้ React render รอบใหม่เสร็จก่อน
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
             setIsEditingItem(false);
             setCurrentBlock(null);
             setViewMode('list');
@@ -1215,7 +1219,7 @@ function SectionsContent() {
                                     if (isProfile) return null;
 
                                     return (
-                                        <div key={section.ID} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col h-[500px]">
+                                        <div key={`${section.ID}-${section.section_blocks?.length || 0}`} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col h-[500px]">
                                             {/* Section Header */}
                                             <div className="flex-1 bg-gray-50 overflow-hidden relative border-b border-gray-200 inner-shadow">
                                                 {renderSectionContent(section)}
@@ -1405,17 +1409,16 @@ function SectionsContent() {
                                                     return (
                                                         <div key={block.ID} className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition">
                                                             <div className="flex items-center gap-4">
-                                                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-white text-lg shadow-sm ${c.type === 'activity' ? 'bg-orange-500' : 'bg-blue-500'}`}>
-                                                                    {c.type === 'activity' ? '🏆' : '💼'}
-                                                                </div>
                                                                 <div>
                                                                     <h4 className="font-bold text-gray-800">{c.title || 'Untitled'}</h4>
                                                                     <p className="text-xs text-gray-500 uppercase font-medium bg-gray-100 px-2 py-0.5 rounded-full inline-block mt-1">{c.type}</p>
                                                                 </div>
                                                             </div>
                                                             <div className="flex gap-2">
-                                                                <button onClick={() => openForm(block)} className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition" title="แก้ไข">✏️</button>
-                                                                <button onClick={() => handleDeleteBlock(block.ID)} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition" title="ลบ">🗑️</button></div></div>);
+                                                                <button onClick={() => openForm(block)} className="px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition">แก้ไข</button>
+                                                                <button onClick={() => handleDeleteBlock(block.ID)} className="px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition">ลบ</button>
+                                                            </div>
+                                                        </div>);
                                                 }))}</div>
                                     </div>
                                 )}

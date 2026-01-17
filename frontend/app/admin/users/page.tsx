@@ -16,6 +16,18 @@ import {
   UpdateUserPayload,
   HttpError,
 } from "@/services/user";
+import { 
+  Search, 
+  UserPlus, 
+  Eye, 
+  Edit2, 
+  Trash2, 
+  Users, 
+  X,
+  Loader2,
+  AlertCircle,
+  CheckCircle2
+} from "lucide-react";
 import "./admin-users.css";
 
 export default function AdminUsersPage() {
@@ -133,64 +145,50 @@ export default function AdminUsersPage() {
 
     if (!formData.email.trim()) {
       errors.email = "กรุณากรอกอีเมล";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
       errors.email = "รูปแบบอีเมลไม่ถูกต้อง";
     } else {
-      const emailDup = users.some((u) => {
-        const uid = u.id || u.ID;
-        return u.email?.toLowerCase() === normalizedEmail && uid !== currentUserId;
+      const emailExists = users.some((u) => {
+        const uId = u.id || u.ID;
+        const uEmailNormalized = (u.email ?? "").trim().toLowerCase();
+        return uEmailNormalized === normalizedEmail && uId !== currentUserId;
       });
-      if (emailDup) errors.email = "อีเมลนี้ถูกใช้แล้ว";
+      if (emailExists) {
+        errors.email = "อีเมลนี้ถูกใช้งานแล้ว";
+      }
     }
 
-    if (modalMode === "create" && !formData.password) {
+    if (modalMode === "create" && !formData.password.trim()) {
       errors.password = "กรุณากรอกรหัสผ่าน";
     }
     if (formData.password && formData.password.length < 6) {
       errors.password = "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร";
     }
 
-    if (!formData.id_number.trim()) errors.id_number = "กรุณากรอกเลขที่เอกสาร";
-    else {
-      const idNum = formData.id_number.trim();
-      if (formData.id_type === 1 && !/^\d{13}$/.test(idNum)) {
+    if (!formData.phone.trim()) {
+      errors.phone = "กรุณากรอกเบอร์โทร";
+    } else if (!/^[0-9]{10}$/.test(formData.phone)) {
+      errors.phone = "เบอร์โทรต้องเป็นตัวเลข 10 หลัก";
+    }
+
+    if (!formData.birthday.trim()) {
+      errors.birthday = "กรุณาเลือกวันเกิด";
+    }
+
+    if (!formData.id_number.trim()) {
+      errors.id_number = "กรุณากรอกเลขเอกสารยืนยันตัวตน";
+    } else {
+      if (formData.id_type === 1 && !/^[0-9]{13}$/.test(formData.id_number)) {
         errors.id_number = "เลขบัตรประชาชนต้องเป็นตัวเลข 13 หลัก";
       }
-      if (formData.id_type === 2 && !/^[Gg]\d{7}$/.test(idNum)) {
-        errors.id_number = "G-Code ต้องขึ้นต้นด้วย G ตามด้วยตัวเลข 7 หลัก";
-      }
-      if (formData.id_type === 3 && !/^[A-Za-z0-9]{6,15}$/.test(idNum)) {
-        errors.id_number = "เลขพาสปอร์ตต้องเป็นตัวอักษร/ตัวเลข 6-15 ตัว";
-      }
-
-      const idDup = users.some((u) => {
-        const uid = u.id || u.ID;
-        return (
-          u.id_number?.trim() === idNum &&
-          u.id_type === formData.id_type &&
-          uid !== currentUserId
-        );
+      const idExists = users.some((u) => {
+        const uId = u.id || u.ID;
+        return u.id_number === formData.id_number && uId !== currentUserId;
       });
-      if (idDup) {
-        const idTypeMsg =
-          formData.id_type === 1
-            ? "หมายเลขบัตรประชาชนนี้ถูกลงทะเบียนแล้ว"
-            : formData.id_type === 2
-            ? "หมายเลข G-Code นี้ถูกลงทะเบียนแล้ว"
-            : "หมายเลขหนังสือเดินทางนี้ถูกลงทะเบียนแล้ว";
-        errors.id_number = idTypeMsg;
+      if (idExists) {
+        errors.id_number = "เลขเอกสารนี้ถูกใช้งานแล้ว";
       }
     }
-    if (!formData.phone.trim()) {
-      errors.phone = "กรุณากรอกเบอร์โทรศัพท์";
-    } else if (!/^\d{10}$/.test(formData.phone)) {
-      errors.phone = "เบอร์โทรศัพท์ต้องเป็นตัวเลข 10 หลัก";
-    }
-    if (!formData.birthday) errors.birthday = "กรุณาเลือกวันเกิด";
-
-    // ตรวจสอบ type_id และ id_type
-    if (!formData.type_id) errors.type_id = "กรุณาเลือกประเภทผู้ใช้";
-    if (!formData.id_type) errors.id_type = "กรุณาเลือกประเภทเอกสาร";
 
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -200,7 +198,6 @@ export default function AdminUsersPage() {
     setModalMode(mode);
     setSelectedUser(user || null);
     setFormErrors({});
-    setNameLanguage("thai");
 
     if (mode === "create") {
       setFormData({
@@ -217,8 +214,8 @@ export default function AdminUsersPage() {
         type_id: 1,
         id_type: 1,
       });
+      setNameLanguage("thai");
     } else if (mode === "edit" && user) {
-      // แก้ไข: เปลี่ยน parameter type เป็น string | undefined เพื่อรองรับค่า undefined
       const formatDateForInput = (dateString?: string): string => {
         if (!dateString) return "";
         try {
@@ -249,7 +246,6 @@ export default function AdminUsersPage() {
       const hasThaiName = !!(user.first_name_th || user.last_name_th);
       setNameLanguage(hasThaiName ? "thai" : "english");
     } else if (mode === "view" && user) {
-      // สำหรับ view mode ใช้ formatDateForInput เหมือนกัน
       const formatDateForInput = (dateString?: string): string => {
         if (!dateString) return "";
         try {
@@ -368,115 +364,156 @@ export default function AdminUsersPage() {
 
   return (
     <div className="admin-users-container">
-      <h1 className="admin-users-title">จัดการผู้ใช้</h1>
-      <p className="admin-users-subtitle">จัดการข้อมูลผู้ใช้ทั้งหมดในระบบ</p>
+      {/* Header Section */}
+      <div className="page-header">
+        <div className="header-content">
+          <div className="header-icon">
+            <Users className="w-10 h-10 text-orange-500" />
+          </div>
+          <div>
+            <h1 className="page-title">จัดการผู้ใช้</h1>
+            <p className="page-subtitle">จัดการข้อมูลผู้ใช้ทั้งหมดในระบบ</p>
+          </div>
+        </div>
+        <div className="stats-badge">
+          <Users className="w-4 h-4" />
+          <span>ผู้ใช้ทั้งหมด: <strong>{users.length}</strong></span>
+        </div>
+      </div>
 
-      <div className="search-bar-container">
-        <input
-          type="text"
-          placeholder="ค้นหาชื่อ, อีเมล, เบอร์โทร..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="search-input"
-          aria-label="ค้นหาผู้ใช้"
-        />
+      {/* Search & Actions Bar */}
+      <div className="search-actions-bar">
+        <div className="search-box">
+          <Search className="search-icon" />
+          <input
+            type="text"
+            placeholder="ค้นหาชื่อ, อีเมล, เบอร์โทร..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="search-input"
+            aria-label="ค้นหาผู้ใช้"
+          />
+        </div>
         <button onClick={() => openModal("create")} className="btn-add-user">
-          + เพิ่มผู้ใช้
+          <UserPlus className="w-5 h-5" />
+          <span>เพิ่มผู้ใช้</span>
         </button>
       </div>
 
-      {error && <div className="error-message">{error}</div>}
+      {/* Error Message */}
+      {error && (
+        <div className="error-banner">
+          <AlertCircle className="w-5 h-5" />
+          <span>{error}</span>
+        </div>
+      )}
 
+      {/* Loading State */}
       {loading ? (
-        <div className="loading-container">
-          <div className="loading-text">กำลังโหลดข้อมูล...</div>
+        <div className="loading-state">
+          <Loader2 className="loading-spinner" />
+          <p className="loading-text">กำลังโหลดข้อมูล...</p>
         </div>
       ) : (
         <>
-          <div className="table-container">
-            <table className="users-table">
-              <thead>
-                <tr>
-                  <th>ชื่อ-นามสกุล</th>
-                  <th>อีเมล</th>
-                  <th>เบอร์โทร</th>
-                  <th>ประเภท</th>
-                  <th>สร้างเมื่อ</th>
-                  <th className="text-center">จัดการ</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredUsers.length === 0 ? (
+          {/* Users Table */}
+          <div className="table-wrapper">
+            <div className="table-container">
+              <table className="users-table">
+                <thead>
                   <tr>
-                    <td colSpan={6} className="empty-message">
-                      {searchQuery ? "ไม่พบผู้ใช้ที่ตรงกับการค้นหา" : "ยังไม่มีผู้ใช้ในระบบ"}
-                    </td>
+                    <th>ชื่อ-นามสกุล</th>
+                    <th>อีเมล</th>
+                    <th>เบอร์โทร</th>
+                    <th>ประเภท</th>
+                    <th>สร้างเมื่อ</th>
+                    <th className="text-center">จัดการ</th>
                   </tr>
-                ) : (
-                  filteredUsers.map((user) => {
-                    const userId = user.id || user.ID;
-                    const badgeClass =
-                      user.type_id === 3 ? "user-type-admin" :
-                      user.type_id === 2 ? "user-type-teacher" : "user-type-student";
+                </thead>
+                <tbody>
+                  {filteredUsers.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="empty-state">
+                        <Users className="empty-icon" />
+                        <p className="empty-text">
+                          {searchQuery ? "ไม่พบผู้ใช้ที่ตรงกับการค้นหา" : "ยังไม่มีผู้ใช้ในระบบ"}
+                        </p>
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredUsers.map((user) => {
+                      const userId = user.id || user.ID;
+                      const badgeClass =
+                        user.type_id === 3 ? "badge-admin" :
+                        user.type_id === 2 ? "badge-teacher" : "badge-student";
 
-                    return (
-                      <tr key={userId}>
-                        <td>
-                          <div className="user-name-primary">
-                            {user.first_name_th} {user.last_name_th}
-                          </div>
-                          <div className="user-name-secondary">
-                            {user.first_name_en} {user.last_name_en}
-                          </div>
-                        </td>
-                        <td>{user.email}</td>
-                        <td>{user.phone}</td>
-                        <td>
-                          <span className={`user-type-badge ${badgeClass}`}>
-                            {getUserTypeName(user.type_id)}
-                          </span>
-                        </td>
-                        <td>{user.CreatedAt ? formatDate(user.CreatedAt) : "-"}</td>
-                        <td className="action-buttons">
-                          <button
-                            onClick={() => openModal("view", user)}
-                            className="btn-view"
-                            title="ดูรายละเอียด"
-                          >
-                            ดู
-                          </button>
-                          <button
-                            onClick={() => openModal("edit", user)}
-                            className="btn-edit"
-                            title="แก้ไข"
-                          >
-                            แก้ไข
-                          </button>
-                          <button
-                            onClick={() => handleDelete(user)}
-                            className="btn-delete"
-                            title="ลบ"
-                          >
-                            ลบ
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+                      return (
+                        <tr key={userId} className="table-row">
+                          <td>
+                            <div className="user-info">
+                              <div className="user-name-primary">
+                                {user.first_name_th} {user.last_name_th}
+                              </div>
+                              <div className="user-name-secondary">
+                                {user.first_name_en} {user.last_name_en}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="email-cell">{user.email}</td>
+                          <td className="phone-cell">{user.phone}</td>
+                          <td>
+                            <span className={`user-badge ${badgeClass}`}>
+                              {getUserTypeName(user.type_id)}
+                            </span>
+                          </td>
+                          <td className="date-cell">
+                            {user.CreatedAt ? formatDate(user.CreatedAt) : "-"}
+                          </td>
+                          <td>
+                            <div className="action-buttons">
+                              <button
+                                onClick={() => openModal("view", user)}
+                                className="btn-action btn-view"
+                                title="ดูรายละเอียด"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => openModal("edit", user)}
+                                className="btn-action btn-edit"
+                                title="แก้ไข"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(user)}
+                                className="btn-action btn-delete"
+                                title="ลบ"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
 
+          {/* Result Count */}
           <div className="result-count">
-            แสดง {filteredUsers.length} จาก {users.length} ผู้ใช้
+            แสดง <strong>{filteredUsers.length}</strong> จาก <strong>{users.length}</strong> ผู้ใช้
           </div>
         </>
       )}
 
+      {/* Modal */}
       {showModal && (
         <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-content text-gray-800" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2 className="modal-title">
                 {modalMode === "create" && "เพิ่มผู้ใช้ใหม่"}
@@ -484,236 +521,207 @@ export default function AdminUsersPage() {
                 {modalMode === "view" && "รายละเอียดผู้ใช้"}
               </h2>
               <button onClick={closeModal} className="btn-close-modal" title="ปิด">
-                ×
+                <X className="w-6 h-6" />
               </button>
             </div>
 
             <div className="modal-body">
               {modalMode === "view" && selectedUser ? (
-                <div className="view-details">
-                  <div className="detail-row">
-                    <span className="detail-label">ชื่อ (ไทย):</span>
-                    <span className="detail-value">{selectedUser.first_name_th} {selectedUser.last_name_th}</span>
+                <div className="view-grid">
+                  <div>
+                    <div className="view-field-label">ชื่อ (ภาษาไทย)</div>
+                    <div className="view-field-value">
+                      {selectedUser.first_name_th} {selectedUser.last_name_th}
+                    </div>
                   </div>
-                  <div className="detail-row">
-                    <span className="detail-label">ชื่อ (อังกฤษ):</span>
-                    <span className="detail-value">{selectedUser.first_name_en} {selectedUser.last_name_en}</span>
+                  <div>
+                    <div className="view-field-label">ชื่อ (ภาษาอังกฤษ)</div>
+                    <div className="view-field-value">
+                      {selectedUser.first_name_en} {selectedUser.last_name_en}
+                    </div>
                   </div>
-                  <div className="detail-row">
-                    <span className="detail-label">อีเมล:</span>
-                    <span className="detail-value">{selectedUser.email}</span>
+                  <div>
+                    <div className="view-field-label">อีเมล</div>
+                    <div className="view-field-value">{selectedUser.email}</div>
                   </div>
-                  <div className="detail-row">
-                    <span className="detail-label">เบอร์โทร:</span>
-                    <span className="detail-value">{selectedUser.phone}</span>
+                  <div>
+                    <div className="view-field-label">เบอร์โทร</div>
+                    <div className="view-field-value">{selectedUser.phone}</div>
                   </div>
-                  <div className="detail-row">
-                    <span className="detail-label">วันเกิด:</span>
-                    <span className="detail-value">{selectedUser.birthday ? formatDate(selectedUser.birthday) : "-"}</span>
+                  <div>
+                    <div className="view-field-label">วันเกิด</div>
+                    <div className="view-field-value">
+                      {selectedUser.birthday ? formatDate(selectedUser.birthday) : "-"}
+                    </div>
                   </div>
-                  <div className="detail-row">
-                    <span className="detail-label">ประเภทเอกสาร:</span>
-                    <span className="detail-value">{getIDTypeName(selectedUser.id_type)}</span>
+                  <div>
+                    <div className="view-field-label">ประเภทผู้ใช้</div>
+                    <div className="view-field-value">{getUserTypeName(selectedUser.type_id)}</div>
                   </div>
-                  <div className="detail-row">
-                    <span className="detail-label">เลขเอกสาร:</span>
-                    <span className="detail-value">{selectedUser.id_number}</span>
+                  <div>
+                    <div className="view-field-label">ประเภทเอกสาร</div>
+                    <div className="view-field-value">{getIDTypeName(selectedUser.id_type)}</div>
                   </div>
-                  <div className="detail-row">
-                    <span className="detail-label">ประเภทผู้ใช้:</span>
-                    <span className="detail-value">{getUserTypeName(selectedUser.type_id)}</span>
-                  </div>
-                  <div className="detail-row">
-                    <span className="detail-label">PDPA:</span>
-                    <span className="detail-value">{selectedUser.pdpa_consent ? "ยินยอม" : "ไม่ยินยอม"}</span>
-                  </div>
-                  <div className="detail-row">
-                    <span className="detail-label">สร้างเมื่อ:</span>
-                    <span className="detail-value">{selectedUser.CreatedAt ? formatDate(selectedUser.CreatedAt) : "-"}</span>
+                  <div>
+                    <div className="view-field-label">เลขเอกสาร</div>
+                    <div className="view-field-value">{selectedUser.id_number}</div>
                   </div>
                 </div>
               ) : (
-                <form onSubmit={handleSubmit}>
-                  {/* ตัวเลือกภาษาชื่อ */}
-                  <div className="form-group">
-                    <label className="form-label">เลือกภาษาชื่อ</label>
+                <form onSubmit={handleSubmit} className="modal-form">
+                  {/* Language Toggle */}
+                  <div className="form-group-inline">
+                    <label className="form-label">
+                      เลือกภาษาชื่อ
+                      <span className="form-label-secondary"> (กรอกได้เพียงภาษาเดียว)</span>
+                    </label>
                     <div className="language-toggle">
                       <button
                         type="button"
-                        className={`btn-language ${nameLanguage === "thai" ? "active" : ""}`}
-                        onClick={() => {
-                          setNameLanguage("thai");
-                          setFormErrors((prev) => {
-                            const next = { ...prev };
-                            delete next.first_name_en;
-                            delete next.last_name_en;
-                            return next;
-                          });
-                          setFormData((prev) => ({
-                            ...prev,
-                            first_name_en: "",
-                            last_name_en: "",
-                          }));
-                        }}
+                        onClick={() => setNameLanguage("thai")}
+                        className={`toggle-btn ${nameLanguage === "thai" ? "active" : ""}`}
                       >
                         ภาษาไทย
                       </button>
                       <button
                         type="button"
-                        className={`btn-language ${nameLanguage === "english" ? "active" : ""}`}
-                        onClick={() => {
-                          setNameLanguage("english");
-                          setFormErrors((prev) => {
-                            const next = { ...prev };
-                            delete next.first_name_th;
-                            delete next.last_name_th;
-                            return next;
-                          });
-                          setFormData((prev) => ({
-                            ...prev,
-                            first_name_th: "",
-                            last_name_th: "",
-                          }));
-                        }}
+                        onClick={() => setNameLanguage("english")}
+                        className={`toggle-btn ${nameLanguage === "english" ? "active" : ""}`}
                       >
                         English
                       </button>
                     </div>
                   </div>
 
+                  {/* Name Fields */}
                   {nameLanguage === "thai" ? (
-                    <div className="form-group">
-                      <label className="form-label">ชื่อ-นามสกุล (ไทย) *</label>
-                      <div className="form-grid-2">
-                        <div>
-                          <input
-                            id="first_name_th"
-                            type="text"
-                            placeholder="ชื่อ"
-                            value={formData.first_name_th}
-                            onChange={(e) => setFormData({ ...formData, first_name_th: e.target.value })}
-                            className={`form-input ${formErrors.first_name_th ? "error" : ""}`}
-                          />
-                          {formErrors.first_name_th && (
-                            <div className="error-text">{formErrors.first_name_th}</div>
-                          )}
-                        </div>
-                        <div>
-                          <input
-                            id="last_name_th"
-                            type="text"
-                            placeholder="นามสกุล"
-                            value={formData.last_name_th}
-                            onChange={(e) => setFormData({ ...formData, last_name_th: e.target.value })}
-                            className={`form-input ${formErrors.last_name_th ? "error" : ""}`}
-                          />
-                          {formErrors.last_name_th && (
-                            <div className="error-text">{formErrors.last_name_th}</div>
-                          )}
-                        </div>
+                    <div className="form-grid-2">
+                      <div className="form-group">
+                        <label htmlFor="first_name_th" className="form-label">ชื่อ (ไทย) *</label>
+                        <input
+                          id="first_name_th"
+                          type="text"
+                          placeholder="ชื่อภาษาไทย"
+                          value={formData.first_name_th}
+                          onChange={(e) => setFormData({ ...formData, first_name_th: e.target.value })}
+                          className={`form-input ${formErrors.first_name_th ? "error" : ""}`}
+                        />
+                        {formErrors.first_name_th && (
+                          <div className="error-text">{formErrors.first_name_th}</div>
+                        )}
+                      </div>
+                      <div className="form-group">
+                        <label htmlFor="last_name_th" className="form-label">นามสกุล (ไทย) *</label>
+                        <input
+                          id="last_name_th"
+                          type="text"
+                          placeholder="นามสกุลภาษาไทย"
+                          value={formData.last_name_th}
+                          onChange={(e) => setFormData({ ...formData, last_name_th: e.target.value })}
+                          className={`form-input ${formErrors.last_name_th ? "error" : ""}`}
+                        />
+                        {formErrors.last_name_th && (
+                          <div className="error-text">{formErrors.last_name_th}</div>
+                        )}
                       </div>
                     </div>
                   ) : (
-                    <div className="form-group">
-                      <label className="form-label">ชื่อ-นามสกุล (อังกฤษ) *</label>
-                      <div className="form-grid-2">
-                        <div>
-                          <input
-                            id="first_name_en"
-                            type="text"
-                            placeholder="First Name"
-                            value={formData.first_name_en}
-                            onChange={(e) => setFormData({ ...formData, first_name_en: e.target.value })}
-                            className={`form-input ${formErrors.first_name_en ? "error" : ""}`}
-                          />
-                          {formErrors.first_name_en && (
-                            <div className="error-text">{formErrors.first_name_en}</div>
-                          )}
-                        </div>
-                        <div>
-                          <input
-                            id="last_name_en"
-                            type="text"
-                            placeholder="Last Name"
-                            value={formData.last_name_en}
-                            onChange={(e) => setFormData({ ...formData, last_name_en: e.target.value })}
-                            className={`form-input ${formErrors.last_name_en ? "error" : ""}`}
-                          />
-                          {formErrors.last_name_en && (
-                            <div className="error-text">{formErrors.last_name_en}</div>
-                          )}
-                        </div>
+                    <div className="form-grid-2">
+                      <div className="form-group">
+                        <label htmlFor="first_name_en" className="form-label">First Name *</label>
+                        <input
+                          id="first_name_en"
+                          type="text"
+                          placeholder="First Name"
+                          value={formData.first_name_en}
+                          onChange={(e) => setFormData({ ...formData, first_name_en: e.target.value })}
+                          className={`form-input ${formErrors.first_name_en ? "error" : ""}`}
+                        />
+                        {formErrors.first_name_en && (
+                          <div className="error-text">{formErrors.first_name_en}</div>
+                        )}
+                      </div>
+                      <div className="form-group">
+                        <label htmlFor="last_name_en" className="form-label">Last Name *</label>
+                        <input
+                          id="last_name_en"
+                          type="text"
+                          placeholder="Last Name"
+                          value={formData.last_name_en}
+                          onChange={(e) => setFormData({ ...formData, last_name_en: e.target.value })}
+                          className={`form-input ${formErrors.last_name_en ? "error" : ""}`}
+                        />
+                        {formErrors.last_name_en && (
+                          <div className="error-text">{formErrors.last_name_en}</div>
+                        )}
                       </div>
                     </div>
                   )}
 
-                  {/* อีเมล */}
-                  <div className="form-group">
-                    <label htmlFor="email" className="form-label">อีเมล *</label>
-                    <input
-                      id="email"
-                      type="email"
-                      placeholder="example@email.com"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className={`form-input ${formErrors.email ? "error" : ""}`}
-                    />
-                    {formErrors.email && <div className="error-text">{formErrors.email}</div>}
+                  {/* Email & Password */}
+                  <div className="form-grid-2">
+                    <div className="form-group">
+                      <label htmlFor="email" className="form-label">อีเมล *</label>
+                      <input
+                        id="email"
+                        type="email"
+                        placeholder="example@email.com"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        className={`form-input ${formErrors.email ? "error" : ""}`}
+                      />
+                      {formErrors.email && <div className="error-text">{formErrors.email}</div>}
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="password" className="form-label">
+                        รหัสผ่าน {modalMode === "edit" && "(เว้นว่างถ้าไม่เปลี่ยน)"}
+                        {modalMode === "create" && "*"}
+                      </label>
+                      <input
+                        id="password"
+                        type="password"
+                        placeholder="รหัสผ่านอย่างน้อย 6 ตัวอักษร"
+                        value={formData.password}
+                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                        className={`form-input ${formErrors.password ? "error" : ""}`}
+                      />
+                      {formErrors.password && <div className="error-text">{formErrors.password}</div>}
+                    </div>
                   </div>
 
-                  {/* รหัสผ่าน */}
-                  <div className="form-group">
-                    <label htmlFor="password" className="form-label">
-                      รหัสผ่าน {modalMode === "create" && "*"}
-                      {modalMode === "edit" && (
-                        <span className="form-label-secondary"> (เว้นว่างถ้าไม่ต้องการเปลี่ยน)</span>
-                      )}
-                    </label>
-                    <input
-                      id="password"
-                      type="password"
-                      placeholder="ระบุรหัสผ่าน"
-                      value={formData.password}
-                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      className={`form-input ${formErrors.password ? "error" : ""}`}
-                    />
-                    {formErrors.password && <div className="error-text">{formErrors.password}</div>}
+                  {/* Phone & Birthday */}
+                  <div className="form-grid-2">
+                    <div className="form-group">
+                      <label htmlFor="phone" className="form-label">เบอร์โทร *</label>
+                      <input
+                        id="phone"
+                        type="tel"
+                        placeholder="0812345678"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        className={`form-input ${formErrors.phone ? "error" : ""}`}
+                      />
+                      {formErrors.phone && <div className="error-text">{formErrors.phone}</div>}
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="birthday" className="form-label">วันเกิด *</label>
+                      <input
+                        id="birthday"
+                        type="date"
+                        value={formData.birthday}
+                        onChange={(e) => setFormData({ ...formData, birthday: e.target.value })}
+                        className={`form-input ${formErrors.birthday ? "error" : ""}`}
+                      />
+                      {formErrors.birthday && <div className="error-text">{formErrors.birthday}</div>}
+                    </div>
                   </div>
 
-                  {/* เบอร์โทรศัพท์ */}
-                  <div className="form-group">
-                    <label htmlFor="phone" className="form-label">เบอร์โทรศัพท์ *</label>
-                    <input
-                      id="phone"
-                      type="text"
-                      placeholder="0812345678"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      maxLength={10}
-                      className={`form-input ${formErrors.phone ? "error" : ""}`}
-                    />
-                    {formErrors.phone && <div className="error-text">{formErrors.phone}</div>}
-                  </div>
-
-                  {/* วันเกิด */}
-                  <div className="form-group">
-                    <label htmlFor="birthday" className="form-label">วันเกิด *</label>
-                    <input
-                      id="birthday"
-                      type="date"
-                      value={formData.birthday}
-                      onChange={(e) => setFormData({ ...formData, birthday: e.target.value })}
-                      className={`form-input ${formErrors.birthday ? "error" : ""}`}
-                    />
-                    {formErrors.birthday && <div className="error-text">{formErrors.birthday}</div>}
-                  </div>
-
-                  {/* ประเภทเอกสารยืนยันตัวตน */}
+                  {/* ID Type & Number */}
                   <div className="form-group">
                     <label className="form-label">ประเภทเอกสารยืนยันตัวตน *</label>
                     <div className="form-grid-2">
                       <div>
-                        <label htmlFor="id_type" className="form-label">ประเภทเอกสาร</label>
+                        <label htmlFor="id_type" className="form-label-sub">ประเภทเอกสาร</label>
                         <select
                           id="id_type"
                           value={formData.id_type}
@@ -731,7 +739,7 @@ export default function AdminUsersPage() {
                         {formErrors.id_type && <div className="error-text">{formErrors.id_type}</div>}
                       </div>
                       <div>
-                        <label htmlFor="id_number" className="form-label">เลขเอกสาร</label>
+                        <label htmlFor="id_number" className="form-label-sub">เลขเอกสาร</label>
                         <input
                           id="id_number"
                           type="text"
@@ -751,7 +759,7 @@ export default function AdminUsersPage() {
                     </div>
                   </div>
 
-                  {/* ประเภทผู้ใช้ */}
+                  {/* User Type */}
                   <div className="form-group">
                     <label htmlFor="type_id" className="form-label">ประเภทผู้ใช้ *</label>
                     <select
@@ -771,6 +779,7 @@ export default function AdminUsersPage() {
                     {formErrors.type_id && <div className="error-text">{formErrors.type_id}</div>}
                   </div>
 
+                  {/* Form Actions */}
                   <div className="form-actions">
                     <button
                       type="button"
@@ -781,11 +790,17 @@ export default function AdminUsersPage() {
                       ยกเลิก
                     </button>
                     <button type="submit" disabled={submitLoading} className="btn-submit">
-                      {submitLoading
-                        ? "กำลังบันทึก..."
-                        : modalMode === "create"
-                        ? "เพิ่มผู้ใช้"
-                        : "บันทึกการเปลี่ยนแปลง"}
+                      {submitLoading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>กำลังบันทึก...</span>
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="w-4 h-4" />
+                          <span>{modalMode === "create" ? "เพิ่มผู้ใช้" : "บันทึกการเปลี่ยนแปลง"}</span>
+                        </>
+                      )}
                     </button>
                   </div>
                 </form>
@@ -795,13 +810,14 @@ export default function AdminUsersPage() {
         </div>
       )}
 
+      {/* Delete Confirmation Modal */}
       {showDeleteConfirm && deleteTarget && (
         <div className="modal-overlay" onClick={cancelDelete}>
-          <div className="modal-content confirm-modal text-gray-800" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-content confirm-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2 className="modal-title">ยืนยันการลบผู้ใช้</h2>
               <button onClick={cancelDelete} className="btn-close-modal" title="ปิด">
-                ×
+                <X className="w-6 h-6" />
               </button>
             </div>
             <div className="modal-body">
@@ -813,7 +829,8 @@ export default function AdminUsersPage() {
                   ยกเลิก
                 </button>
                 <button type="button" onClick={confirmDelete} className="btn-delete-confirm">
-                  ตกลง
+                  <Trash2 className="w-4 h-4" />
+                  <span>ลบผู้ใช้</span>
                 </button>
               </div>
             </div>

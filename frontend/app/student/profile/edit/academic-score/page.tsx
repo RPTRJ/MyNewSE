@@ -219,11 +219,13 @@ export default function EditAcademicScorePage() {
                     id="gpax_semesters"
                     type="number"
                     min="0"
+                    max="6"
                     className="w-full py-3 px-4 rounded-xl border-2 border-gray-200 focus:border-orange-500 focus:outline-none focus:ring-0 text-gray-900 transition-colors"
                     value={form.gpax_semesters}
                     onChange={(e) => setForm((prev) => ({ ...prev, gpax_semesters: e.target.value }))}
-                    placeholder="เช่น 5"
+                    placeholder="เช่น 5 (สูงสุด 6)"
                   />
+                  <p className="mt-1 text-xs text-gray-500">กรุณาระบุจำนวนเทอม 0-6</p>
                 </div>
               </div>
             </div>
