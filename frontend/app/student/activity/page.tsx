@@ -402,7 +402,7 @@ export default function ActivityUI() {
                 <label className="text-sm font-medium text-neutral-700 ml-1">ชื่อกิจกรรม</label>
                 <input
                   className="w-full px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors"
-                  placeholder="เช่น แข่งขันหุ่นยนต์"
+                  placeholder="กรอกชื่อกิจกรรม"
                   value={name}
                   maxLength={50}
                   onChange={(e) => setName(e.target.value)}
@@ -412,7 +412,7 @@ export default function ActivityUI() {
                 <label className="text-sm font-medium text-neutral-700 ml-1">หน่วยงานที่จัด</label>
                 <input
                   className="w-full px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors"
-                  placeholder="เช่น สมาคม..."
+                  placeholder="กรอกชื่อหน่วยงานที่จัด"
                   value={institution}
                   onChange={(e) => setInstitution(e.target.value)}
                 />
@@ -425,6 +425,7 @@ export default function ActivityUI() {
                 <input
                   type="date"
                   className="w-full px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors"
+                  style={{ color: activityDate === "" ? "#9ca3af" : "black" }}
                   value={activityDate}
                   onChange={(e) => setActivityDate(e.target.value)}
                 />
@@ -434,12 +435,13 @@ export default function ActivityUI() {
                 <label className="text-sm font-medium text-neutral-700 ml-1">ประเภทกิจกรรม</label>
                 <select
                   className="w-full px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors"
+                  style={{ color: typeId === "" ? "#9ca3af" : "black" }}
                   value={typeId}
                   onChange={(e) => setTypeId(e.target.value)}
                 >
-                  <option value="">เลือกประเภท</option>
+                  <option value="" className="text-gray-400">เลือกประเภท</option>
                   {types.map((t) => (
-                    <option key={t.ID} value={t.ID}>
+                    <option key={t.ID} value={t.ID} className="text-black">
                       {t.type_name}
                     </option>
                   ))}
@@ -450,12 +452,13 @@ export default function ActivityUI() {
                 <label className="text-sm font-medium text-neutral-700 ml-1">ระดับกิจกรรม</label>
                 <select
                   className="w-full px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors"
+                  style={{ color: levelId === "" ? "#9ca3af" : "black" }}
                   value={levelId}
                   onChange={(e) => setLevelId(e.target.value)}
                 >
-                  <option value="">เลือกระดับ</option>
+                  <option value="" className="text-gray-400">เลือกระดับ</option>
                   {levels.map((l) => (
-                    <option key={l.ID} value={l.ID}>
+                    <option key={l.ID} value={l.ID} className="text-black">
                       {l.level_name}
                     </option>
                   ))}
@@ -466,12 +469,13 @@ export default function ActivityUI() {
                 <label className="text-sm font-medium text-neutral-700 ml-1">รางวัลที่ได้รับ</label>
                 <select
                   className="w-full px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors"
+                  style={{ color: rewardId === "" ? "#9ca3af" : "black" }}
                   value={rewardId}
                   onChange={(e) => setRewardId(e.target.value)}
                 >
-                  <option value="">เลือกรางวัล</option>
+                  <option value="" className="text-gray-400">เลือกรางวัล</option>
                   {rewards.map((r) => (
-                    <option key={r.ID} value={r.ID}>
+                    <option key={r.ID} value={r.ID} className="text-black">
                       {r.level_name}
                     </option>
                   ))}
@@ -683,7 +687,7 @@ export default function ActivityUI() {
                     <label className="text-sm font-medium text-neutral-700 ml-1">ชื่อกิจกรรม</label>
                     <input
                       className="w-full px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors"
-                      placeholder="เช่น แข่งขันหุ่นยนต์"
+                      placeholder="กรอกชื่อกิจกรรม"
                       value={name}
                       maxLength={50}
                       onChange={(e) => setName(e.target.value)}
@@ -693,7 +697,7 @@ export default function ActivityUI() {
                     <label className="text-sm font-medium text-neutral-700 ml-1">หน่วยงานที่จัด</label>
                     <input
                       className="w-full px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors"
-                      placeholder="เช่น สมาคม..."
+                      placeholder="กรอกชื่อหน่วยงานที่จัด"
                       value={institution}
                       onChange={(e) => setInstitution(e.target.value)}
                     />
@@ -706,6 +710,7 @@ export default function ActivityUI() {
                     <input
                       type="date"
                       className="w-full px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors"
+                      style={{ color: activityDate === "" ? "#9ca3af" : "black" }}
                       value={activityDate}
                       onChange={(e) => setActivityDate(e.target.value)}
                     />
@@ -715,12 +720,13 @@ export default function ActivityUI() {
                     <label className="text-sm font-medium text-neutral-700 ml-1">ประเภทกิจกรรม</label>
                     <select
                       className="w-full px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors"
+                      style={{ color: typeId === "" ? "#9ca3af" : "black" }}
                       value={typeId}
                       onChange={(e) => setTypeId(e.target.value)}
                     >
-                      <option value="">เลือกประเภท</option>
+                      <option value="" className="text-gray-400">เลือกประเภท</option>
                       {types.map((t) => (
-                        <option key={t.ID} value={t.ID}>
+                        <option key={t.ID} value={t.ID} className="text-black">
                           {t.type_name}
                         </option>
                       ))}
@@ -731,12 +737,13 @@ export default function ActivityUI() {
                     <label className="text-sm font-medium text-neutral-700 ml-1">ระดับกิจกรรม</label>
                     <select
                       className="w-full px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors"
+                      style={{ color: levelId === "" ? "#9ca3af" : "black" }}
                       value={levelId}
                       onChange={(e) => setLevelId(e.target.value)}
                     >
-                      <option value="">เลือกระดับ</option>
+                      <option value="" className="text-gray-400">เลือกระดับ</option>
                       {levels.map((l) => (
-                        <option key={l.ID} value={l.ID}>
+                        <option key={l.ID} value={l.ID} className="text-black">
                           {l.level_name}
                         </option>
                       ))}
@@ -747,12 +754,13 @@ export default function ActivityUI() {
                     <label className="text-sm font-medium text-neutral-700 ml-1">รางวัลที่ได้รับ</label>
                     <select
                       className="w-full px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors"
+                      style={{ color: rewardId === "" ? "#9ca3af" : "black" }}
                       value={rewardId}
                       onChange={(e) => setRewardId(e.target.value)}
                     >
-                      <option value="">เลือกรางวัล</option>
+                      <option value="" className="text-gray-400">เลือกรางวัล</option>
                       {rewards.map((r) => (
-                        <option key={r.ID} value={r.ID}>
+                        <option key={r.ID} value={r.ID} className="text-black">
                           {r.level_name}
                         </option>
                       ))}

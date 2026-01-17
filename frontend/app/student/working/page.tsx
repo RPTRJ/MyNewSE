@@ -45,7 +45,7 @@ export default function WorkingUI() {
 
   // Form states
   const [title, setTitle] = useState("");
-  const [status, setStatus] = useState("pending");
+  const [status, setStatus] = useState("");
   const [typeId, setTypeId] = useState("");
   const [date, setDate] = useState("");
   const [description, setDescription] = useState("");
@@ -205,7 +205,7 @@ export default function WorkingUI() {
 
   const resetForm = () => {
     setTitle("");
-    setStatus("pending");
+    setStatus("");
     setTypeId("");
     setDate("");
     setDescription("");
@@ -223,9 +223,7 @@ export default function WorkingUI() {
 
   const statusConfig: Record<string, { bg: string; text: string; label: string }> = {
     completed: { bg: "bg-emerald-100", text: "text-emerald-700", label: "เสร็จสิ้น" },
-    in_progress: { bg: "bg-blue-100", text: "text-blue-700", label: "กำลังดำเนินการ" },
-    pending: { bg: "bg-amber-100", text: "text-amber-700", label: "รอดำเนินการ" },
-    cancelled: { bg: "bg-gray-100", text: "text-gray-700", label: "ยกเลิก" }
+    in_development: { bg: "bg-blue-100", text: "text-blue-700", label: "อยู่ในระหว่างพัฒนา" },
   };
 
   /* ================= UI ================= */
@@ -406,12 +404,13 @@ export default function WorkingUI() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <select
                 className="px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors"
+                style={{ color: typeId === "" ? "#9ca3af" : "black" }}
                 value={typeId}
                 onChange={(e) => setTypeId(e.target.value)}
               >
-                <option value="">เลือกประเภทงาน</option>
+                <option value="" className="text-gray-400">เลือกประเภทงาน</option>
                 {types.map((t) => (
-                  <option key={t.ID} value={t.ID}>
+                  <option key={t.ID} value={t.ID} className="text-black">
                     {t.type_name}
                   </option>
                 ))}
@@ -419,19 +418,21 @@ export default function WorkingUI() {
 
               <select
                 className="px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors"
+                style={{ color: status === "" ? "#9ca3af" : "black" }}
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
               >
-                <option value="pending">รอดำเนินการ</option>
-                <option value="in_progress">กำลังดำเนินการ</option>
-                <option value="completed">เสร็จสิ้น</option>
-                <option value="cancelled">ยกเลิก</option>
+                <option value="" className="text-gray-400">เลือกสถานะงาน</option>
+                <option value="in_development" className="text-black">อยู่ในระหว่างพัฒนา</option>
+                <option value="completed" className="text-black">เสร็จสิ้น</option>
               </select>
 
               <input
                 type="date"
                 className="px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors"
+                style={{ color: date === "" ? "#9ca3af" : "black" }}
                 value={date}
+                max={new Date().toLocaleDateString('en-CA')}
                 onChange={(e) => setDate(e.target.value)}
               />
             </div>
@@ -696,33 +697,36 @@ export default function WorkingUI() {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <select
-                    className="px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors"
+                    className={`px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors ${typeId === "" ? "text-gray-400" : "text-black"
+                      }`}
                     value={typeId}
                     onChange={(e) => setTypeId(e.target.value)}
                   >
-                    <option value="">เลือกประเภทงาน</option>
+                    <option value="" className="text-gray-400">เลือกประเภทงาน</option>
                     {types.map((t) => (
-                      <option key={t.ID} value={t.ID}>
+                      <option key={t.ID} value={t.ID} className="text-black">
                         {t.type_name}
                       </option>
                     ))}
                   </select>
 
                   <select
-                    className="px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors"
+                    className={`px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors ${status === "" ? "text-gray-400" : "text-black"
+                      }`}
                     value={status}
                     onChange={(e) => setStatus(e.target.value)}
                   >
-                    <option value="pending">รอดำเนินการ</option>
-                    <option value="in_progress">กำลังดำเนินการ</option>
-                    <option value="completed">เสร็จสิ้น</option>
-                    <option value="cancelled">ยกเลิก</option>
+                    <option value="" className="text-gray-400">เลือกสถานะงาน</option>
+                    <option value="in_development" className="text-black">อยู่ในระหว่างพัฒนา</option>
+                    <option value="completed" className="text-black">เสร็จสิ้น</option>
                   </select>
 
                   <input
                     type="date"
-                    className="px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors"
+                    className={`px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors ${date === "" ? "text-gray-400" : "text-black"
+                      }`}
                     value={date}
+                    max={new Date().toLocaleDateString('en-CA')}
                     onChange={(e) => setDate(e.target.value)}
                   />
                 </div>
