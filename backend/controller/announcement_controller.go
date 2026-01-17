@@ -110,6 +110,16 @@ func GetAdminAnnouncements(c *gin.Context) {
 	db := config.GetDB()
 	var announcements []entity.Announcement
 
+	// เวลาไทย
+	location, _ := time.LoadLocation("Asia/Bangkok")
+	now := time.Now().In(location)
+
+	// 🔥 อัปเดตสถานะ EXPIRED ก่อน
+	db.Model(&entity.Announcement{}).
+		Where("expires_at IS NOT NULL").
+		Where("expires_at <= ? AND status != ?", now, "EXPIRED").
+		Update("status", "EXPIRED")
+
 	status := c.Query("status")
 
 	query := db.Preload("User").Preload("Cetagory")

@@ -37,8 +37,7 @@ const PortfolioReview = () => {
 
   const sections = [
     { id: 'introduction', label: 'ข้อมูลส่วนตัว', icon: '📄' },
-    { id: 'workings', label: 'คลังผลงาน', icon: '📋' },
-    { id: 'activities', label: 'กิจกรรม', icon: '🎨' },
+    { id: 'portfolio', label: 'คลังผลงาน', icon: '📁' },
   ];
 
   useEffect(() => {
@@ -51,12 +50,17 @@ const PortfolioReview = () => {
     if (!scorecard?.score_criteria) return;
 
     const total = scorecard.score_criteria.reduce((sum: number, c: any) => {
-      return sum + c.score;
+      return sum + (Number(c.score) || 0);
+    }, 0);
+
+    const maxTotal = scorecard.score_criteria.reduce((sum: number, c: any) => {
+      return sum + (Number(c.max_score) || 0);
     }, 0);
 
     setScorecard((prev: any) => ({
       ...prev,
       total_score: Number(total.toFixed(2)),
+      max_score: maxTotal > 0 ? maxTotal : (prev?.max_score || 100),
     }));
   }, [scorecard?.score_criteria]);
 
@@ -195,7 +199,34 @@ const PortfolioReview = () => {
     }));
   };
 
+  const validateBeforeSave = () => {
+    // 1️⃣ ตรวจ Overall Comment
+    if (!feedback.overall_comment || feedback.overall_comment.trim() === '') {
+      alert('กรุณากรอกความคิดเห็นโดยรวม (Overall Comment)');
+      return false;
+    }
+
+    // 2️⃣ ตรวจ Scorecard
+    if (!scorecard || !scorecard.score_criteria) {
+      alert('ไม่พบข้อมูล Scorecard');
+      return false;
+    }
+
+    const unfilledCriteria = scorecard.score_criteria.find(
+      (c: any) => c.score === null || c.score === undefined || c.score === 0
+    );
+
+    if (unfilledCriteria) {
+      alert('กรุณาให้คะแนนครบทุกหัวข้อใน Scorecard');
+      return false;
+    }
+
+    return true;
+  };
+
+
   const handleSave = async () => {
+    if (!validateBeforeSave()) return;
     setSaving(true);
     try {
       // Save feedback
@@ -238,9 +269,6 @@ const PortfolioReview = () => {
         setScorecard(savedScorecard);
       }
 
-      // Update status
-      await submissionService.updateSubmissionStatus(submission.ID, "under_review");
-
       alert('บันทึกสำเร็จ!');
       router.push("/teacher");
       router.refresh();
@@ -253,6 +281,7 @@ const PortfolioReview = () => {
   };
 
   const handleApprove = async () => {
+    if (!validateBeforeSave()) return;
     if (!confirm('ยืนยันการอนุมัติ? หลังจากนี้จะไม่สามารถแก้คะแนนได้')) return;
     try {
       setSaving(true);
@@ -272,6 +301,7 @@ const PortfolioReview = () => {
 
   const handleRequestRevision = async () => {
     try {
+      await handleSave();
       await submissionService.updateSubmissionStatus(submission.ID, 'revision_requested');
       setStatus('revision_requested');
       alert('ส่งคำขอแก้ไขแล้ว');
@@ -332,14 +362,8 @@ const PortfolioReview = () => {
     });
 
     if (activeSection === 'introduction') {
-      // Show profile section(s)
-      const profileSections = enabledSections.filter((s: any) =>
-        s.section_title?.toLowerCase().includes('profile') ||
-        s.layout_type?.includes('profile')
-      );
-
-      if (profileSections.length === 0 && profile) {
-        // Fallback to old profile display
+      // แสดง profile แบบธรรมดา (fallback) เสมอ
+      if (profile) {
         return (
           <div className="space-y-8">
             <div className="flex items-start gap-6 pb-6 border-b border-gray-200">
@@ -458,44 +482,33 @@ const PortfolioReview = () => {
         );
       }
 
-      // Render portfolio profile sections
       return (
-        <div className="space-y-6">
-          {profileSections.map((section: any) => (
-            <SectionContent
-              key={section.ID}
-              section={section}
-              activities={activities}
-              workings={workings}
-              currentUser={currentUser}
-              imageIndices={imageIndices}
-              onNextImage={handleNextImage}
-              onPrevImage={handlePrevImage}
-            />
-          ))}
+        <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+          <div className="text-4xl mb-4">📦</div>
+          <div className="text-lg">ไม่พบข้อมูล Profile</div>
         </div>
       );
     }
 
-    if (activeSection === 'workings') {
-      // Show sections with 'working' blocks
+    if (activeSection === 'portfolio') {
+      // Show full portfolio with all sections and design
+      const primaryColor = portfolio?.colors?.primary_color || '#FF6B35';
+      const bgColor = portfolio?.colors?.background_color || '#ffffff';
+      const fontFam = portfolio?.font?.font_family || 'inherit';
+
       return (
-        <div className="space-y-8">
+        <div
+          className="space-y-6 p-6 rounded-xl"
+          style={{ backgroundColor: bgColor, fontFamily: fontFam }}
+        >
           {enabledSections.map((section: any) => {
-            const hasWorkings = section.portfolio_blocks?.some((block: any) => {
-              const content = typeof block.content === 'string' ? JSON.parse(block.content) : block.content;
-              return content?.type === 'working';
-            });
-
-            if (!hasWorkings) return null;
-
             const isProfile = section.section_title?.toLowerCase().includes('profile') ||
               section.layout_type?.includes('profile');
 
             return (
               <div key={section.ID} className="space-y-4">
                 {!isProfile && (
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-4 mb-4">
                     <h3 className="text-xl font-bold text-gray-800">
                       {section.section_title}
                     </h3>
@@ -510,49 +523,6 @@ const PortfolioReview = () => {
                   imageIndices={imageIndices}
                   onNextImage={handleNextImage}
                   onPrevImage={handlePrevImage}
-                  filterByType="working"
-                />
-              </div>
-            );
-          })}
-        </div>
-      );
-    }
-
-    if (activeSection === 'activities') {
-      // Show sections with 'activity' blocks
-      return (
-        <div className="space-y-8">
-          {enabledSections.map((section: any) => {
-            const hasActivities = section.portfolio_blocks?.some((block: any) => {
-              const content = typeof block.content === 'string' ? JSON.parse(block.content) : block.content;
-              return content?.type === 'activity';
-            });
-
-            if (!hasActivities) return null;
-
-            const isProfile = section.section_title?.toLowerCase().includes('profile') ||
-              section.layout_type?.includes('profile');
-
-            return (
-              <div key={section.ID} className="space-y-4">
-                {!isProfile && (
-                  <div className="flex items-center gap-4">
-                    <h3 className="text-xl font-bold text-gray-800">
-                      {section.section_title}
-                    </h3>
-                    <div className="h-0.5 flex-1 bg-gray-200"></div>
-                  </div>
-                )}
-                <SectionContent
-                  section={section}
-                  activities={activities}
-                  workings={workings}
-                  currentUser={currentUser}
-                  imageIndices={imageIndices}
-                  onNextImage={handleNextImage}
-                  onPrevImage={handlePrevImage}
-                  filterByType="activity"
                 />
               </div>
             );
@@ -712,7 +682,9 @@ const PortfolioReview = () => {
                         / {scorecard.max_score}
                       </p>
                       <p className="text-sm text-gray-500 mt-1">
-                        {((scorecard.total_score / scorecard.max_score) * 100).toFixed(1)}%
+                        {scorecard.max_score > 0
+                          ? ((scorecard.total_score / scorecard.max_score) * 100).toFixed(1)
+                          : '0.0'}%
                       </p>
                     </div>
                   </div>

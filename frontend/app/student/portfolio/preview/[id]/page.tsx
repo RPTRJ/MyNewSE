@@ -1,14 +1,19 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { 
     fetchMyPortfolios, 
     fetchActivities, 
     fetchWorkings,
+    fetchPortfolioByStatusActive,
+    // fetchPortfolioById, // Import the new fetch function
 } from "@/services/portfolio";
-import { fetchMyProfile } from "@/services/user";
+import { fetchUserProfile } from "@/services/user";
 import type { UserDTO } from "@/services/user";
+import type { DisplayUser } from "@/src/interfaces/portfolio";
+import { fetchMyProfile } from "@/services/user";
+import { log } from "util";
 
 
 // --- Helper Functions ---
@@ -45,7 +50,7 @@ function parseBlockContent(content: any): any {
 const placeholderImage = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cuc3ZnLm9yZyI+PHJlY3Qgd2lkdGg9IjE1MCIgaGVpZ2h0PSIxNTAiIGZpbGw9IiNFNUU3RUIiLz48L3N2Zz4=";
 
 function getImageUrl(image: any): string {
-    return image?.file_path || image?.FilePath || image?.image_url || image?.ImageUrl || image?.working_image_url || placeholderImage;
+    return image?.file_path || image?.FilePath || image?.image_url || image?.ImageUrl || image?.working_image_url || '/placeholder.jpg';
 }
 
 function extractImages(data: any, type: 'activity' | 'working'): any[] {
@@ -59,64 +64,74 @@ function extractImages(data: any, type: 'activity' | 'working'): any[] {
     return Array.isArray(images) ? images : [];
 }
 
-export default function PortfolioPreviewPage({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = use(params);
+export default function PortfolioPreviewPage() {
     const router = useRouter();
+    const params = useParams(); 
+    const portfolioId = params?.id;
     
     const [portfolio, setPortfolio] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-    const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const [activities, setActivities] = useState<any[]>([]); 
     const [workings, setWorkings] = useState<any[]>([]);
-    const [currentUser, setCurrentUser] = useState<any>(null);
+    const [currentUser, setCurrentUser] = useState<DisplayUser | null>(null);
     const [imageIndices, setImageIndices] = useState<{[key: string]: number}>({});
+    const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
     useEffect(() => {
         const loadData = async () => {
             try {
                 setLoading(true);
-                setErrorMsg(null);
-                
                 const [portfoliosRes, activitiesRes, workingsRes, userRes] = await Promise.all([
-                    fetchMyPortfolios({ includeBlocks: true }),
+                    fetchMyPortfolios(),
                     fetchActivities({ includeImages: true }),
                     fetchWorkings({ includeImages: true }),
+                    // fetchUserProfile(),
                     fetchMyProfile(),
                 ]);
 
-                const found = portfoliosRes.data?.find((p: any) => p.ID.toString() === id);
+                let targetPortfolio = portfoliosRes.data?.find((p: any) => p.ID.toString() === portfolioId);
                 
-                if (found) {
-                    if (found.portfolio_sections) {
-                        found.portfolio_sections.sort((a: any, b: any) => (a.section_order || 0) - (b.section_order || 0));
+                if (targetPortfolio && targetPortfolio.ID) {
+                    if (targetPortfolio.portfolio_sections) {
+                        targetPortfolio.portfolio_sections.sort((a: any, b: any) => (a.section_order || 0) - (b.section_order || 0));
                     }
-                    setPortfolio(found);
+                    setPortfolio(targetPortfolio);
                 } else {
                     setErrorMsg("ไม่พบแฟ้มสะสมผลงาน");
-                    // Optionally redirect after a delay
-                    // setTimeout(() => router.push('/student/portfolio'), 3000);
                     router.push('/student/portfolio');
                     return;
                 }
                 
                 setActivities(activitiesRes.data || []);
                 setWorkings(workingsRes.data || []);
+
+                const userData = (userRes as any).data || userRes;
                 
-                const education = (userRes as UserDTO).education || {};
-                const academic_score = (userRes as UserDTO).academic_score || {};
+                const education = (userData as UserDTO).education || {};
+                const academic_score = (userData as UserDTO).academic_score || {};
 
                 const schoolName = education.school?.name || education.school_name || "Suranaree University of Technology";
                 const majorName = education.curriculum_type?.name || "-";
-                
-                const rawGpax = academic_score.GPAX || academic_score.gpax;
+                const rawGpax = academic_score.gpax;
                 const gpax = rawGpax ? Number(rawGpax).toFixed(2) : "-";
+                
+                // const userData = (userRes as any).data || userRes;
+                // setCurrentUser({
+                //     firstname: userData.first_name_en || userData.first_name_th || "-",
+                //     lastname: userData.last_name_en || userData.last_name_th || "-",
+                //     major: userData.major || "Software Engineering", // ถ้า API ไม่มี field นี้อาจต้อง hardcode หรือแก้ backend
+                //     gpa: userData.gpa || "4.00", 
+                //     school: userData.school || "Suranaree University of Technology",
+                //     profile_image: userData.profile_image_url || "" 
+                    
+                // });
 
                 const finalUser = {
-                    firstname: (userRes as UserDTO).first_name_th || (userRes as UserDTO).first_name_en || "-",
-                    lastname: (userRes as UserDTO).last_name_th || (userRes as UserDTO).last_name_en || "-",
+                    firstname: (userData as UserDTO).first_name_th || (userData as UserDTO).first_name_en || "-",
+                    lastname: (userData as UserDTO).last_name_th || (userData as UserDTO).last_name_en || "-",
                     major: majorName,
                     school: schoolName,
-                    profile_image: (userRes as UserDTO).profile_image_url || "",
+                    profile_image: (userData as UserDTO).profile_image_url || "",
                     gpa: gpax,
                     academic_score: academic_score || {},
                 };
@@ -131,8 +146,8 @@ export default function PortfolioPreviewPage({ params }: { params: Promise<{ id:
             }
         };
 
-        if (id) loadData();
-    }, [id, router]);
+        loadData();
+    }, [portfolioId, router]);
 
     useEffect(() => {
         if (portfolio?.font?.font_url) {
@@ -144,14 +159,16 @@ export default function PortfolioPreviewPage({ params }: { params: Promise<{ id:
         }
     }, [portfolio]);
 
+    // ฟังก์ชันเลื่อนรูปภาพ (ถัดไป)
     const handleNextImage = (blockId: string, totalImages: number, e: React.MouseEvent) => {
-        e.stopPropagation();
+        e.stopPropagation(); // ป้องกันไม่ให้กดแล้วไป trigger event อื่น
         setImageIndices(prev => ({
             ...prev,
             [blockId]: ((prev[blockId] || 0) + 1) % totalImages
         }));
     };
 
+    // ฟังก์ชันเลื่อนรูปภาพ (ก่อนหน้า)
     const handlePrevImage = (blockId: string, totalImages: number, e: React.MouseEvent) => {
         e.stopPropagation();
         setImageIndices(prev => ({
@@ -160,61 +177,122 @@ export default function PortfolioPreviewPage({ params }: { params: Promise<{ id:
         }));
     };
 
+    // --- Render Function ---
     const renderSectionContent = (section: any) => {
         const blocks = section.portfolio_blocks || [];
-        const isProfileLayout = section.section_title?.toLowerCase().includes('profile') || 
-                                (section as any).layout_type === 'profile_header_left';
+        // const isProfileLayout = section.section_title?.toLowerCase().includes('profile') || 
+        //                         (section as any).layout_type === 'profile_header_left';
 
-        if (isProfileLayout) {
-            const isRight = section.section_title?.toLowerCase().includes('right') || 
-                             (section as any).layout_type === 'profile_header_right';
-             const user = currentUser || { 
-                 firstname: "Loading...", lastname: "", 
-                 major: "-", school: "-", profile_image: null,
-                 academic_score: { gpax: "0.00" }
-             };
-             const gpax = user.academic_score?.gpax || user.gpa || "-";
+        // เช็คว่าเป็น Section โปรไฟล์
+        const isIntroSection = section.section_title?.includes("แนะนำตัว") ||
+            section.section_title?.toLowerCase().includes("profile") ||
+            (section as any).layout_type?.includes('profile');
 
-             return (
-                 <div className={`flex flex-col items-center gap-6 p-6 bg-white border border-gray-100 rounded-xl shadow-sm h-full w-full 
-                                 ${isRight ? 'md:flex-row-reverse text-right' : 'md:flex-row text-left'}`}>
-                     <div className="w-32 h-32 flex-shrink-0 rounded-full overflow-hidden border-4 border-blue-100 shadow-md">
-                         <img 
-                            src={user.profile_image || placeholderImage} 
-                            alt="Profile" 
-                            className="w-full h-full object-cover" 
-                            onError={(e) => e.currentTarget.src = placeholderImage}
-                          />
-                     </div>
-                     <div className={`flex-1 w-full space-y-3 ${isRight ? 'md:items-end' : 'md:items-start'}`}>
-                         <div className={`border-b pb-2 border-gray-100 ${isRight ? 'flex flex-col items-end' : ''}`}>
-                             <h3 className="text-2xl font-bold text-gray-800">
-                                 {user.firstname} {user.lastname}
-                             </h3>
-                             <p className="text-blue-500 font-medium">
-                                 {user.school || "Suranaree University of Technology"}
-                             </p>
-                         </div>
-                         <div className={`space-y-1 text-sm text-gray-600 ${isRight ? 'flex flex-col items-end' : ''}`}>
-                             <p><span className="font-bold text-gray-800">Major:</span> {user.major}</p>
-                             <p><span className="font-bold text-gray-800">GPAX:</span> <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold">{gpax}</span></p>
-                            
-                             {user.academic_score && (user.academic_score.math || user.academic_score.eng || user.academic_score.sci || user.academic_score.lang || user.academic_score.social) && (
-                                <div className="mt-2 border-t border-gray-100 pt-2 text-xs w-full">
-                                    <p className="font-bold text-gray-700 mb-1">คะแนนรายวิชา</p>
-                                    <div className="grid grid-cols-3 gap-x-4 gap-y-1">
-                                        {user.academic_score.math && <p><span className="font-semibold">คณิต:</span> {user.academic_score.math}</p>}
-                                        {user.academic_score.eng && <p><span className="font-semibold">อังกฤษ:</span> {user.academic_score.eng}</p>}
-                                        {user.academic_score.sci && <p><span className="font-semibold">วิทย์:</span> {user.academic_score.sci}</p>}
-                                        {user.academic_score.lang && <p><span className="font-semibold">ไทย:</span> {user.academic_score.lang}</p>}
-                                        {user.academic_score.social && <p><span className="font-semibold">สังคม:</span> {user.academic_score.social}</p>}
-                                    </div>
+        if (isIntroSection) {
+            const isRight = section.section_title?.toLowerCase().includes('right') ||
+                (section as any).layout_type === 'profile_header_right';
+
+            const user = currentUser || {
+                firstname: "Loading...",
+                lastname: "",
+                major: "-",
+                school: "-",
+                profile_image: "",
+                gpa: "0.00",
+                academic_score: { gpax: "0.00" }
+            };
+            const gpax = user.academic_score?.gpax || user.gpa || "-";
+
+            // กรองเอาเฉพาะ Text Blocks ที่กดเพิ่มเข้ามา
+            const textBlocks = blocks.filter((block: any) => {
+                const c = parseBlockContent(block.content);
+                return c?.type === 'text';
+            });
+            const isAdditionalIntro = section.section_title?.includes("แนะนำตัว เพิ่มเติม");
+            const primaryColor = portfolio.colors?.primary_color || '#FF6B35';
+            return (
+                <div className="flex flex-col w-full gap-6">
+                    {!isAdditionalIntro && (
+                        <div className={`flex flex-col items-center gap-6 p-6 bg-white border border-gray-100 rounded-xl shadow-sm w-full 
+                                     ${isRight ? 'md:flex-row-reverse text-right' : 'md:flex-row text-left'}`}>
+                            <div className="w-32 h-32 flex-shrink-0 rounded-full overflow-hidden border-4 border-blue-100 shadow-md">
+                                <img
+                                    src={user.profile_image || placeholderImage}
+                                    alt="Profile"
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => e.currentTarget.src = placeholderImage}
+                                />
+                            </div>
+                            <div className={`flex-1 w-full space-y-3 ${isRight ? 'md:items-end' : 'md:items-start'}`}>
+                                <div className={`border-gray-100 ${isRight ? 'flex flex-col items-end' : ''}`}>
+                                    <h3 className="text-2xl font-bold text-gray-800">
+                                        {user.firstname} {user.lastname}
+                                    </h3>
+                                    <p className="font-medium"
+                                        style={{ color: primaryColor || '#FF6B35' }}
+                                    >
+                                        {user.school || "Suranaree University of Technology"}
+                                    </p>
+                                    <p><span className="font-bold text-gray-800">Major:</span> {user.major}</p>
+                                    <p><span className="font-bold text-gray-800">GPAX:</span> <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold">{gpax}</span></p>
                                 </div>
-                            )}
-                         </div>
-                     </div>
-                 </div>
-             );
+                                <div className={`space-y-1 text-sm text-gray-600 ${isRight ? 'flex flex-col items-end' : ''}`}>
+                                    {user.academic_score && (user.academic_score.math || user.academic_score.eng || user.academic_score.sci || user.academic_score.lang || user.academic_score.social) && (
+                                        <div className="mt-2 border-t border-gray-100 pt-2 text-xs w-full">
+                                            <p className="font-bold text-gray-700 mb-1">คะแนนรายวิชา</p>
+                                            <div className="grid grid-cols-3 gap-x-4 gap-y-1">
+                                                {user.academic_score.math && <p><span className="font-semibold">คณิต:</span> {user.academic_score.math}</p>}
+                                                {user.academic_score.eng && <p><span className="font-semibold">อังกฤษ:</span> {user.academic_score.eng}</p>}
+                                                {user.academic_score.sci && <p><span className="font-semibold">วิทย์:</span> {user.academic_score.sci}</p>}
+                                                {user.academic_score.lang && <p><span className="font-semibold">ไทย:</span> {user.academic_score.lang}</p>}
+                                                {user.academic_score.social && <p><span className="font-semibold">สังคม:</span> {user.academic_score.social}</p>}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+
+                    {/* ================================================= */}
+                    {/* 2. ส่วนรายการข้อความ (Text Blocks) */}
+                    {/* (ตัดกล่องชมพูทิ้งแล้ว เอาอันนี้มาต่อเลย) */}
+                    {/* ================================================= */}
+                    {textBlocks.length > 0 && (
+                        <div className="flex flex-col gap-4 w-full">
+                            {/* หัวข้อเล็กๆ ถ้าต้องการ (ถ้าไม่เอาก็ลบ div นี้ทิ้งได้) */}
+                            <div className="flex items-center gap-4">
+                                {/* <h3 className="text-xl font-bold text-gray-800">แนะนำตัว เพิ่มเติม</h3> */}
+                                {/* <div className="h-1 flex-1 rounded-full bg-gray-100"></div> */}
+                            </div>
+
+                            {/* Loop แสดงกล่องข้อความ */}
+                            {textBlocks.map((block: any, idx: number) => {
+                                const c = parseBlockContent(block.content);
+                                return (
+                                    <div key={block.ID || idx} className="p-6 rounded-xl bg-white border border-gray-200 shadow-sm hover:shadow-md transition">
+                                        <div className="flex items-start gap-4">
+                                            {/* ไอคอน */}
+                                            <div className="w-10 h-10 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-xl flex-shrink-0">
+                                                📝
+                                            </div>
+                                            {/* เนื้อหา */}
+                                            <div className="flex-1">
+                                                {c.title && <h4 className="font-bold text-gray-800 mb-2 text-lg">{c.title}</h4>}
+                                                <div className="text-gray-600 whitespace-pre-wrap leading-relaxed">
+                                                    {c.detail}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                </div>
+            );
         }
 
         if (blocks.length === 0) {
@@ -230,14 +308,15 @@ export default function PortfolioPreviewPage({ params }: { params: Promise<{ id:
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {blocks.map((block: any, idx: number) => {
                     const c = parseBlockContent(block.content);
-                    if(c?.type === 'profile') return null;
+                    if (c?.type === 'profile') return null;
 
                     let itemData = null;
-                    if(c?.type === 'activity') itemData = activities.find((a: any) => a.ID == c.data_id);
-                    else if(c?.type === 'working') itemData = workings.find((w: any) => w.ID == c.data_id);
-                    
+                    if (c?.type === 'activity') itemData = activities.find((a: any) => a.ID == c.data_id);
+                    else if (c?.type === 'working') itemData = workings.find((w: any) => w.ID == c.data_id);
+
                     const finalData = itemData || c?.data;
-                    if(!finalData) return null;
+                    if (!finalData) return null;
+
                     const images = extractImages(finalData, c.type);
                     const uniqueKey = block.ID ? block.ID.toString() : `${section.ID}-${idx}`;
                     const currentIndex = imageIndices[uniqueKey] || 0;
@@ -252,7 +331,7 @@ export default function PortfolioPreviewPage({ params }: { params: Promise<{ id:
 
                     return (
                         <div key={idx} className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition flex flex-col group relative">
-                            <div className="h-64 w-full bg-gray-100 relative overflow-hidden group">
+                            <div className="h-80 w-full bg-gray-100 relative overflow-hidden group">
                                 <img src={currentImageSrc} className="w-full h-full object-cover transition-all duration-500" />
                                 <span className={`absolute top-2 right-2 text-[10px] text-white px-2 py-1 rounded font-bold uppercase z-10 ${c.type === 'activity' ? 'bg-orange-400' : 'bg-blue-400'}`}>
                                     {c.type}
@@ -294,7 +373,7 @@ export default function PortfolioPreviewPage({ params }: { params: Promise<{ id:
                                     )}
                                 </div>
                                 <p className="text-xs text-gray-500 line-clamp-2">{description}</p>
-                               <div className="mt-auto pt-3 border-t border-gray-50 flex flex-col gap-1.5">
+                                <div className="mt-auto pt-3 border-t border-gray-50 flex flex-col gap-1.5">
                                     {award && (
                                         <div className="flex items-center gap-2 text-xs text-gray-500">
                                             <div className="bg-yellow-50 p-1 rounded">

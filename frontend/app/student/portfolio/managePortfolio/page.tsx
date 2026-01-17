@@ -84,6 +84,68 @@ export default function MyPortfoliosPage() {
     });
     const router = useRouter();
 
+    // Modal states for beautiful alerts
+    const [alertModal, setAlertModal] = useState<{show: boolean; title: string; message: string; type: 'success' | 'error' | 'warning'}>({ 
+        show: false, 
+        title: '', 
+        message: '', 
+        type: 'success' 
+    });
+    const [confirmModal, setConfirmModal] = useState<{show: boolean; title: string; message: string; portfolioId: number | null; portfolioName: string}>({ 
+        show: false, 
+        title: '', 
+        message: '', 
+        portfolioId: null,
+        portfolioName: ''
+    });
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    const showAlert = (title: string, message: string, type: 'success' | 'error' | 'warning' = 'success', autoClose = true) => {
+        setAlertModal({ show: true, title, message, type });
+        if (autoClose) {
+            setTimeout(() => setAlertModal({ show: false, title: '', message: '', type: 'success' }), 2500);
+        }
+    };
+
+    const closeAlert = () => {
+        setAlertModal({ show: false, title: '', message: '', type: 'success' });
+    };
+
+    const showDeleteConfirm = (portfolioId: number, portfolioName: string) => {
+        setConfirmModal({
+            show: true,
+            title: 'ยืนยันการลบ',
+            message: `คุณต้องการลบแฟ้ม "${portfolioName}" ใช่หรือไม่?`,
+            portfolioId,
+            portfolioName
+        });
+    };
+
+    const closeConfirm = () => {
+        setConfirmModal({ show: false, title: '', message: '', portfolioId: null, portfolioName: '' });
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!confirmModal.portfolioId) return;
+        
+        setIsDeleting(true);
+        try {
+            await deletePortfolio(confirmModal.portfolioId);
+            await loadPortfolios();
+            if (selectedPortfolio && selectedPortfolio.ID === confirmModal.portfolioId) {
+                setSelectedPortfolio(null);
+            }
+            closeConfirm();
+            showAlert('สำเร็จ!', 'ลบแฟ้มเรียบร้อย', 'success');
+        } catch (err) {
+            console.error('Delete failed', err);
+            closeConfirm();
+            showAlert('เกิดข้อผิดพลาด', 'ไม่สามารถลบแฟ้มได้', 'error', false);
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
     // Get theme for a specific portfolio or use default
     const getPortfolioTheme = (portfolio: any) => {
         if (portfolio?.colors) {
@@ -552,11 +614,11 @@ export default function MyPortfoliosPage() {
             portfolio_id: scorecardModalState.portfolioID
             });
 
-            alert("ส่งงานแก้ไขแล้ว (Version ใหม่)");
+            showAlert("สำเร็จ!", "ส่งงานแก้ไขแล้ว (Version ใหม่)", "success");
             setScorecardModalState(prev => ({ ...prev, isOpen: false }));
             await loadSubmissionStatuses();
         } catch {
-            alert("ไม่สามารถส่งได้");
+            showAlert("เกิดข้อผิดพลาด", "ไม่สามารถส่งได้", "error", false);
         }
     };
 
@@ -573,13 +635,13 @@ export default function MyPortfoliosPage() {
         } catch (err) {
             console.error("Error fetching template details:", err);
             setLoadingPreview(false);
-            alert("ไม่สามารถโหลดตัวอย่างเทมเพลตได้");
+            showAlert("เกิดข้อผิดพลาด", "ไม่สามารถโหลดตัวอย่างเทมเพลตได้", "error", false);
         }
     };
 
     const handleSaveTheme = async () => {
         if (!selectedColorId || !portfolioToChangeColor) {
-            alert("กรุณาเลือกสีธีม");
+            showAlert("คำเตือน", "กรุณาเลือกสีธีม", "warning", false);
             return;
         }
 
@@ -587,7 +649,7 @@ export default function MyPortfoliosPage() {
             // Update only the selected portfolio
             await updatePortfolio(portfolioToChangeColor.ID, { colors_id: selectedColorId });
             
-            alert("บันทึกสีธีมสำเร็จ!");
+            showAlert("สำเร็จ!", "บันทึกสีธีมสำเร็จ", "success");
             setIsThemeModalOpen(false);
             setPortfolioToChangeColor(null);
             setSelectedColorId(null);
@@ -596,7 +658,7 @@ export default function MyPortfoliosPage() {
             await loadPortfolios();
         } catch (err) {
             console.error(err);
-            alert("เกิดข้อผิดพลาดในการบันทึก");
+            showAlert("เกิดข้อผิดพลาด", "ไม่สามารถบันทึกสีธีมได้", "error", false);
         }
     };
 
@@ -666,7 +728,130 @@ export default function MyPortfoliosPage() {
     }
 
     return (
-        <div className="min-h-screen bg-white">
+        <div className="min-h-screen bg-white relative">
+            
+            {/* Beautiful Alert Modal */}
+            {alertModal.show && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center animate-fade-in">
+                    <div 
+                        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                        onClick={closeAlert}
+                    />
+                    <div className="relative bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 animate-scale-up">
+                        <button
+                            onClick={closeAlert}
+                            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition"
+                        >
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                        <div className="flex justify-center mb-4">
+                            {alertModal.type === 'success' && (
+                                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                                    <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                            )}
+                            {alertModal.type === 'error' && (
+                                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+                                    <svg className="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </div>
+                            )}
+                            {alertModal.type === 'warning' && (
+                                <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
+                                    <svg className="w-10 h-10 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                </div>
+                            )}
+                        </div>
+                        <h3 className={`text-2xl font-bold text-center mb-2 ${
+                            alertModal.type === 'success' ? 'text-green-700' :
+                            alertModal.type === 'error' ? 'text-red-700' :
+                            'text-orange-700'
+                        }`}>
+                            {alertModal.title}
+                        </h3>
+                        <p className="text-gray-600 text-center mb-6">
+                            {alertModal.message}
+                        </p>
+                        <button
+                            onClick={closeAlert}
+                            className={`w-full py-3 rounded-xl font-semibold text-white transition-all hover:shadow-lg ${
+                                alertModal.type === 'success' ? 'bg-green-600 hover:bg-green-700' :
+                                alertModal.type === 'error' ? 'bg-red-600 hover:bg-red-700' :
+                                'bg-orange-600 hover:bg-orange-700'
+                            }`}
+                        >
+                            ตกลง
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {confirmModal.show && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center animate-fade-in">
+                    <div 
+                        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                        onClick={() => !isDeleting && closeConfirm()}
+                    />
+                    <div className="relative bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 animate-scale-up">
+                        <button
+                            onClick={() => !isDeleting && closeConfirm()}
+                            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition"
+                            disabled={isDeleting}
+                        >
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                        <div className="flex justify-center mb-4">
+                            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+                                <svg className="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </div>
+                        </div>
+                        <h3 className="text-2xl font-bold text-center mb-2 text-red-700">
+                            {confirmModal.title}
+                        </h3>
+                        <p className="text-gray-600 text-center mb-6">
+                            {confirmModal.message}
+                        </p>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={closeConfirm}
+                                disabled={isDeleting}
+                                className="flex-1 py-3 rounded-xl font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-all disabled:opacity-50"
+                            >
+                                ยกเลิก
+                            </button>
+                            <button
+                                onClick={handleConfirmDelete}
+                                disabled={isDeleting}
+                                className="flex-1 py-3 rounded-xl font-semibold text-white bg-red-600 hover:bg-red-700 transition-all hover:shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
+                            >
+                                {isDeleting ? (
+                                    <>
+                                        <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                        </svg>
+                                        กำลังลบ...
+                                    </>
+                                ) : (
+                                    'ลบแฟ้ม'
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
            
             {/* Main Content */}
             <div className="mx-auto" style={{ maxWidth: 1500 }}>
@@ -750,17 +935,30 @@ export default function MyPortfoliosPage() {
                                                     style={{ background: `linear-gradient(135deg, ${portfolioTheme.primary} 0%, ${portfolioTheme.secondary} 100%)` }}
                                                 >
                                                     <div className="text-white text-center">
-                                                        <div className="text-6xl font-bold opacity-30 mb-2">📚</div>
-                                                        <div className="text-sm font-bold bg-white rounded-full px-3 py-1 inline-block shadow-sm" style={{ color: portfolioTheme.primary }}>
-                                                            {sectionsCount} Sections • {blocksCount} Items
-                                                        </div>
+                                                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                        </svg>
+                                                        <button
+                                                            className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 p-3 bg-white rounded-full shadow-md text-gray-600 hover:text-primary hover:bg-gray-50 transition-all duration-200 z-10 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                document.getElementById(`cover-upload-${portfolio.ID}`)?.click();
+                                                            }}
+                                                            title="เปลี่ยนรูปปก"
+                                                        >
+                                                            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                            </svg>
+                                                        </button>
                                                     </div>
                                                 </div>
                                             )}
                                         </div>
 
                                         {/* Color Change Button */}
-                                        <button
+                                        {/* <button
                                             className="absolute top-2 left-2 p-2 bg-white rounded-full shadow-md hover:bg-gray-50 transition-all duration-200 z-10 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0"
                                             onClick={(e) => {
                                                 e.stopPropagation();
@@ -774,23 +972,10 @@ export default function MyPortfoliosPage() {
                                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
                                             </svg>
-                                        </button>
+                                        </button> */}
 
                                         {/* Upload Button at Corner */}
-                                        <button
-                                            className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md text-gray-600 hover:text-primary hover:bg-gray-50 transition-all duration-200 z-10 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                document.getElementById(`cover-upload-${portfolio.ID}`)?.click();
-                                            }}
-                                            title="เปลี่ยนรูปปก"
-                                        >
-                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                                            </svg>
-                                        </button>
-
+                                        
                                         <input
                                             type="file"
                                             id={`cover-upload-${portfolio.ID}`}
@@ -860,12 +1045,6 @@ export default function MyPortfoliosPage() {
                                                 </svg>
                                                 <span>{sectionsCount} sections</span>
                                             </div>
-                                            <div className="flex items-center gap-1">
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                </svg>
-                                                <span>{blocksCount} items</span>
-                                            </div>
                                         </div>
 
                                         {/* Action Buttons */}
@@ -890,19 +1069,9 @@ export default function MyPortfoliosPage() {
                                             </button>
                                             {renderSubmissionButton(portfolio)}
                                             <button
-                                                onClick={async (e) => {
+                                                onClick={(e) => {
                                                     e.stopPropagation();
-                                                    if (!confirm('คุณต้องการลบแฟ้มนี้ใช่หรือไม่?')) return;
-                                                    try {
-                                                        await deletePortfolio(portfolio.ID);
-                                                        // Reload to get updated statuses from backend
-                                                        await loadPortfolios();
-                                                        if (selectedPortfolio && selectedPortfolio.ID === portfolio.ID) setSelectedPortfolio(null);
-                                                        alert('ลบแฟ้มเรียบร้อย');
-                                                    } catch (err) {
-                                                        console.error('Delete failed', err);
-                                                        alert('ไม่สามารถลบแฟ้มได้');
-                                                    }
+                                                    showDeleteConfirm(portfolio.ID, portfolio.portfolio_name || `แฟ้ม ${portfolio.ID}`);
                                                 }}
                                                 className="px-3 py-2 border-2 rounded-lg text-sm font-medium transition"
                                                 style={{ borderColor: portfolioTheme.primary, color: portfolioTheme.primary }}
@@ -914,8 +1083,7 @@ export default function MyPortfoliosPage() {
 
                                     {/* Footer Info */}
                                     <div className="px-5 py-3 border-t text-xs text-gray-500" style={{ backgroundColor: portfolioTheme.primaryLight }}>
-                                        <div className="flex items-center justify-between">
-                                            <span>ID: {portfolio.ID}</span>
+                                        <div className="flex items-center justify-end">
                                             <span>อัปเดต: {new Date(portfolio.updated_at || portfolio.UpdatedAt).toLocaleDateString('th-TH')}</span>
                                         </div>
                                     </div>
@@ -946,105 +1114,12 @@ export default function MyPortfoliosPage() {
             </div>
         </div>
 
-            {/* Theme Color Modal */}
-            {isThemeModalOpen && portfolioToChangeColor && (
-                <div className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full p-6 max-h-[90vh] overflow-y-auto">
-                        <div className="flex items-center justify-between mb-6">
-                            <div>
-                                <h2 className="text-2xl font-bold text-gray-900">เลือกสีธีม</h2>
-                                <p className="text-sm text-gray-600 mt-1">
-                                    Portfolio: {portfolioToChangeColor.portfolio_name || portfolioToChangeColor.PortfolioName}
-                                </p>
-                            </div>
-                            <button
-                                onClick={() => {
-                                    setIsThemeModalOpen(false);
-                                    setPortfolioToChangeColor(null);
-                                    setSelectedColorId(null);
-                                }}
-                                className="text-gray-400 hover:text-gray-600 text-3xl leading-none"
-                            >
-                                ×
-                            </button>
-                        </div>
-
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-                            {availableColors.map((color) => (
-                                <div
-                                    key={color.ID}
-                                    onClick={() => setSelectedColorId(color.ID)}
-                                    className={`border-2 rounded-xl p-4 cursor-pointer transition hover:shadow-lg ${
-                                        selectedColorId === color.ID ? 'ring-4 ring-offset-2' : ''
-                                    }`}
-                                    style={{
-                                        borderColor: selectedColorId === color.ID ? color.primary_color : '#e5e7eb',
-                                        ...(selectedColorId === color.ID && {
-                                            ['--tw-ring-color' as any]: color.primary_color
-                                        })
-                                    }}
-                                >
-                                    <div className="flex items-center gap-3 mb-3">
-                                        <div
-                                            className="w-12 h-12 rounded-lg shadow-sm"
-                                            style={{ backgroundColor: color.primary_color }}
-                                        />
-                                        <div className="flex-1">
-                                            <h3 className="font-bold text-gray-900">{color.colors_name}</h3>
-                                            <p className="text-xs text-gray-500">{color.primary_color}</p>
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <div className="text-center">
-                                            <div
-                                                className="w-full h-8 rounded mb-1"
-                                                style={{ backgroundColor: color.secondary_color }}
-                                            />
-                                            <p className="text-[10px] text-gray-500">Secondary</p>
-                                        </div>
-                                        <div className="text-center">
-                                            <div
-                                                className="w-full h-8 rounded mb-1"
-                                                style={{ backgroundColor: color.background_color }}
-                                            />
-                                            <p className="text-[10px] text-gray-500">Background</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-
-                        <div className="flex justify-end gap-3">
-                            <button
-                                onClick={() => {
-                                    setIsThemeModalOpen(false);
-                                    setPortfolioToChangeColor(null);
-                                    setSelectedColorId(null);
-                                }}
-                                className="px-6 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-100 transition"
-                            >
-                                ยกเลิก
-                            </button>
-                            <button
-                                onClick={handleSaveTheme}
-                                disabled={!selectedColorId}
-                                className="px-6 py-2.5 rounded-lg text-white font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
-                                style={{ backgroundColor: theme.primary }}
-                            >
-                                บันทึกสีธีม
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
             {/* Create Modal (template selection -> naming) */}
             {isCreateModalOpen && (
                 <div className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className={`bg-white rounded-2xl shadow-2xl max-w-5xl w-full p-6 animate-in fade-in zoom-in duration-200 ${ previewTemplate ? 'max-w-6xl h-[90vh]' : 'max-w-5xl'}`}>
                     {previewTemplate ? (
-                <div className="flex flex-col h-full">
+                <div className="flex flex-col h-full">  
                     {/* Header ของหน้า Preview */}
                     <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-200">
                         <div>
@@ -1334,33 +1409,6 @@ export default function MyPortfoliosPage() {
                                         );
                                     }
 
-                                // return (
-                                //     <div className="p-6 border-b flex items-start justify-between" style={{ background: `linear-gradient(to right, ${selectedTheme.primaryLight}, ${selectedTheme.primaryLight})` }}>
-                                //         <div className="flex-1">
-                                //             <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                                //                 {selectedPortfolio.portfolio_name || selectedPortfolio.PortfolioName || 'ไม่มีชื่อ'}
-                                //             </h2>
-                                //             {selectedPortfolio.description && (
-                                //                 <p className="text-gray-600 mb-3">{selectedPortfolio.description}</p>
-                                //             )}
-                                //             <div className="flex items-center gap-3">
-                                //                 <span className={`text-xs font-bold px-3 py-1 rounded-full ${selectedPortfolio.status === 'active'
-                                //                     ? 'bg-green-100 text-green-700'
-                                //                     : 'bg-gray-100 text-gray-600'
-                                //                     }`}>
-                                //                     {selectedPortfolio.status === 'active' ? '✓ เผยแพร่' : '📝 แบบร่าง'}
-                                //                 </span>
-                                //                 <span className="text-sm text-gray-500">Portfolio ID: {selectedPortfolio.ID}</span>
-                                //             </div>
-                                //         </div>
-                                //         <button
-                                //             onClick={() => setSelectedPortfolio(null)}
-                                //             className="text-gray-400 hover:text-gray-600 text-3xl leading-none ml-4"
-                                //         >
-                                //             ×
-                                //         </button>
-                                //     </div>
-                                // );
                                 return (
                                     <div className="space-y-10 max-w-5xl mx-auto">
                                         {sections.map((section: any, idx: number) => (
@@ -1415,269 +1463,6 @@ export default function MyPortfoliosPage() {
                                     );
                                 }
 
-                                // return (
-                                //     <div>
-                                //         <div className="flex items-center justify-between mb-6">
-                                //             <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                                //                 <span className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white" style={{ backgroundColor: selectedTheme.primary }}>
-                                //                     {sections.length}
-                                //                 </span>
-                                //                 Sections ทั้งหมด
-                                //             </h3>
-                                //             <button
-                                //                 onClick={() => {
-                                //                     setSelectedPortfolio(null);
-                                //                     router.push(`/student/portfolio/section?portfolio_id=${selectedPortfolio.ID}`);
-                                //                 }}
-                                //                 className="text-sm font-medium flex items-center gap-1"
-                                //                 style={{ color: selectedTheme.primary }}
-                                //             >
-                                //                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                //                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                //                 </svg>
-                                //                 จัดการ
-                                //             </button>
-                                //         </div>
-
-                                //         <div className="space-y-6">
-                                //             {sections.map((section: any, sectionIndex: number) => {
-                                //                 const blocks = section.portfolio_blocks || section.PortfolioBlocks || [];
-
-                                //                 return (
-                                //                     <div
-                                //                         key={section.ID}
-                                //                         className="border-2 rounded-xl p-5 transition bg-white"
-                                //                         style={{ borderColor: selectedTheme.primaryLight }}
-                                //                     >
-                                //                         {/* Section Header */}
-                                //                         <div className="flex items-start justify-between mb-4">
-                                //                             <div className="flex-1">
-                                //                                 <div className="flex items-center gap-2 mb-2">
-                                //                                     <span className="text-xs font-bold px-3 py-1 rounded-full text-white" style={{ backgroundColor: selectedTheme.accent }}>
-                                //                                         Section {sectionIndex + 1}
-                                //                                     </span>
-                                //                                     <h4 className="text-lg font-bold text-gray-900">
-                                //                                         {section.section_title || section.SectionTitle || 'ไม่มีชื่อ'}
-                                //                                     </h4>
-                                //                                 </div>
-                                //                                 <p className="text-sm text-gray-500">
-                                //                                     {blocks.length} รายการ
-                                //                                 </p>
-                                //                             </div>
-                                //                         </div>
-
-                                //                         {/* Blocks Display */}
-                                //                         {blocks.length > 0 ? (
-                                //                             <div className="space-y-3">
-                                //                                 {blocks.map((block: any, blockIndex: number) => {
-                                //                                     const contents = parseBlockContent(block.content || block.Content);
-                                //                                     if (!contents) return null;
-
-                                //                                     const data = contents.data || {};
-                                //                                     const images = extractImages(data, contents.type);
-
-                                //                                     // Helper formats
-                                //                                     const formatDate = (dateString: string) => {
-                                //                                         if (!dateString) return "";
-                                //                                         const date = new Date(dateString);
-                                //                                         return date.toLocaleDateString("th-TH", {
-                                //                                             year: "numeric",
-                                //                                             month: "long",
-                                //                                             day: "numeric",
-                                //                                         });
-                                //                                     };
-
-                                //                                     let displayData: any = null;
-                                //                                     if (contents.type === 'activity') {
-                                //                                         displayData = {
-                                //                                             type: 'activity',
-                                //                                             title: data.activity_name,
-                                //                                             institution: data.activity_detail?.institution || data.ActivityDetail?.Institution,
-                                //                                             date: formatDate(data.activity_detail?.activity_at || data.ActivityDetail?.ActivityAt),
-                                //                                             desc: data.activity_detail?.description || data.ActivityDetail?.Description,
-                                //                                             typeName: data.activity_detail?.type_activity?.type_name || data.ActivityDetail?.TypeActivity?.TypeName,
-                                //                                             levelName: data.activity_detail?.level_activity?.level_name || data.ActivityDetail?.LevelActivity?.LevelName,
-                                //                                             rewardName: data.reward?.level_name || data.Reward?.LevelName
-                                //                                         };
-                                //                                     } else {
-                                //                                         displayData = {
-                                //                                             type: 'working',
-                                //                                             title: data.working_name,
-                                //                                             status: data.status,
-                                //                                             typeName: data.working_detail?.type_working?.type_name || data.WorkingDetail?.TypeWorking?.TypeName,
-                                //                                             date: formatDate(data.working_detail?.working_at || data.WorkingDetail?.WorkingAt),
-                                //                                             desc: data.working_detail?.description || data.WorkingDetail?.Description,
-                                //                                             links: data.working_detail?.links || data.WorkingDetail?.Links || []
-                                //                                         };
-                                //                                     }
-
-                                //                                     return (
-                                //                                         <div
-                                //                                             key={block.ID}
-                                //                                             className="border rounded-lg p-4 transition hover:shadow-md bg-white"
-                                //                                             style={{ borderColor: selectedTheme.primaryLight }}
-                                //                                         >
-                                //                                             <div className="flex items-start gap-4">
-                                //                                                 {/* Images Preview */}
-                                //                                                 {images.length > 0 && (
-                                //                                                     <div className="flex-shrink-0">
-                                //                                                         <div
-                                //                                                             className={`w-24 h-24 rounded-lg overflow-hidden bg-gray-200 border border-gray-100 relative group ${images.length > 1 ? 'cursor-pointer' : ''}`}
-                                //                                                             onClick={(e) => {
-                                //                                                                 if (images.length > 1) {
-                                //                                                                     e.stopPropagation();
-                                //                                                                     setItemImageIndices(prev => {
-                                //                                                                         const currentIndex = prev[block.ID] || 0;
-                                //                                                                         return { ...prev, [block.ID]: (currentIndex + 1) % images.length };
-                                //                                                                     });
-                                //                                                                 }
-                                //                                                             }}
-                                //                                                         >
-                                //                                                             <div
-                                //                                                                 className="flex transition-transform duration-300 ease-in-out h-full"
-                                //                                                                 style={{
-                                //                                                                     transform: `translateX(-${(itemImageIndices[block.ID] || 0) * 100}%)`,
-                                //                                                                     width: `${images.length * 100}%`
-                                //                                                                 }}
-                                //                                                             >
-                                //                                                                 {images.map((img: any, idx: number) => (
-                                //                                                                     <div key={idx} className="w-full h-full flex-shrink-0 relative">
-                                //                                                                         <img
-                                //                                                                             src={getImageUrl(img)}
-                                //                                                                             alt={`Preview ${idx + 1}`}
-                                //                                                                             className="w-full h-full object-cover"
-                                //                                                                             onError={(e) => { e.currentTarget.src = '/placeholder.jpg'; }}
-                                //                                                                         />
-                                //                                                                     </div>
-                                //                                                                 ))}
-                                //                                                             </div>
-
-                                //                                                             {/* Expand Button Overlay */}
-                                //                                                             <button
-                                //                                                                 className="absolute top-1 right-1 p-1 bg-black bg-opacity-50 rounded text-white opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-opacity-70"
-                                //                                                                 onClick={(e) => {
-                                //                                                                     e.stopPropagation();
-                                //                                                                     setLightboxState({
-                                //                                                                         isOpen: true,
-                                //                                                                         images: images,
-                                //                                                                         photoIndex: itemImageIndices[block.ID] || 0
-                                //                                                                     });
-                                //                                                                 }}
-                                //                                                                 title="ดูรูปภาพขนาดใหญ่"
-                                //                                                             >
-                                //                                                                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                //                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                                //                                                                 </svg>
-                                //                                                             </button>
-
-                                //                                                             {/* Optional: Indicator dots or overlays could go here if needed, but keeping it clean for now */}
-                                //                                                         </div>
-                                //                                                         {images.length > 1 && (
-                                //                                                             <div className="text-xs text-gray-500 text-center mt-1 font-medium select-none">
-                                //                                                                 {(itemImageIndices[block.ID] || 0) + 1} / {images.length} รูป
-                                //                                                             </div>
-                                //                                                         )}
-                                //                                                     </div>
-                                //                                                 )}
-
-                                //                                                 {/* Content Info */}
-                                //                                                 <div className="flex-1 min-w-0">
-                                //                                                     <div className="flex items-center gap-2 mb-1">
-                                //                                                         <h5 className="font-bold text-lg text-gray-900 truncate">
-                                //                                                             {displayData.title || 'ไม่มีชื่อ'}
-                                //                                                         </h5>
-                                //                                                         {displayData.status && (
-                                //                                                             <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold border ${displayData.status === 'COMPLETED' ? 'bg-yellow-50 text-yellow-600 border-yellow-200' :
-                                //                                                                 displayData.status === 'INPROGRESS' ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-gray-50 text-gray-600 border-gray-200'
-                                //                                                                 }`}>
-                                //                                                                 {displayData.status}
-                                //                                                             </span>
-                                //                                                         )}
-                                //                                                     </div>
-
-                                //                                                     {/* Badges Row */}
-                                //                                                     <div className="flex flex-wrap gap-2 mb-2">
-                                //                                                         <span className={`px-2 py-0.5 rounded text-[10px] font-bold text-white uppercase ${displayData.type === 'activity' ? 'bg-orange-500' : 'bg-blue-500'}`}>
-                                //                                                             {displayData.type}
-                                //                                                         </span>
-                                //                                                         {displayData.typeName && (
-                                //                                                             <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-100 text-gray-600 border border-gray-200">
-                                //                                                                 {displayData.typeName}
-                                //                                                             </span>
-                                //                                                         )}
-                                //                                                         {displayData.levelName && (
-                                //                                                             <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-600 border border-purple-100">
-                                //                                                                 {displayData.levelName}
-                                //                                                             </span>
-                                //                                                         )}
-                                //                                                         {displayData.rewardName && (
-                                //                                                             <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-100 flex items-center gap-1">
-                                //                                                                 🏆 {displayData.rewardName}
-                                //                                                             </span>
-                                //                                                         )}
-                                //                                                     </div>
-
-                                //                                                     {/* Details */}
-                                //                                                     <div className="text-sm text-gray-600 space-y-1">
-                                //                                                         {displayData.institution && (
-                                //                                                             <div className="flex items-center gap-2">
-                                //                                                                 <span className="text-gray-400">🏢</span>
-                                //                                                                 <span>{displayData.institution}</span>
-                                //                                                             </div>
-                                //                                                         )}
-                                //                                                         {displayData.date && (
-                                //                                                             <div className="flex items-center gap-2">
-                                //                                                                 <span className="text-gray-400">🗓</span>
-                                //                                                                 <span>{displayData.date}</span>
-                                //                                                             </div>
-                                //                                                         )}
-                                //                                                         {displayData.desc && (
-                                //                                                             <p className="text-gray-500 mt-1 line-clamp-2 text-xs">
-                                //                                                                 {displayData.desc}
-                                //                                                             </p>
-                                //                                                         )}
-                                //                                                         {/* Links */}
-                                //                                                         {displayData.links && displayData.links.length > 0 && (
-                                //                                                             <div className="flex flex-wrap gap-2 mt-2">
-                                //                                                                 {displayData.links.map((link: any, i: number) => (
-                                //                                                                     <a
-                                //                                                                         key={i}
-                                //                                                                         href={link.working_link}
-                                //                                                                         target="_blank"
-                                //                                                                         rel="noopener noreferrer"
-                                //                                                                         className="flex items-center gap-1 text-xs text-blue-500 hover:underline bg-blue-50 px-2 py-1 rounded"
-                                //                                                                     >
-                                //                                                                         🔗 Link {i + 1}
-                                //                                                                     </a>
-                                //                                                                 ))}
-                                //                                                             </div>
-                                //                                                         )}
-                                //                                                     </div>
-                                //                                                 </div>
-
-                                //                                                 {/* Order Badge */}
-                                //                                                 <div className="flex-shrink-0">
-                                //                                                     <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-white text-xs font-bold shadow-sm" style={{ border: `1px solid ${selectedTheme.primary}`, color: selectedTheme.primary }}>
-                                //                                                         {blockIndex + 1}
-                                //                                                     </span>
-                                //                                                 </div>
-                                //                                             </div>
-                                //                                         </div>
-                                //                                     );
-                                //                                 })}
-                                //                             </div>
-                                //                         ) : (
-                                //                             <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                                //                                 <div className="text-3xl mb-2">🔭</div>
-                                //                                 <p className="text-sm text-gray-500">ยังไม่มีข้อมูลใน Section นี้</p>
-                                //                             </div>
-                                //                         )}
-                                //                     </div>
-                                //                 );
-                                //             })}
-                                //         </div>
-                                //     </div>
-                                // );
                             })()}
                         </div>
 

@@ -7,6 +7,7 @@ import { getWorkingsByUserWithMeta } from "@/services/working";
 import { Loader2, Trophy, Briefcase, FileText, Calendar, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import announcement from "@/services/announcement";
 
 export default function HomePage() {
   const router = useRouter();
@@ -223,7 +224,11 @@ export default function HomePage() {
 
                   <div className="hidden md:flex items-center justify-center px-4 border-l border-gray-200/50">
                     <div className="w-10 h-10 rounded-full bg-white text-gray-300 group-hover:bg-orange-500 group-hover:text-white flex items-center justify-center transition-all duration-300 shadow-sm">
-                      <ArrowUpRight className="w-5 h-5" />
+                      <ArrowUpRight className="w-5 h-5"
+                      onClick={() => {
+                        router.push(`/admin/announcements/${news.ID}`);
+                      }}
+                       />
                     </div>
                   </div>
                 </div>

@@ -41,6 +41,8 @@ export interface UserDetail {
         created_at: string;
         updated_at: string;
     };
+    gpax?: string;
+    major?: string;
 
 }
 
@@ -63,4 +65,21 @@ export interface AcademicScore{
     created_at: string;
     updated_at: string;
     transcript_file_url?: string;
+}
+
+export interface DisplayUser {
+    firstname: string;
+    lastname: string;
+    major: string;
+    school: string;
+    profile_image: string;
+    gpa: string;
+    academic_score?: {
+        math?: number;
+        eng?: number;
+        sci?: number;
+        lang?: number;
+        social?: number;
+        gpax?: string;
+    };
 }

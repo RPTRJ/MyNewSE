@@ -21,8 +21,8 @@ const AnnouncementDashboard = () => {
 
   // Fetch announcements and categories on mount
   useEffect(() => {
-      if (didFetch.current) return;
-        didFetch.current = true;
+    if (didFetch.current) return;
+    didFetch.current = true;
     fetchAnnouncements();
     fetchCategories();
   }, []);
@@ -54,21 +54,33 @@ const AnnouncementDashboard = () => {
     }
   };
 
-  const statuses = ['All', 'Published', 'Scheduled', 'Draft'];
+  const statuses = ['All', 'Published', 'Scheduled', 'Draft', 'Expired'];
 
   // Determine status from announcement data
   const getAnnouncementStatus = (announcement: Announcement): string => {
     const now = new Date();
-    const scheduledDate = new Date(announcement.scheduled_publish_at);
-    
+
+    if (announcement.expires_at) {
+      const expiresAt = new Date(announcement.expires_at);
+      if (now > expiresAt) {
+        return 'Expired';
+      }
+    }
+
     if (announcement.published_at) {
       return 'Published';
-    } else if (scheduledDate > now) {
-      return 'Scheduled';
-    } else {
-      return 'Draft';
     }
-    
+
+    if (announcement.scheduled_publish_at) {
+      const scheduledDate = new Date(announcement.scheduled_publish_at);
+      if (scheduledDate > now) {
+        return 'Scheduled';
+      }
+    }
+
+  
+
+    return 'Draft';
   };
 
   // Filter logic
@@ -95,16 +107,16 @@ const AnnouncementDashboard = () => {
   };
 
   const handleDelete = async (id: number) => {
-    
+
     if (!confirm('คุณแน่ใจหรือไม่ที่จะลบประกาศนี้?')) return;
 
     try {
       await AnnouncementService.deleteAnnouncement(id);
 
       await AnnouncementService.createAdminLog({
-          action_type: "DELETE",
-          announcement_id: id,  
-        });
+        action_type: "DELETE",
+        announcement_id: id,
+      });
 
       alert('ลบประกาศสำเร็จ');
       fetchAnnouncements();
@@ -141,7 +153,7 @@ const AnnouncementDashboard = () => {
   const handleBulkPin = async () => {
     try {
       await Promise.all(
-        selectedItems.map(id => 
+        selectedItems.map(id =>
           AnnouncementService.updateAnnouncement(id, { is_pinned: true })
         )
       );
@@ -161,6 +173,8 @@ const AnnouncementDashboard = () => {
         return 'bg-blue-100 text-blue-700';
       case 'Draft':
         return 'bg-gray-100 text-gray-700';
+      case 'Expired':
+        return 'bg-red-100 text-red-700';
       default:
         return 'bg-gray-100 text-gray-700';
     }
@@ -169,10 +183,10 @@ const AnnouncementDashboard = () => {
   const formatDate = (dateString?: string) => {
     if (!dateString) return '-';
     const date = new Date(dateString);
-    return date.toLocaleDateString('th-TH', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
+    return date.toLocaleDateString('th-TH', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
     });
   };
 
@@ -190,7 +204,7 @@ const AnnouncementDashboard = () => {
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-bold text-orange-600">ประกาศทั้งหมด</h1>
-            <button 
+            <button
               onClick={() => router.push('/admin/announcements/create')}
               className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
             >
@@ -228,7 +242,7 @@ const AnnouncementDashboard = () => {
                   <option value="All">สถานะ: ทั้งหมด</option>
                   {statuses.slice(1).map(status => (
                     <option key={status} value={status}>
-                      {status === 'Published' ? 'เผยแพร่แล้ว' : status === 'Scheduled' ? 'กำหนดเวลา' : 'ฉบับร่าง'}
+                      {status === 'Expired' ? 'หมดอายุ' : status === 'Published' ? 'เผยแพร่แล้ว' : status === 'Scheduled' ? 'กำหนดเวลา' : 'ฉบับร่าง'}
                     </option>
                   ))}
                 </select>
@@ -262,7 +276,7 @@ const AnnouncementDashboard = () => {
                   </button>
                   {showBulkMenu && (
                     <div className="absolute top-full mt-1 left-0 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-10 w-48">
-                      <button 
+                      <button
                         onClick={() => {
                           handleBulkPin();
                           setShowBulkMenu(false);
@@ -272,7 +286,7 @@ const AnnouncementDashboard = () => {
                         <Pin size={16} />
                         ปักหมุดที่เลือก
                       </button>
-                      <button 
+                      <button
                         onClick={() => {
                           handleBulkDelete();
                           setShowBulkMenu(false);
@@ -293,7 +307,7 @@ const AnnouncementDashboard = () => {
 
       {/* Table */}
       <div className="max-w-7xl mx-auto px-6 py-6">
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+        <div className="bg-white rounded-lg shadow-sm">
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="animate-spin text-orange-600" size={32} />
@@ -330,11 +344,13 @@ const AnnouncementDashboard = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {filteredAnnouncements.map((announcement) => {
+                  {filteredAnnouncements.map((announcement, index) => {
                     const status = getAnnouncementStatus(announcement);
+                    const isLastItems = index >= filteredAnnouncements.length - 2 && filteredAnnouncements.length > 2;
+
                     return (
                       <tr key={announcement.ID} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-6 py-4">
+                        <td className="w-12 px-6 py-4">
                           <input
                             type="checkbox"
                             checked={selectedItems.includes(announcement.ID!)}
@@ -356,7 +372,7 @@ const AnnouncementDashboard = () => {
                         <td className="px-6 py-4">
                           <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(status)}`}>
                             {status === 'Scheduled' && <Clock size={12} />}
-                            {status === 'Published' ? 'เผยแพร่แล้ว' : status === 'Scheduled' ? 'กำหนดเวลา' : 'ฉบับร่าง'}
+                            {status === 'Expired' ? 'หมดอายุ' : status === 'Published' ? 'เผยแพร่แล้ว' : status === 'Scheduled' ? 'กำหนดเวลา' : 'ฉบับร่าง'}
                           </span>
                         </td>
                         <td className="px-6 py-4">
@@ -369,15 +385,15 @@ const AnnouncementDashboard = () => {
                         </td>
                         <td className="px-6 py-4">
                           <div className="relative">
-                            <button 
+                            <button
                               onClick={() => setActionMenuOpen(actionMenuOpen === announcement.ID ? null : announcement.ID!)}
                               className="p-1 rounded hover:bg-gray-100"
                             >
                               <MoreVertical size={18} className="text-gray-400" />
                             </button>
                             {actionMenuOpen === announcement.ID && (
-                              <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-10 w-40">
-                                <button 
+                              <div className={`absolute right-0 ${isLastItems ? 'bottom-full mb-1' : 'top-full mt-1'} bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-10 w-40`}>
+                                <button
                                   onClick={() => {
                                     router.push(`/admin/announcements/${announcement.ID}`);
                                     setActionMenuOpen(null);
@@ -387,7 +403,7 @@ const AnnouncementDashboard = () => {
                                   <Eye size={14} />
                                   ดู
                                 </button>
-                                <button 
+                                <button
                                   onClick={() => {
                                     router.push(`/admin/announcements/${announcement.ID}/edit`);
                                     setActionMenuOpen(null);
@@ -397,7 +413,7 @@ const AnnouncementDashboard = () => {
                                   <Edit size={14} />
                                   แก้ไข
                                 </button>
-                                <button 
+                                <button
                                   onClick={() => {
                                     handleTogglePin(announcement);
                                     setActionMenuOpen(null);
@@ -408,7 +424,7 @@ const AnnouncementDashboard = () => {
                                   {announcement.is_pinned ? 'ยกเลิกปักหมุด' : 'ปักหมุด'}
                                 </button>
                                 <div className="border-t border-gray-200 my-1"></div>
-                                <button 
+                                <button
                                   onClick={() => {
                                     handleDelete(announcement.ID!);
                                     setActionMenuOpen(null);

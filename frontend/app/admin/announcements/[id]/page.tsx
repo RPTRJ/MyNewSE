@@ -24,11 +24,11 @@ const AnnouncementDetailPage = () => {
   const fetchAnnouncementDetail = async () => {
     try {
       setLoading(true);
-      
+
       // ดึงข้อมูลประกาศ
       const data = await AnnouncementService.getAnnouncementById(Number(id));
-      setAnnouncement(data); 
-      
+      setAnnouncement(data);
+
       // ดึงข้อมูล attachments
       try {
         const attachmentsData = await AnnouncementService.getAttachmentsByAnnouncementId(Number(id));
@@ -38,7 +38,7 @@ const AnnouncementDetailPage = () => {
         console.log('No attachments found or error fetching attachments');
         setAttachments([]);
       }
-      
+
     } catch (error: any) {
       console.error('Failed to fetch announcement:', error);
       alert('ไม่สามารถโหลดข้อมูลประกาศได้: ' + error.message);
@@ -50,10 +50,10 @@ const AnnouncementDetailPage = () => {
   const formatDate = (dateString?: string) => {
     if (!dateString) return '-';
     const date = new Date(dateString);
-    return date.toLocaleDateString('th-TH', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    return date.toLocaleDateString('th-TH', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
     });
   };
 
@@ -94,13 +94,13 @@ const AnnouncementDetailPage = () => {
     if (filePath.startsWith('http')) {
       return filePath;
     }
-    
+
     // ถ้าไม่มี ให้เพิ่ม base URL
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-    
+
     // ตรวจสอบว่า filePath ขึ้นต้นด้วย / หรือไม่
     const path = filePath.startsWith('/') ? filePath : `/${filePath}`;
-    
+
     return `${baseUrl}${path}`;
   };
 
@@ -108,14 +108,14 @@ const AnnouncementDetailPage = () => {
     try {
       const fileUrl = getFileUrl(attachment.file_path);
       console.log('Downloading from:', fileUrl);
-      
+
       // ใช้ fetch เพื่อดาวน์โหลดไฟล์
       const response = await fetch(fileUrl);
-      
+
       if (!response.ok) {
         throw new Error('Failed to download file');
       }
-      
+
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -161,7 +161,7 @@ const AnnouncementDetailPage = () => {
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">ไม่พบประกาศ</h2>
           <p className="text-gray-600 mb-4">ประกาศที่คุณค้นหาอาจถูกลบหรือไม่มีอยู่</p>
-          <button 
+          <button
             onClick={() => router.push('/admin/announcements')}
             className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700"
           >
@@ -180,7 +180,7 @@ const AnnouncementDetailPage = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Image Preview Modal */}
       {previewImage && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4"
           onClick={() => setPreviewImage(null)}
         >
@@ -190,7 +190,7 @@ const AnnouncementDetailPage = () => {
           >
             <X size={32} />
           </button>
-          <img 
+          <img
             src={previewImage}
             alt="Preview"
             className="max-w-full max-h-full object-contain"
@@ -202,7 +202,7 @@ const AnnouncementDetailPage = () => {
       {/* Header */}
       <div className="bg-white border-b border-gray-200 sticky top-0">
         <div className="max-w-4xl  px-6 py-4">
-          <button 
+          <button
             onClick={() => router.back()}
             className="flex items-left gap-2 text-gray-600 hover:text-gray-900 mb-4 "
           >
@@ -239,7 +239,7 @@ const AnnouncementDetailPage = () => {
           {/* Content Section */}
           <div className="px-8 py-6">
             <div className="prose max-w-none">
-              <div 
+              <div
                 className="text-gray-700 leading-relaxed whitespace-pre-wrap"
                 dangerouslySetInnerHTML={{ __html: announcement.content }}
               />
@@ -253,12 +253,12 @@ const AnnouncementDetailPage = () => {
                   {imageAttachments.map((attachment) => {
                     const imageUrl = getFileUrl(attachment.file_path);
                     return (
-                      <div 
-                        key={attachment.ID} 
+                      <div
+                        key={attachment.ID}
                         className="rounded-lg overflow-hidden bg-gray-100 aspect-video relative group cursor-pointer"
                         onClick={() => handleImageClick(attachment.file_path)}
                       >
-                        <img 
+                        <img
                           src={imageUrl}
                           alt={attachment.file_name}
                           className="w-full h-full object-cover"
@@ -284,17 +284,16 @@ const AnnouncementDetailPage = () => {
               <h2 className="text-xl font-bold text-gray-900 mb-4">ไฟล์เอกสาร</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {documentAttachments.map((attachment) => (
-                  <div 
+                  <div
                     key={attachment.ID}
                     className="border border-gray-200 rounded-lg p-4 hover:border-orange-300 hover:bg-orange-50 transition-all group"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className={`w-10 h-10 rounded flex items-center justify-center flex-shrink-0 ${
-                          attachment.file_name.endsWith('.pdf') ? 'bg-red-50' :
-                          attachment.file_name.endsWith('.xlsx') || attachment.file_name.endsWith('.xls') ? 'bg-green-50' :
-                          'bg-blue-50'
-                        }`}>
+                        <div className={`w-10 h-10 rounded flex items-center justify-center flex-shrink-0 ${attachment.file_name.endsWith('.pdf') ? 'bg-red-50' :
+                            attachment.file_name.endsWith('.xlsx') || attachment.file_name.endsWith('.xls') ? 'bg-green-50' :
+                              'bg-blue-50'
+                          }`}>
                           {getFileIcon(attachment.file_name)}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -307,14 +306,14 @@ const AnnouncementDetailPage = () => {
                         </div>
                       </div>
                       <div className="flex gap-2 ml-2">
-                        <button 
+                        <button
                           onClick={() => handleViewFile(attachment)}
                           className="p-2 rounded hover:bg-white group-hover:text-orange-600 transition-colors"
                           title="ดูไฟล์"
                         >
                           <Eye size={18} />
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleDownload(attachment)}
                           className="p-2 rounded hover:bg-white group-hover:text-orange-600 transition-colors"
                           title="ดาวน์โหลด"

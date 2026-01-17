@@ -415,84 +415,6 @@ export default function CreateTemplatePage() {
               </div>
             </div>
 
-            {/* Thumbnail Upload - Commented out temporarily */}
-            {/* <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                รูปภาพตัวอย่าง (ไม่บังคับ)
-              </label>
-              
-              <input
-                type="file"
-                id="thumbnail_file"
-                accept=".jpg,.jpeg,.png,.gif,.webp,.bmp"
-                onChange={async (e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-
-                  console.log('File selected:', file.name, 'Type:', file.type, 'Size:', file.size);
-
-                  // ตรวจสอบ file extension (รองรับทุก browser รวม Edge)
-                  const validExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
-                  const fileName = file.name.toLowerCase();
-                  const isValidFile = validExtensions.some(ext => fileName.endsWith(ext));
-                  
-                  if (!isValidFile) {
-                    alert('กรุณาเลือกไฟล์รูปภาพเท่านั้น (JPG, PNG, GIF, WEBP, BMP)');
-                    e.target.value = '';
-                    return;
-                  }
-
-                  // แสดง preview ทันที (ใช้ได้ทุก browser)
-                  const reader = new FileReader();
-                  reader.onloadend = () => {
-                    setFormData(prev => ({ ...prev, thumbnail: reader.result as string }));
-                  };
-                  reader.onerror = () => {
-                    console.error('Failed to read file');
-                    alert('ไม่สามารถอ่านไฟล์ได้');
-                  };
-                  reader.readAsDataURL(file);
-
-                  // Upload ไฟล์ไปยัง backend
-                  try {
-                    console.log('Uploading file to backend...');
-                    const url = await uploadImage(file);
-                    console.log('Upload success! URL:', url);
-                    setFormData(prev => ({ ...prev, thumbnail: url }));
-                    // alert('อัพโหลดรูปภาพสำเร็จ!');
-                  } catch (error) {
-                    console.error('Upload error:', error);
-                    const errorMessage = error instanceof Error ? error.message : 'เกิดข้อผิดพลาด';
-                    alert('เกิดข้อผิดพลาดในการอัพโหลดรูปภาพ: ' + errorMessage);
-                    e.target.value = '';
-                    setFormData(prev => ({ ...prev, thumbnail: '' }));
-                  }
-                }}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-              />
-
-              <p className="text-xs text-gray-500 mt-2">
-                อัพโหลดไฟล์รูปภาพเท่านั้น (JPG, PNG, GIF, WEBP)
-              </p>
-              
-              {formData.thumbnail && (
-                <div className="mt-4">
-                  <p className="text-sm font-medium text-gray-700 mb-2">ตัวอย่าง:</p>
-                  <div className="w-full h-48 border-2 border-gray-200 rounded-lg overflow-hidden bg-gray-50">
-                    <img 
-                      src={formData.thumbnail} 
-                      alt="Preview" 
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = '';
-                        (e.target as HTMLImageElement).style.display = 'none';
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
-            </div> */}
-
             {/* Sections Selection */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -649,16 +571,16 @@ export default function CreateTemplatePage() {
         </form>
 
         {/* Info Card */}
-        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-6">
+        <div className="mt-6 bg-orange-50 border border-orange-200 rounded-xl p-6">
           <div className="flex gap-3">
-            <div className="text-blue-600 flex-shrink-0">
+            <div className="text-orange-600 flex-shrink-0">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
             <div>
-              <h3 className="font-semibold text-blue-900 mb-1">ข้อมูลเพิ่มเติม</h3>
-              <p className="text-sm text-blue-800">
+              <h3 className="font-semibold text-orange-500 mb-1">ข้อมูลเพิ่มเติม</h3>
+              <p className="text-sm text-orange-500">
                 หลังจากสร้างเทมเพลตแล้ว คุณสามารถเพิ่ม Sections และ Blocks เข้าไปในเทมเพลตได้ในภายหลัง
               </p>
             </div>

@@ -133,10 +133,9 @@ export default function TeacherPage() {
         }
     };
 
-  useEffect(() => {
+ useEffect(() => {
+  const initApp = async () => {
     const token = localStorage.getItem("token");
-    console.log("Token:", token);
-
     const userStr = localStorage.getItem("user");
 
     if (!token || !userStr) {
@@ -148,7 +147,6 @@ export default function TeacherPage() {
 
     try {
       const user = JSON.parse(userStr);
-
       if (user.type_id !== 2) {
         alert("No permission");
         localStorage.removeItem("token");
@@ -158,25 +156,24 @@ export default function TeacherPage() {
       }
 
       setUserName(
-        user.first_name_th && user.last_name_th
-          ? `${user.first_name_th} ${user.last_name_th}`
-          : `${user.first_name_en} ${user.last_name_en}`
-      );
-
+        user.first_name_th && user.last_name_th
+          ? `${user.first_name_th} ${user.last_name_th}`
+          : `${user.first_name_en} ${user.last_name_en}`
+      );
       setIsAuthorized(true);
-      fetchSubmissions();
+      
+      // ✅ เรียกแค่ครั้งเดียว
+      await fetchSubmissions();
     } catch (err) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
       router.push("/login");
     }
-  }, [router]);
+  };
 
-  useEffect(() => {
-    if (isAuthorized) {
-      fetchSubmissions();
-    }
-  }, [isAuthorized]);
+  initApp();
+}, []); // ✅ dependency ว่าง
+
 
 
   if (!isAuthorized) {

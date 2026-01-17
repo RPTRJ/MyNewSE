@@ -15,7 +15,7 @@ const EditAnnouncementForm: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [originalData, setOriginalData] = useState<Announcement | null>(null);
-  
+
   const [formData, setFormData] = useState<UpdateAnnouncementPayload>({
     title: "",
     content: "",
@@ -73,16 +73,16 @@ const EditAnnouncementForm: React.FC = () => {
         cetagory_name: newCategoryName.trim(),
       });
 
-      setCategories(prev => [...prev, { 
-        id: newCategory.ID!, 
-        name: newCategory.cetagory_name 
+      setCategories(prev => [...prev, {
+        id: newCategory.ID!,
+        name: newCategory.cetagory_name
       }]);
-      
+
       setFormData(prev => ({ ...prev, cetagory_id: newCategory.ID! }));
-      
+
       setNewCategoryName("");
       setShowNewCategoryInput(false);
-      
+
       alert("สร้างหมวดหมู่สำเร็จ ✅");
     } catch (error: any) {
       console.error(error);
@@ -95,13 +95,20 @@ const EditAnnouncementForm: React.FC = () => {
       setFetchLoading(true);
       const data = await AnnouncementService.getAnnouncementById(announcementId);
       setOriginalData(data);
-      
-      const scheduledDate = data.scheduled_publish_at 
-        ? new Date(data.scheduled_publish_at).toISOString().slice(0, 16)
+
+      const toLocalISOString = (dateStr: string) => {
+        const date = new Date(dateStr);
+        const offset = date.getTimezoneOffset() * 60000;
+        const localDate = new Date(date.getTime() - offset);
+        return localDate.toISOString().slice(0, 16);
+      };
+
+      const scheduledDate = data.scheduled_publish_at
+        ? toLocalISOString(data.scheduled_publish_at)
         : "";
-      
+
       const expiresDate = data.expires_at
-        ? new Date(data.expires_at).toISOString().slice(0, 16)
+        ? toLocalISOString(data.expires_at)
         : null;
 
       setFormData({
@@ -116,7 +123,7 @@ const EditAnnouncementForm: React.FC = () => {
 
       const fetchedAttachments = await AnnouncementService.getAttachmentsByAnnouncementId(announcementId);
       setExistingAttachments(fetchedAttachments);
-      
+
     } catch (error: any) {
       console.error("Failed to fetch announcement:", error);
       alert("ไม่สามารถโหลดข้อมูลประกาศได้: " + error.message);
@@ -176,7 +183,7 @@ const EditAnnouncementForm: React.FC = () => {
       alert("กรุณาเลือกหมวดหมู่ก่อนอัปโหลดไฟล์");
       return;
     }
-    
+
     setLoading(true);
     try {
       let status: "PUBLISHED" | "SCHEDULED" | "DRAFT" = "PUBLISHED";
@@ -191,9 +198,9 @@ const EditAnnouncementForm: React.FC = () => {
       const payload: UpdateAnnouncementPayload = {
         ...formData,
         status,
-        scheduled_publish_at: new Date(formData.scheduled_publish_at || "").toISOString(),
+        scheduled_publish_at: new Date(formData.scheduled_publish_at || "").toISOString().slice(0, 16),
         expires_at: formData.expires_at
-          ? new Date(formData.expires_at).toISOString()
+          ? new Date(formData.expires_at).toISOString().slice(0, 16)
           : null,
       };
 
@@ -246,9 +253,9 @@ const EditAnnouncementForm: React.FC = () => {
 
       // Send notification if enabled
       if (formData.send_notification) {
-        await AnnouncementService.createNotification({
+        await AnnouncementService.createNotificationForStudents({
           notification_title: formData.title || "",
-          notification_type: "ANNOUNCEMENT",
+          notification_type: "Announcement",
           notification_message: formData.content || "",
           is_read: false,
           announcement_id: announcementId,
@@ -337,7 +344,7 @@ const EditAnnouncementForm: React.FC = () => {
           <div className="lg:col-span-2 space-y-6">
             {/* Announcement Title */}
             <div className="bg-white rounded-lg shadow-sm p-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-m font-medium text-gray-700 mb-2">
                 หัวข้อประกาศ
               </label>
               <input
@@ -502,7 +509,7 @@ const EditAnnouncementForm: React.FC = () => {
 
           {/* Right Column - Publishing Options Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-sm p-6 sticky top-24 space-y-6">
+            <div className="bg-white rounded-lg shadow-sm p-6 sticky top-24 space-y-6 max-h-[calc(100vh-100px)] overflow-y-auto">
               <h3 className="text-lg font-semibold text-gray-900">ตั้งค่าการเผยแพร่</h3>
 
               {/* Category */}
@@ -605,32 +612,36 @@ const EditAnnouncementForm: React.FC = () => {
 
               {/* Pin to Top */}
               <div className="flex items-center justify-between py-3 border-t border-gray-200">
-                <label htmlFor="pin-to-top" className="text-sm font-medium text-gray-700">
+                <span className="text-sm font-medium text-gray-700">
                   ปักหมุดด้านบน
+                </span>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="is_pinned"
+                    checked={formData.is_pinned}
+                    onChange={handleInputChange}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
                 </label>
-                <input
-                  type="checkbox"
-                  name="is_pinned"
-                  checked={formData.is_pinned}
-                  onChange={handleInputChange}
-                  id="pin-to-top"
-                  className="w-10 h-6 bg-gray-200 rounded-full relative cursor-pointer appearance-none checked:bg-orange-600 transition-colors"
-                />
               </div>
 
               {/* Send Notification */}
               <div className="flex items-center justify-between py-3 border-t border-gray-200">
-                <label htmlFor="send-notification" className="text-sm font-medium text-gray-700">
+                <span className="text-sm font-medium text-gray-700">
                   ส่งการแจ้งเตือน
+                </span>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="send_notification"
+                    checked={formData.send_notification}
+                    onChange={handleInputChange}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
                 </label>
-                <input
-                  type="checkbox"
-                  name="send_notification"
-                  checked={formData.send_notification}
-                  onChange={handleInputChange}
-                  id="send-notification"
-                  className="w-10 h-6 bg-gray-200 rounded-full relative cursor-pointer appearance-none checked:bg-orange-600 transition-colors"
-                />
               </div>
             </div>
           </div>

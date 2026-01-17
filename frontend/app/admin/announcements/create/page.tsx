@@ -8,7 +8,7 @@ function toBackendDate(value: string) {
   if (!value) return null;
 
   const date = new Date(value);
-  return date.toISOString().slice(0, 16); 
+  return date.toISOString().slice(0, 16);
 
 }
 
@@ -26,13 +26,14 @@ const CreateAnnouncementForm: React.FC = () => {
   const [featuredImage, setFeaturedImage] = useState<File | null>(null);
   const [attachments, setAttachments] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
-  
+
   // State สำหรับจัดการ category
   const [categories, setCategories] = useState<Array<{ id: number; name: string }>>([]);
   const [showNewCategoryInput, setShowNewCategoryInput] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // โหลด categories ที่มีอยู่แล้ว (ถ้ามี API สำหรับดึงข้อมูล)
+  // โหลด categories ที่มีอยู่แล้ว 
   useEffect(() => {
     loadCategories();
   }, []);
@@ -52,6 +53,29 @@ const CreateAnnouncementForm: React.FC = () => {
     }
   };
 
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.title.trim()) {
+      newErrors.title = "กรุณากรอกหัวข้อประกาศ";
+    }
+
+    if (!formData.content.trim()) {
+      newErrors.content = "กรุณากรอกรายละเอียดเนื้อหา";
+    }
+
+    if (formData.cetagory_id === 0) {
+      newErrors.cetagory_id = "กรุณาเลือกหมวดหมู่";
+    }
+
+    if (!formData.scheduled_publish_at) {
+      newErrors.scheduled_publish_at = "กรุณากรอกวัน/เวลาที่ต้องการเผยแพร่";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleCreateCategory = async () => {
     if (!newCategoryName.trim()) {
       alert("กรุณากรอกชื่อหมวดหมู่");
@@ -65,18 +89,18 @@ const CreateAnnouncementForm: React.FC = () => {
       });
 
       // เพิ่ม category ใหม่เข้า list
-      setCategories(prev => [...prev, { 
-        id: newCategory.ID!, 
-        name: newCategory.cetagory_name 
+      setCategories(prev => [...prev, {
+        id: newCategory.ID!,
+        name: newCategory.cetagory_name
       }]);
-      
+
       // เลือก category ที่สร้างใหม่
       setFormData(prev => ({ ...prev, cetagory_id: newCategory.ID! }));
-      
+
       // รีเซ็ตและปิด input
       setNewCategoryName("");
       setShowNewCategoryInput(false);
-      
+
       alert("สร้างหมวดหมู่สำเร็จ ✅");
     } catch (error: any) {
       console.error(error);
@@ -100,6 +124,13 @@ const CreateAnnouncementForm: React.FC = () => {
           ? (e.target as HTMLInputElement).checked
           : value,
     }));
+    if (errors[name as keyof typeof errors]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name as keyof typeof errors];
+        return newErrors;
+      });
+    }
   };
 
   const handleFeaturedImageChange = (
@@ -123,8 +154,8 @@ const CreateAnnouncementForm: React.FC = () => {
   };
 
   const handleDraft = async () => {
-    if (formData.cetagory_id === 0) {
-      alert("กรุณาเลือกหมวดหมู่ก่อน");
+    if (!validateForm()) {
+      alert("กรุณากรอกข้อมูลที่จำเป็นให้ครบก่อนบันทึก");
       return;
     }
     setLoading(true);
@@ -185,11 +216,11 @@ const CreateAnnouncementForm: React.FC = () => {
   // ===================== Submit =====================
 
   const handleSubmit = async () => {
-    if (formData.cetagory_id === 0) {
-      alert("กรุณาเลือกหมวดหมู่ก่อน");
+    if (!validateForm()) {
+      alert("กรุณากรอกข้อมูลที่จำเป็นให้ครบก่อนเผยแพร่\nหัวข้อ, รายละเอียด, หมวดหมู่, และวันที่");
       return;
     }
-    
+
     setLoading(true);
     try {
       let status: "PUBLISHED" | "SCHEDULED" = "PUBLISHED";
@@ -198,12 +229,12 @@ const CreateAnnouncementForm: React.FC = () => {
       const now = new Date();
 
       if (scheduledDate > now) {
-        status = "SCHEDULED"; 
+        status = "SCHEDULED";
       }
 
       const payload: CreateAnnouncementPayload = {
         ...formData,
-        status, 
+        status,
         scheduled_publish_at: new Date(formData.scheduled_publish_at).toISOString().slice(0, 16),
         expires_at: formData.expires_at
           ? toBackendDate(formData.expires_at)
@@ -243,7 +274,7 @@ const CreateAnnouncementForm: React.FC = () => {
           cetagory_id: formData.cetagory_id,
         });
       }
-      
+
       await AnnouncementService.createAdminLog({
         action_type: "CREATE",
         announcement_id: announcementId,
@@ -285,7 +316,7 @@ const CreateAnnouncementForm: React.FC = () => {
               onClick={() => window.history.back()}
               className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
             >
-             ยกเลิก
+              ยกเลิก
             </button>
             <button
               type="button"
@@ -367,7 +398,7 @@ const CreateAnnouncementForm: React.FC = () => {
                     <span className="text-orange-600 hover:text-orange-700">Upload a file</span>
                     <span className="text-gray-600"> or drag and drop</span>
                   </label>
-          
+
                   {featuredImage && (
                     <div className="mt-4 text-sm text-gray-700">
                       Selected: {featuredImage.name}
@@ -400,7 +431,7 @@ const CreateAnnouncementForm: React.FC = () => {
                     <span className="text-orange-600 hover:text-orange-700">Upload files</span>
                     <span className="text-gray-600"> or drag and drop</span>
                   </label>
-                  
+
                 </div>
               </div>
 
@@ -441,7 +472,7 @@ const CreateAnnouncementForm: React.FC = () => {
 
           {/* Right Column - Publishing Options Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-sm p-6 sticky top-25 space-y-6">
+            <div className="bg-white rounded-lg shadow-sm p-6 sticky top-25 space-y-6 max-h-[calc(100vh-100px)] overflow-y-auto">
               <h3 className="text-lg font-semibold text-gray-900">ตั้งค่ารายละเอียด</h3>
 
               {/* Category */}
@@ -544,32 +575,36 @@ const CreateAnnouncementForm: React.FC = () => {
 
               {/* Pin to Top */}
               <div className="flex items-center justify-between py-3 border-t border-gray-200">
-                <label htmlFor="pin-to-top" className="text-sm font-medium text-gray-700">
+                <span className="text-sm font-medium text-gray-700">
                   ปักหมุดประกาศ
+                </span>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="is_pinned"
+                    checked={formData.is_pinned}
+                    onChange={handleInputChange}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
                 </label>
-                <input
-                  type="checkbox"
-                  name="is_pinned"
-                  checked={formData.is_pinned}
-                  onChange={handleInputChange}
-                  id="pin-to-top"
-                  className="w-10 h-6 bg-gray-200 rounded-full relative cursor-pointer appearance-none checked:bg-orange-600 transition-colors"
-                />
               </div>
 
               {/* Send Notification */}
               <div className="flex items-center justify-between py-3 border-t border-gray-200">
-                <label htmlFor="send-notification" className="text-sm font-medium text-gray-700">
+                <span className="text-sm font-medium text-gray-700">
                   ส่งแจ้งเตือน
+                </span>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="send_notification"
+                    checked={formData.send_notification}
+                    onChange={handleInputChange}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
                 </label>
-                <input
-                  type="checkbox"
-                  name="send_notification"
-                  checked={formData.send_notification}
-                  onChange={handleInputChange}
-                  id="send-notification"
-                  className="w-10 h-6 bg-gray-200 rounded-full relative cursor-pointer appearance-none checked:bg-orange-600 transition-colors"
-                />
               </div>
             </div>
           </div>
@@ -578,5 +613,4 @@ const CreateAnnouncementForm: React.FC = () => {
     </div>
   );
 };
-
 export default CreateAnnouncementForm;

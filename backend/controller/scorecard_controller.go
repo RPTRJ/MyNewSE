@@ -139,7 +139,7 @@ func (c *ScorecardController) Update(ctx *gin.Context) {
 
 func (c *ScorecardController) GetAll(ctx *gin.Context) {
 	var scorecards []entity.Scorecard
-	if err := c.DB.Preload("User").Preload("PortfolioSubmission").Find(&scorecards).Error; err != nil {
+	if err := c.DB.Preload("User").Preload("PortfolioSubmission").First(&scorecards).Error; err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

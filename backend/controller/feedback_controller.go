@@ -43,7 +43,7 @@ func (c *FeedbackController) Create(ctx *gin.Context) {
 
 func (c *FeedbackController) GetAll(ctx *gin.Context) {
 	var feedbacks []entity.Feedback
-	if err := c.DB.Preload("User").Preload("PortfolioSubmission").Find(&feedbacks).Error; err != nil {
+	if err := c.DB.Preload("User").Preload("PortfolioSubmission").First(&feedbacks).Error; err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
