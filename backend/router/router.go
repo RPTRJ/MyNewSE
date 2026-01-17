@@ -29,7 +29,6 @@ func CacheControlMiddleware() gin.HandlerFunc {
 func SetupRoutes() *gin.Engine {
 
 	r := gin.Default()
-	
 
 	// ✅ Enable Gzip Compression - reduces bandwidth significantly
 	r.Use(gzip.Gzip(gzip.DefaultCompression))
@@ -75,6 +74,9 @@ func SetupRoutes() *gin.Engine {
 	db := config.GetDB()
 	authService := services.NewAuthService(db)
 	authController := controller.NewAuthController(authService)
+	emailService := services.NewEmailService()
+	passwordResetService := services.NewPasswordResetService(db, emailService)
+	passwordResetController := controller.NewPasswordResetController(passwordResetService)
 	userController := controller.NewUserController()
 	curriculumController := controller.NewCurriculumController()
 	facultyController := controller.NewFacultyController()
@@ -87,6 +89,7 @@ func SetupRoutes() *gin.Engine {
 
 	// --- Public Routes ---
 	authController.RegisterRoutes(r)
+	passwordResetController.RegisterRoutes(r)
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{"message": "pong"})
 	})

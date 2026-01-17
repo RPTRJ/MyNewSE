@@ -99,6 +99,7 @@ func SetupDatabase() {
 		&entity.TemplateSectionLink{},
 		&entity.Event{},
 		&entity.Selection{},
+		&entity.PasswordReset{},
 	); err != nil {
 		log.Fatal("Failed to migrate database:", err)
 	}

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   loginService,
   registerService,
@@ -190,6 +191,11 @@ export default function AuthPage() {
                               className="w-full h-12 rounded-xl border border-orange-100 bg-orange-50/40 pl-12 pr-4 text-gray-800 placeholder:text-gray-400 focus:border-[#e66a0a] focus:ring-2 focus:ring-orange-100 transition"
                               placeholder="••••••••"
                             />
+                          </div>
+                          <div className="text-right mt-2">
+                            <Link href="/forgot-password" className="text-sm text-[#e66a0a] hover:underline">
+                              ลืมรหัสผ่าน?
+                            </Link>
                           </div>
                         </div>
                       </div>
