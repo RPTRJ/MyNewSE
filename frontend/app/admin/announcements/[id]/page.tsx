@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { ChevronLeft, Calendar, User, Pin, Download, FileText, File, Loader2, Image as ImageIcon, Eye, X, AlignLeft, ArrowDownLeftIcon, ArrowLeftIcon } from 'lucide-react';
 import AnnouncementService, { type Announcement, type Attachment } from '@/services/announcement';
 import { useRouter, useParams } from 'next/navigation';
+import { AlertError } from '@/utils/alert';
 
 const AnnouncementDetailPage = () => {
   const router = useRouter();
@@ -41,7 +42,7 @@ const AnnouncementDetailPage = () => {
 
     } catch (error: any) {
       console.error('Failed to fetch announcement:', error);
-      alert('ไม่สามารถโหลดข้อมูลประกาศได้: ' + error.message);
+      AlertError('ไม่สามารถโหลดข้อมูลประกาศได้: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -182,7 +183,7 @@ const AnnouncementDetailPage = () => {
             className="flex items-left gap-2 text-gray-600 hover:text-gray-900 mb-4 "
           >
             <ArrowLeftIcon size={20} />
-            Back to Announcements
+            กลับไปหน้าประกาศ
           </button>
         </div>
       </div>

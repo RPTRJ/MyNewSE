@@ -118,7 +118,7 @@ func (u *UploadController) UploadFile(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"file_path": savedPath})
+	c.JSON(http.StatusOK, gin.H{"url": savedPath})
 }
 
 // DeleteFile deletes a file from storage by filename

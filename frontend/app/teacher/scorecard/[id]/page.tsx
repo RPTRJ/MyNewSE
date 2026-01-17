@@ -7,6 +7,13 @@ import submissionService from '@/services/submission';
 import { fetchUserProfileByTeacher } from '@/services/profile';
 import { fetchPortfolioById } from '@/services/portfolio';
 import {
+  AlertSuccess,
+  AlertError,
+  AlertWarning,
+  AlertConfirm
+} from "@/utils/alert";
+
+import {
   lightenColor,
   SectionContent,
   ProfileSection
@@ -124,7 +131,7 @@ const PortfolioReview = () => {
         console.error('Error loading profile:', err);
       }
 
-      // Load the full portfolio design
+      
       try {
         const portfolioId = submissionData.portfolio?.ID;
         console.log('Loading portfolio with ID:', portfolioId);
@@ -134,7 +141,7 @@ const PortfolioReview = () => {
           console.log('Portfolio loaded:', portfolioData);
 
           if (portfolioData) {
-            // Sort sections by order
+            
             if (portfolioData.portfolio_sections) {
               portfolioData.portfolio_sections.sort((a: any, b: any) =>
                 (a.section_order || 0) - (b.section_order || 0)
@@ -149,13 +156,12 @@ const PortfolioReview = () => {
         }
       } catch (err) {
         console.error('Error loading portfolio:', err);
-        // Don't fail the entire load if portfolio fails
-        // We'll fall back to the basic profile view
+        
       }
 
     } catch (err) {
       console.error('Error loading data:', err);
-      alert('ไม่สามารถโหลดข้อมูลได้: ' + (err as Error).message);
+      AlertError('ไม่สามารถโหลดข้อมูลได้: ' + (err as Error).message);
     } finally {
       setLoading(false);
     }
@@ -202,13 +208,13 @@ const PortfolioReview = () => {
   const validateBeforeSave = () => {
     // 1️⃣ ตรวจ Overall Comment
     if (!feedback.overall_comment || feedback.overall_comment.trim() === '') {
-      alert('กรุณากรอกความคิดเห็นโดยรวม (Overall Comment)');
+      AlertWarning('กรอกข้อมูลไม่ครบ', 'กรุณากรอก Overall Comment');
       return false;
     }
 
     // 2️⃣ ตรวจ Scorecard
     if (!scorecard || !scorecard.score_criteria) {
-      alert('ไม่พบข้อมูล Scorecard');
+      AlertError('ไม่พบข้อมูล Scorecard');
       return false;
     }
 
@@ -217,7 +223,7 @@ const PortfolioReview = () => {
     );
 
     if (unfilledCriteria) {
-      alert('กรุณาให้คะแนนครบทุกหัวข้อใน Scorecard');
+      AlertWarning('ยังให้คะแนนไม่ครบ', 'กรุณาให้คะแนนทุกหัวข้อ');
       return false;
     }
 
@@ -269,12 +275,12 @@ const PortfolioReview = () => {
         setScorecard(savedScorecard);
       }
 
-      alert('บันทึกสำเร็จ!');
+      await AlertSuccess('บันทึกสำเร็จ');
       router.push("/teacher");
       router.refresh();
     } catch (err) {
       console.error(err);
-      alert('เกิดข้อผิดพลาดในการบันทึก');
+      AlertError('เกิดข้อผิดพลาด', 'ไม่สามารถบันทึกข้อมูลได้');
     } finally {
       setSaving(false);
     }
@@ -293,22 +299,22 @@ const PortfolioReview = () => {
       router.refresh();
     } catch (err) {
       console.error(err);
-      alert('เกิดข้อผิดพลาด');
+      AlertError('เกิดข้อผิดพลาด', 'ไม่สามารถอนุมัติผลงานได้');
     } finally {
       setSaving(false);
     }
   };
 
   const handleRequestRevision = async () => {
+    if (!validateBeforeSave()) return;
     try {
       await handleSave();
       await submissionService.updateSubmissionStatus(submission.ID, 'revision_requested');
       setStatus('revision_requested');
-      alert('ส่งคำขอแก้ไขแล้ว');
       router.push("/teacher");
       router.refresh();
     } catch (err) {
-      alert('เกิดข้อผิดพลาด');
+      AlertError('เกิดข้อผิดพลาด', 'ไม่สามารถส่งคำขอแก้ไขได้');
     }
   };
 
@@ -589,7 +595,7 @@ const PortfolioReview = () => {
           </div>
         </main>
 
-        <aside className="fixed right-8 top-[155px] bottom-4 w-96 bg-white border-l border-gray-200 flex flex-col overflow-y-auto">
+        <aside className="fixed right-7 top-[70px] bottom-4 w-96 bg-white border-l border-gray-200 flex flex-col overflow-y-auto">
           <div className="flex gap-4 px-6 pt-6 pb-3 border-b border-gray-200 bg-white flex-shrink-0">
             <button
               onClick={() => setActiveTab('general')}

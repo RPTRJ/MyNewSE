@@ -260,16 +260,16 @@ export default function PortfolioPreviewPage() {
                             </div>
                             <div className={`flex-1 w-full space-y-3 ${isRight ? 'md:items-end' : 'md:items-start'}`}>
                                 <div className={`border-gray-100 ${isRight ? 'flex flex-col items-end' : ''}`}>
-                                    <h3 className="text-4xl font-bold text-gray-800">
+                                    <h3 className="text-3xl font-bold text-gray-800">
                                         {user.firstname} {user.lastname}
                                     </h3>
-                                    <p className="font-medium text-2xl"
+                                    <p className="font-medium text-xl"
                                         style={{ color: primaryColor || '#ff6b35' }} // ✅ ใช้สีจาก Theme
                                     >
                                         {user.school || "Suranaree University of Technology"}
                                     </p>
-                                    <p><span className="font-bold text-gray-800 text-2xl">หลักสูตร:</span> {user.major}</p>
-                                    <p><span className="font-bold text-gray-800 text-2xl">เกรดเฉลี่ยสะสม (GPAX):</span> <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold">{gpax}</span></p>
+                                    <p className="text-xl"><span className="font-bold text-gray-800 text-xl">หลักสูตร:</span> {user.major}</p>
+                                    <p><span className="font-bold text-gray-800 text-xl">เกรดเฉลี่ยสะสม (GPAX):</span> <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold text-xl">{gpax}</span></p>
                                 </div>
                                 <div className={`space-y-1 text-sm text-gray-600 ${isRight ? 'flex flex-col items-end' : ''}`}>
                                     {user.academic_score && (user.academic_score.math || user.academic_score.eng || user.academic_score.sci || user.academic_score.lang || user.academic_score.social) && (
@@ -395,27 +395,27 @@ export default function PortfolioPreviewPage() {
                                 )}
                             </div>
                             <div className="p-4 flex flex-col flex-1 h-full">
-                                <h4 className="font-bold text-gray-800 text-2xl mb-1 line-clamp-1">
+                                <h4 className="font-bold text-gray-800 text-xl mb-1 line-clamp-1">
                                     {c.type === 'activity' ? finalData.activity_name : finalData.working_name}
                                 </h4>
                                 <div className="flex flex-wrap gap-2 mb-3">
-                                    {level && <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-purple-100 text-purple-700 text-xl font-medium">{level}</span>}
-                                    {category && <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-orange-100 text-orange-700 text-xl font-medium">{category}</span>}
+                                    {level && <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-purple-100 text-purple-700 text-md font-medium">{level}</span>}
+                                    {category && <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-orange-100 text-orange-700 text-md font-medium">{category}</span>}
                                 </div>
-                                <p className="text-xl text-gray-500 line-clamp-2">{description}</p>
+                                <p className="text-md text-gray-500 line-clamp-2">{description}</p>
                                 <div className="mt-auto pt-3 border-t border-gray-50 flex flex-col gap-1.5">
                                     {award && (
-                                        <div className="flex items-center gap-2 text-xl text-gray-500">
+                                        <div className="flex items-center gap-2 text-md text-gray-500">
                                             <div className="bg-yellow-50 p-1 rounded"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5 text-yellow-600"><path fillRule="evenodd" d="M5.166 2.621v.858c-1.035.148-2.059.33-3.071.543a.75.75 0 00-.584.859 6.637 6.637 0 002.545 5.123c.388.263.803.493 1.237.682 1.327.58 2.793 1.032 4.302 1.309.37.068.732.14.962.387.246.265.485.642.485 1.139v3.016a29.89 29.89 0 00-6.02 1.365.75.75 0 00-.462.685c.178 1.956 1.48 3.518 3.212 4.295.66.295 1.396.447 2.164.447h2.09c.768 0 1.503-.152 2.164-.447 1.732-.777 3.034-2.339 3.212-4.295a.75.75 0 00-.462-.685 29.89 29.89 0 00-6.02-1.365v-3.016c0-.497.24-.874.485-1.139.23-.247.592-.32.962-.387 1.509-.277 2.975-.729 4.302-1.309.434-.189.849-.419 1.237-.682a6.637 6.637 0 002.545-5.123.75.75 0 00-.584-.859 13.926 13.926 0 00-3.071-.543v-.858a.75.75 0 00-.75-.75h-11.25a.75.75 0 00-.75.75z" clipRule="evenodd" /></svg></div>
                                             <span className="font-medium text-gray-700">{award}</span>
                                         </div>
                                     )}
-                                    <div className="flex items-center gap-2 text-xl text-gray-500">
+                                    <div className="flex items-center gap-2 text-md text-gray-500">
                                         <div className="bg-blue-50 p-1 rounded"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-blue-500"><path fillRule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75z" clipRule="evenodd" /></svg></div>
                                         <span className="font-medium text-gray-600">{formatDateTH(date)}</span>
                                     </div>
                                     {location && (
-                                        <div className="flex items-center gap-2 text-xl text-gray-500">
+                                        <div className="flex items-center gap-2 text-md text-gray-500">
                                             <div className="bg-rose-50 p-1 rounded"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-rose-500"><path fillRule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 002.273 1.765 11.842 11.842 0 00.976.544l.062.029.006.003.002.001.003.001a.75.75 0 01-.01-.001zM10 12.5a3.5 3.5 0 110-7 3.5 3.5 0 010 7z" clipRule="evenodd" /></svg></div>
                                             <span className="font-medium text-gray-600 line-clamp-1">{location}</span>
                                         </div>

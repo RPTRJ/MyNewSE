@@ -181,14 +181,14 @@ const AnnouncementDetailPage = () => {
       )}
 
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0">
+      <div className="bg-white border-b border-orange-400 sticky top-0">
         <div className="max-w-4xl  px-6 py-4">
           <button
             onClick={() => router.back()}
-            className="flex items-left gap-2 text-gray-600 hover:text-gray-900 mb-4 "
+            className="flex items-left gap-2 text-gray-600 hover:text-gray-900 mb-4 text-md"
           >
             <ArrowLeftIcon size={20} />
-            Back to Announcements
+            กลับไปหน้าประกาศ
           </button>
         </div>
       </div>
@@ -221,7 +221,8 @@ const AnnouncementDetailPage = () => {
           <div className="px-8 py-6">
             <div className="prose max-w-none">
               <div
-                className="text-gray-700 leading-relaxed whitespace-pre-wrap text-3xl"
+                className="text-gray-700 leading-relaxed whitespace-pre-wrap"
+                style={{ fontSize: "18px", lineHeight: "1.9" }}
                 dangerouslySetInnerHTML={{ __html: announcement.content }}
               />
             </div>

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import AnnouncementService, {
   type CreateAnnouncementPayload,
 } from "@/services/announcement";
+import { AlertError, AlertSuccess, AlertWarning } from "@/utils/alert";
 
 function toBackendDate(value: string) {
   if (!value) return null;
@@ -78,7 +79,7 @@ const CreateAnnouncementForm: React.FC = () => {
 
   const handleCreateCategory = async () => {
     if (!newCategoryName.trim()) {
-      alert("กรุณากรอกชื่อหมวดหมู่");
+      AlertWarning("กรุณากรอกชื่อหมวดหมู่");
       return;
     }
 
@@ -101,10 +102,10 @@ const CreateAnnouncementForm: React.FC = () => {
       setNewCategoryName("");
       setShowNewCategoryInput(false);
 
-      alert("สร้างหมวดหมู่สำเร็จ ✅");
+      AlertSuccess("สร้างหมวดหมู่สำเร็จ ✅");
     } catch (error: any) {
       console.error(error);
-      alert(error.message || "เกิดข้อผิดพลาดในการสร้างหมวดหมู่");
+      AlertError(error.message || "เกิดข้อผิดพลาดในการสร้างหมวดหมู่");
     }
   };
 
@@ -155,7 +156,7 @@ const CreateAnnouncementForm: React.FC = () => {
 
   const handleDraft = async () => {
     if (!validateForm()) {
-      alert("กรุณากรอกข้อมูลที่จำเป็นให้ครบก่อนบันทึก");
+      AlertWarning("กรุณากรอกข้อมูลที่จำเป็นให้ครบก่อนบันทึก");
       return;
     }
     setLoading(true);
@@ -203,11 +204,11 @@ const CreateAnnouncementForm: React.FC = () => {
         });
       }
 
-      alert("บันทึกฉบับร่างเรียบร้อย 📝");
+      AlertSuccess("บันทึกฉบับร่างเรียบร้อย 📝");
       window.history.back();
     } catch (error: any) {
       console.error(error);
-      alert(error.message);
+      AlertError(error.message);
     } finally {
       setLoading(false);
     }
@@ -217,7 +218,7 @@ const CreateAnnouncementForm: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!validateForm()) {
-      alert("กรุณากรอกข้อมูลที่จำเป็นให้ครบก่อนเผยแพร่\nหัวข้อ, รายละเอียด, หมวดหมู่, และวันที่");
+      AlertWarning("กรุณากรอกข้อมูลที่จำเป็นให้ครบก่อนเผยแพร่\nหัวข้อ, รายละเอียด, หมวดหมู่, และวันที่");
       return;
     }
 
@@ -290,7 +291,7 @@ const CreateAnnouncementForm: React.FC = () => {
         });
       }
 
-      alert(
+      AlertSuccess(
         status === "SCHEDULED"
           ? "ตั้งเวลาเผยแพร่เรียบร้อย ⏰"
           : "เผยแพร่ประกาศสำเร็จ 🎉"
@@ -298,7 +299,7 @@ const CreateAnnouncementForm: React.FC = () => {
       window.history.back();
     } catch (error: any) {
       console.error(error);
-      alert(error.message);
+      AlertError(error.message);
     } finally {
       setLoading(false);
     }
@@ -417,6 +418,7 @@ const CreateAnnouncementForm: React.FC = () => {
                 <input
                   type="file"
                   multiple
+                  accept=".pdf,.doc,.docx,.xls,.xlsx"
                   onChange={handleAttachmentsChange}
                   className="hidden"
                   id="attachments"

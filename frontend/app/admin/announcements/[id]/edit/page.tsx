@@ -6,6 +6,7 @@ import AnnouncementService, {
 } from "@/services/announcement";
 import { useRouter, useParams } from "next/navigation";
 import { Loader2, X, FileText } from "lucide-react";
+import { AlertError, AlertSuccess, AlertWarning } from "@/utils/alert";
 
 const EditAnnouncementForm: React.FC = () => {
   const router = useRouter();
@@ -64,7 +65,7 @@ const EditAnnouncementForm: React.FC = () => {
 
   const handleCreateCategory = async () => {
     if (!newCategoryName.trim()) {
-      alert("กรุณากรอกชื่อหมวดหมู่");
+      AlertWarning("กรุณากรอกชื่อหมวดหมู่");
       return;
     }
 
@@ -83,10 +84,10 @@ const EditAnnouncementForm: React.FC = () => {
       setNewCategoryName("");
       setShowNewCategoryInput(false);
 
-      alert("สร้างหมวดหมู่สำเร็จ ✅");
+      AlertSuccess("สร้างหมวดหมู่สำเร็จ ✅");
     } catch (error: any) {
       console.error(error);
-      alert(error.message || "เกิดข้อผิดพลาดในการสร้างหมวดหมู่");
+      AlertError(error.message || "เกิดข้อผิดพลาดในการสร้างหมวดหมู่");
     }
   };
 
@@ -126,7 +127,7 @@ const EditAnnouncementForm: React.FC = () => {
 
     } catch (error: any) {
       console.error("Failed to fetch announcement:", error);
-      alert("ไม่สามารถโหลดข้อมูลประกาศได้: " + error.message);
+      AlertError("ไม่สามารถโหลดข้อมูลประกาศได้: " + error.message);
       router.back();
     } finally {
       setFetchLoading(false);
@@ -180,7 +181,7 @@ const EditAnnouncementForm: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!formData.cetagory_id || formData.cetagory_id === 0) {
-      alert("กรุณาเลือกหมวดหมู่ก่อนอัปโหลดไฟล์");
+      AlertWarning("กรุณาเลือกหมวดหมู่ก่อนอัปโหลดไฟล์");
       return;
     }
 
@@ -262,11 +263,11 @@ const EditAnnouncementForm: React.FC = () => {
         });
       }
 
-      alert("อัปเดตประกาศสำเร็จ 🎉");
+      AlertSuccess("อัปเดตประกาศสำเร็จ 🎉");
       router.push("/admin/announcements");
     } catch (error: any) {
       console.error(error);
-      alert("เกิดข้อผิดพลาด: " + error.message);
+      AlertError("เกิดข้อผิดพลาด: " + error.message);
     } finally {
       setLoading(false);
     }
@@ -282,11 +283,11 @@ const EditAnnouncementForm: React.FC = () => {
 
       await AnnouncementService.updateAnnouncement(announcementId, payload);
 
-      alert("บันทึกฉบับร่างเรียบร้อย 📝");
+      AlertSuccess("บันทึกฉบับร่างเรียบร้อย 📝");
       router.push("/admin/announcements");
     } catch (error: any) {
       console.error(error);
-      alert("เกิดข้อผิดพลาด: " + error.message);
+      AlertError("เกิดข้อผิดพลาด: " + error.message);
     } finally {
       setLoading(false);
     }
@@ -455,6 +456,7 @@ const EditAnnouncementForm: React.FC = () => {
                 <input
                   type="file"
                   multiple
+                  accept=".pdf,.doc,.docx,.xls,.xlsx"
                   onChange={handleAttachmentsChange}
                   className="hidden"
                   id="attachments"

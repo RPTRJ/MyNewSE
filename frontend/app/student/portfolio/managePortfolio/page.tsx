@@ -565,7 +565,7 @@ export default function MyPortfoliosPage() {
                 e.stopPropagation();
                 handleSubmitForReview(portfolio.ID);
                 }}
-                className="px-4 py-2 border-2 rounded-lg"
+                className="px-1 py-4 border-2 rounded-lg"
                 style={{ borderColor: theme.primary, color: theme.primary }}
             >
                 📤 ส่งตรวจทาน
@@ -578,7 +578,7 @@ export default function MyPortfoliosPage() {
             case 'awaiting_review':
             case 'submitted':
             return (
-                <button disabled className="px-4 py-2 bg-gray-300 text-gray-600 rounded-lg">
+                <button disabled className="px-4 py-4.5 bg-gray-300 text-gray-600 rounded-lg">
                 ⏳ รออาจารย์ตรวจ
                 </button>
             );
@@ -602,7 +602,7 @@ export default function MyPortfoliosPage() {
                     e.stopPropagation();
                     handleShowScorecard(portfolio.ID);
                 }}
-                className="px-4 py-2 bg-green-500 text-white rounded-lg"
+                className="px-4 py-4.5 bg-green-500 text-white rounded-lg"
                 >
                 ✓ ผ่านการตรวจแล้ว
                 </button>

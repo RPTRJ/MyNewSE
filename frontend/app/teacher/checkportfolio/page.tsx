@@ -137,10 +137,10 @@ export default function CheckPortfolioPage() {
                   </div>
 
                   {/* Portfolio Info */}
-                  <div className="bg-gradient-to-br from-gray-100 to-gray-200 aspect-square flex items-center justify-center p-4">
+                  <div className="bg-gradient-to-br from-orange-500 to-yellow-500 aspect-square flex items-center justify-center p-4">
                     <div className="text-center">
                       <User className="w-16 h-16 text-gray-300 mx-auto mb-2" />
-                      <p className="text-gray-600 text-sm font-medium mb-1">{item. portfolio.portfolio_name}</p>
+                      <p className="text-white text-sm font-medium mb-1">{item.portfolio.portfolio_name}</p>
                     </div>
                   </div>
 

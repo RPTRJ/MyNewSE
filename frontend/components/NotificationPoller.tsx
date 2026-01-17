@@ -8,107 +8,123 @@ export default function NotificationSocket() {
   const socketRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    // ใช้ Timeout เพื่อรอให้ React Mount เสร็จชัวร์ๆ ก่อนค่อยต่อ (แก้ปัญหา Strict Mode)
-    const timeoutId = setTimeout(() => {
-        const connect = () => {
-          // 1. ดึง User ID จาก LocalStorage
-          let currentUserId = 0;
-          try {
-            const userStr = localStorage.getItem("user");
-            if (userStr) {
-                const u = JSON.parse(userStr);
-                currentUserId = u.ID || u.id || 0;
-            }
-          } catch (e) {
-            console.error("Error parsing user:", e);
-          }
+    let socket: WebSocket | null = null;
+    let reconnectTimeout: NodeJS.Timeout | null = null;
+    let isMounted = true;
+    let retryDelay = 3000; // Start with 3s delay
 
-          if (!currentUserId) {
-            console.log("❌ No User ID found, skipping WebSocket connection.");
-            return;
-          }
+    const connect = () => {
+      if (!isMounted) return;
 
-          // 2. ส่ง user_id ไปกับ URL
-          const baseUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8080/ws";
-          const wsUrl = `${baseUrl}?user_id=${currentUserId}`;
+      // 1. Get User ID from LocalStorage
+      let currentUserId = 0;
+      try {
+        const userStr = localStorage.getItem("user");
+        if (userStr) {
+          const u = JSON.parse(userStr);
+          currentUserId = u.ID || u.id || 0;
+        }
+      } catch (e) {
+        console.error("Error parsing user:", e);
+      }
 
-          console.log("Connecting to WebSocket:", wsUrl);
-          
-          const socket = new WebSocket(wsUrl);
-          socketRef.current = socket;
+      if (!currentUserId) {
+        // If no user, retry later (maybe login happens later)
+        console.log("❌ No User ID found, skipping WebSocket connection.");
+        return;
+      }
 
-          socket.onopen = () => {
-            console.log("✅ WebSocket Connected");
-          };
+      // 2. Connect
+      const baseUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8080/ws";
+      const wsUrl = `${baseUrl}?user_id=${currentUserId}`;
 
-          socket.onmessage = (event) => {
-             try {
-                const data = JSON.parse(event.data);
-                const message = data.notification_message || data.message || data.Notification_Message || event.data;
-                const title = data.notification_title || data.title || data.Notification_Title || "แจ้งเตือนใหม่";
-                const id = data.ID || data.id;
+      console.log(`Connecting to WebSocket: ${baseUrl} (User: ${currentUserId})`);
 
-                toast((t) => (
-                    <div className="flex flex-col relative pr-4 min-w-[250px]">
-                      <button 
-                         onClick={() => toast.dismiss(t.id)}
-                         className="absolute -top-1 -right-2 text-gray-400 hover:text-red-500 font-bold p-1 rounded-full"
-                      >✕</button>
-                      <span className="font-bold text-sm text-gray-800 mb-1">{title}</span>
-                      <span className="text-sm text-gray-600 leading-snug">{message}</span>
-                    </div>
-                  ), {
-                    id: `noti-${id || Date.now()}`,
-                    
-                    // ✅✅✅ แก้ตรงนี้: เปลี่ยน 5000 เป็น Infinity ✅✅✅
-                    duration: Infinity, 
-                    
-                    position: 'top-right',
-                    style: { 
-                        borderLeft: '4px solid #FFA500', 
-                        background: '#fff', 
-                        color: '#333', 
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)', 
-                        padding: '12px 16px' 
-                    },
-                });
-                
-                // สั่งรีเฟรชข้อมูลส่วนอื่น
-                window.dispatchEvent(new Event("refresh_data"));
-                
-                // Mark as read (ถ้าต้องการให้เด้งแล้วถือว่าอ่านเลย ก็เปิดบรรทัดนี้ได้)
-                if (id) markNotificationReadAPI(id); 
-            } catch (e) {
-                // กรณีส่งข้อความธรรมดา (ไม่ใช่ JSON)
-                toast(event.data, { 
-                    icon: '🔔',
-                    duration: Infinity // ✅ ตั้ง Infinity ตรงนี้ด้วย
-                });
-            }
-          };
+      socket = new WebSocket(wsUrl);
+      socketRef.current = socket;
 
-          socket.onclose = () => {
-            console.log("❌ WebSocket Disconnected. Retrying in 3s...");
-            if (socketRef.current) {
-                setTimeout(() => connect(), 3000);
-            }
-          };
+      socket.onopen = () => {
+        if (!isMounted) {
+          socket?.close();
+          return;
+        }
+        console.log("✅ WebSocket Connected");
+        retryDelay = 3000; // Reset delay on success
+      };
 
-          socket.onerror = (err) => {
-            socket.close();
-          };
-        };
-        
-        connect();
-    }, 100); 
+      socket.onmessage = (event) => {
+        if (!isMounted) return;
+        try {
+          const data = JSON.parse(event.data);
+          const message = data.notification_message || data.message || data.Notification_Message || event.data;
+          const title = data.notification_title || data.title || data.Notification_Title || "แจ้งเตือนใหม่";
+          const id = data.ID || data.id;
 
-    // Cleanup
+          toast((t) => (
+            <div className="flex flex-col relative pr-4 min-w-[250px]">
+              <button
+                onClick={() => toast.dismiss(t.id)}
+                className="absolute -top-1 -right-2 text-gray-400 hover:text-red-500 font-bold p-1 rounded-full"
+              >✕</button>
+              <span className="font-bold text-sm text-gray-800 mb-1">{title}</span>
+              <span className="text-sm text-gray-600 leading-snug">{message}</span>
+            </div>
+          ), {
+            id: `noti-${id || Date.now()}`,
+            duration: Infinity,
+            position: 'top-right',
+            style: {
+              borderLeft: '4px solid #FFA500',
+              background: '#fff',
+              color: '#333',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+              padding: '12px 16px'
+            },
+          });
+
+          // Allow other components to refresh data
+          window.dispatchEvent(new Event("refresh_data"));
+
+          // Optional: Mark as read immediately
+          if (id) markNotificationReadAPI(id);
+        } catch (e) {
+          toast(event.data, {
+            icon: '🔔',
+            duration: Infinity
+          });
+        }
+      };
+
+      socket.onclose = () => {
+        if (!isMounted) return;
+        console.log(`❌ WebSocket Disconnected. Retrying in ${retryDelay / 1000}s...`);
+
+        // Exponential backoff
+        // Cap at 30 seconds
+        reconnectTimeout = setTimeout(() => {
+          retryDelay = Math.min(retryDelay * 1.5, 30000);
+          connect();
+        }, retryDelay);
+      };
+
+      socket.onerror = (err) => {
+        // Error will trigger onclose, so we don't need to double-handle reconnect here usually,
+        // but explicit close ensures onclose fires.
+        socket?.close();
+      };
+    };
+
+    // Initial connection attempt
+    // Small delay to ensure client-side hydration or auth is ready
+    const timer = setTimeout(() => connect(), 100);
+
     return () => {
-      clearTimeout(timeoutId);
+      isMounted = false;
+      clearTimeout(timer);
+      if (reconnectTimeout) clearTimeout(reconnectTimeout);
       if (socketRef.current) {
-        const socket = socketRef.current;
-        socketRef.current = null; 
-        socket.close();
+        socketRef.current.close();
+        socketRef.current = null;
       }
     };
   }, []);

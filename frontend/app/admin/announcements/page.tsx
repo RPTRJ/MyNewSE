@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Plus, Calendar, List, ChevronDown, MoreVertical, Eye, Edit, Trash2, Pin, Clock, Loader2 } from 'lucide-react';
 import AnnouncementService, { type Announcement } from '@/services/announcement';
 import { useRouter } from 'next/navigation';
+import { AlertConfirm, AlertError, AlertSuccess } from '@/utils/alert';
 
 const AnnouncementDashboard = () => {
   const router = useRouter();
@@ -35,7 +36,7 @@ const AnnouncementDashboard = () => {
       setAnnouncements(data);
     } catch (error: any) {
       console.error('Failed to fetch announcements:', error);
-      alert('ไม่สามารถโหลดข้อมูลประกาศได้: ' + error.message);
+      AlertError('ไม่สามารถโหลดข้อมูลประกาศได้: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -108,7 +109,7 @@ const AnnouncementDashboard = () => {
 
   const handleDelete = async (id: number) => {
 
-    if (!confirm('คุณแน่ใจหรือไม่ที่จะลบประกาศนี้?')) return;
+    if (!AlertConfirm('คุณแน่ใจหรือไม่ที่จะลบประกาศนี้?')) return;
 
     try {
       await AnnouncementService.deleteAnnouncement(id);
@@ -118,10 +119,10 @@ const AnnouncementDashboard = () => {
         announcement_id: id,
       });
 
-      alert('ลบประกาศสำเร็จ');
+      AlertSuccess('ลบประกาศสำเร็จ');
       fetchAnnouncements();
     } catch (error: any) {
-      alert('ไม่สามารถลบประกาศได้: ' + error.message);
+      AlertError('ไม่สามารถลบประกาศได้: ' + error.message);
     }
   };
 
@@ -130,10 +131,10 @@ const AnnouncementDashboard = () => {
       await AnnouncementService.updateAnnouncement(announcement.ID!, {
         is_pinned: !announcement.is_pinned
       });
-      alert(announcement.is_pinned ? 'ยกเลิกปักหมุดแล้ว' : 'ปักหมุดแล้ว');
+      AlertSuccess(announcement.is_pinned ? 'ยกเลิกปักหมุดแล้ว' : 'ปักหมุดแล้ว');
       fetchAnnouncements();
     } catch (error: any) {
-      alert('ไม่สามารถอัปเดตได้: ' + error.message);
+      AlertError('ไม่สามารถอัปเดตได้: ' + error.message);
     }
   };
 
@@ -142,11 +143,11 @@ const AnnouncementDashboard = () => {
 
     try {
       await Promise.all(selectedItems.map(id => AnnouncementService.deleteAnnouncement(id)));
-      alert('ลบประกาศทั้งหมดสำเร็จ');
+      AlertSuccess('ลบประกาศทั้งหมดสำเร็จ');
       setSelectedItems([]);
       fetchAnnouncements();
     } catch (error: any) {
-      alert('ไม่สามารถลบประกาศบางรายการได้: ' + error.message);
+      AlertError('ไม่สามารถลบประกาศบางรายการได้: ' + error.message);
     }
   };
 
@@ -157,13 +158,29 @@ const AnnouncementDashboard = () => {
           AnnouncementService.updateAnnouncement(id, { is_pinned: true })
         )
       );
-      alert('ปักหมุดประกาศทั้งหมดสำเร็จ');
+      AlertSuccess('ปักหมุดประกาศทั้งหมดสำเร็จ');
       setSelectedItems([]);
       fetchAnnouncements();
     } catch (error: any) {
-      alert('ไม่สามารถปักหมุดประกาศบางรายการได้: ' + error.message);
+      AlertError('ไม่สามารถปักหมุดประกาศบางรายการได้: ' + error.message);
     }
   };
+
+  const handleBulkUnpin = async () => {
+  try {
+    await Promise.all(
+      selectedItems.map(id =>
+        AnnouncementService.updateAnnouncement(id, { is_pinned: false })
+      )
+    );
+
+    AlertSuccess('ยกเลิกปักหมุดประกาศทั้งหมดสำเร็จ');
+    setSelectedItems([]);
+    fetchAnnouncements();
+  } catch (error: any) {
+    AlertError('ไม่สามารถยกเลิกปักหมุดบางรายการได้: ' + error.message);
+  }
+};
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -285,6 +302,16 @@ const AnnouncementDashboard = () => {
                       >
                         <Pin size={16} />
                         ปักหมุดที่เลือก
+                      </button>
+                      <button
+                        onClick={() => {
+                          handleBulkUnpin();
+                          setShowBulkMenu(false);
+                        }}
+                        className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2"
+                      >
+                        <Pin size={16} />
+                        ยกเลิกปักหมุด
                       </button>
                       <button
                         onClick={() => {

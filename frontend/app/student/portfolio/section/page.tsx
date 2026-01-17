@@ -1258,6 +1258,8 @@ function SectionsContent() {
                             <EditorSidebar
                                 onThemeSelect={handleThemeChange}
                                 onFontSelect={handleFontChange}
+                                currentFont={activeFont}
+                                currentTheme={activeTheme}
                             />
                         </div>
                     </aside>

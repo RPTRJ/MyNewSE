@@ -427,6 +427,7 @@ export default function ActivityUI() {
                   className="w-full px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors"
                   style={{ color: activityDate === "" ? "#9ca3af" : "black" }}
                   value={activityDate}
+                  max={new Date().toLocaleDateString('en-CA')}
                   onChange={(e) => setActivityDate(e.target.value)}
                 />
               </div>
