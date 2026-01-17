@@ -212,10 +212,10 @@ export default function TemplatesPage() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-8xl px-6">
+      <div className="max-w-8xl px-6 md:px-10">
         <div className="flex items-center justify-between mb-8 mt-4">
           <div >
-            <h1 className="text-3xl font-bold text-gray-900 ">Portfolio Templates</h1>
+            <h1 className="text-3xl font-bold text-orange-500 ">Portfolio Templates</h1>
             {/* <p className="text-gray-600 mt-2">เลือกเทมเพลตที่ต้องการสำหรับพอร์ตโฟลิโอของคุณ</p> */}
           </div>
           <button 
@@ -231,7 +231,7 @@ export default function TemplatesPage() {
           </button>
         </div>
       </div>
-      <div className="max-w-7xl mx-auto px-6">
+      <div className="max-w-8xl mx-auto px-6 md:px-10">
         {/* Templates Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-10 mb-10">
           {templates.map((template) => (

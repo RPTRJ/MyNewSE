@@ -112,13 +112,13 @@ func (u *UploadController) UploadFile(c *gin.Context) {
 		return
 	}
 
-	url, err := services.LocalStorage.UploadFile(file, header.Filename, contentType)
+	savedPath, err := services.LocalStorage.UploadFile(file, header.Filename, contentType)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload file: " + err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"url": url})
+	c.JSON(http.StatusOK, gin.H{"file_path": savedPath})
 }
 
 // DeleteFile deletes a file from storage by filename

@@ -801,17 +801,6 @@ function SectionsContent() {
             });
             const sectionBgColor = activeTheme?.background_color || theme.primary;
 
-
-            //  return (
-            //     //  <div className="h-full flex flex-col p-6 space-y-6 overflow-y-auto"
-            //     //     style={{
-            //     //         backgroundColor: activeTheme?.background_color || 'white',
-            //     //         color: activeTheme?.primary_color || 'black',
-            //     //         fontFamily: activeFont?.font_family || 'inherit',
-            //     //     }}
-            //     //  >
-            //     //  </div>
-            //  );
             if (isAdditionalIntro) {
                 return (
                     <div className="h-full flex flex-col p-6 space-y-6 overflow-y-auto"
@@ -976,28 +965,6 @@ function SectionsContent() {
                                         </div>
                                     </div>
 
-                                    {/* ✅✅✅ 2. ส่วนปุ่มกด (ขวา) ที่คุณต้องการ ใส่ตรงนี้ครับ ✅✅✅ */}
-                                    {/* <div className="flex gap-2 ml-4 flex-shrink-0">
-                                        <button 
-                                            onClick={(e) => { 
-                                                e.stopPropagation(); // กันไม่ให้กดทะลุไปโดนการ์ด
-                                                handleDirectEdit(section, block); 
-                                            }} 
-                                            className="px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition"
-                                        > */}
-                                    {/* แก้ไข
-                                        </button> */}
-                                    {/* <button 
-                                            onClick={(e) => { 
-                                                e.stopPropagation(); 
-                                                handleDeleteBlock(block.ID); 
-                                            }} 
-                                            className="px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition"
-                                        >
-                                            ลบ
-                                        </button> */}
-                                    {/* </div> */}
-
                                 </div>
                             );
                         }
@@ -1020,11 +987,6 @@ function SectionsContent() {
                         );
                     })}
 
-                    {/* ========================================================= */}
-                    {/* vvv  ส่วนด้านล่าง: พื้นที่ว่าง (Placeholder)  vvv   */}
-                    {/* ========================================================= */}
-
-                    {/* แสดงปุ่ม "+" สำหรับเพิ่มข้อมูลเสมอ (1 ช่อง) */}
                     <EmptySlot onClick={() => handleDirectAdd(section)} />
 
                 </motion.div>
@@ -1222,29 +1184,22 @@ function SectionsContent() {
             <div className="flex-1 overflow-hidden p-6">
                 <div className="max-w-[1800px] mx-auto h-full grid grid-cols-12 gap-6">
 
-                    {/* ========================================================= */}
-                    {/* กล่องที่ 1: ส่วนเนื้อหา (Content Canvas) - กินพื้นที่ 9 ส่วน */}
-                    {/* ========================================================= */}
                     <main className="col-span-12 lg:col-span-9 bg-white rounded-2xl shadow-sm border border-gray-200 flex flex-col overflow-hidden relative">
 
                         {/* Header ของกล่องเนื้อหา */}
                         <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10">
                             <div>
-                                <h2 className="text-xl font-bold flex items-center gap-2 text-orange-400">
-                                    พื้นที่จัดวางเนื้อหา (Canvas)
+                                <h2 className="text-2xl font-bold flex items-center gap-2 text-orange-500">
+                                    พื้นที่จัดวางเนื้อหา
                                 </h2>
-                                <p className="text-xs text-gray-400">Section ที่คุณสร้างจะแสดงผลตามสีและฟอนต์ที่เลือก</p>
+                                <p className="text-gray-400">Section ที่คุณสร้างจะแสดงผลตามสีและฟอนต์ที่เลือก</p>
                             </div>
-                            {/* <button onClick={handleCreateSection} className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition text-sm font-bold">
-                                <CirclePlus size={18} /> เพิ่ม Section ใหม่
-                            </button> */}
                         </div>
 
                         {/* พื้นที่แสดง Section (Scroll ได้) */}
                         <div
                             className="flex-1 overflow-y-auto p-6 transition-colors duration-500"
                             style={{
-                                //backgroundColor: activeTheme?.background_color || '#f9fafb', // เปลี่ยนสีพื้นหลังตามธีม
                                 fontFamily: activeFont?.font_family
                             }}
                         >
@@ -1293,16 +1248,10 @@ function SectionsContent() {
                             )}
                         </div>
                     </main>
-
-                    {/* ========================================================= */}
-                    {/* กล่องที่ 2: ส่วนเครื่องมือ (Tools Panel) - กินพื้นที่ 3 ส่วน */}
-                    {/* ========================================================= */}
                     <aside className="col-span-12 lg:col-span-3 bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col h-full">
                         {/* ใส่ Component Sidebar ลงในนี้ */}
                         <div className="h-full overflow-hidden">
                             <EditorSidebar
-                                // onThemeSelect={(theme) => setActiveTheme(theme)}
-                                // onFontSelect={(font) => setActiveFont(font)}
                                 onThemeSelect={handleThemeChange}
                                 onFontSelect={handleFontChange}
                             />

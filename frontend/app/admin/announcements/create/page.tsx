@@ -562,7 +562,7 @@ const CreateAnnouncementForm: React.FC = () => {
               {/* Expires At */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  เวลาที่หมดการเผยแพร่
+                  เวลาที่หมดการเผยแพร่ (ถ้ามี)
                 </label>
                 <input
                   type="datetime-local"

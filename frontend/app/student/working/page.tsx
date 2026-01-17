@@ -232,11 +232,11 @@ export default function WorkingUI() {
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="mx-auto max-w-[1500px] p-6">
+      <div className="mx-auto max-w-[1600px] p-6">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8 mt-4">
+        <div className="flex items-center justify-between mb-8 mt-4 border-b border-gray-200 pb-4">
           <div>
-            <h2 className="text-3xl font-bold text-gray-900">
+            <h2 className="text-3xl font-bold text-orange-500">
               {activeTab === 'create' ? 'สร้างผลงานใหม่' : 'ผลงานทั้งหมด'}
             </h2>
             <p className="text-gray-600 mt-2">

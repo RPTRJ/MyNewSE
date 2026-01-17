@@ -59,9 +59,15 @@ export default function AdminPage() {
         setUserCount(usersRes.length || 0);
         setCurriculumCount(curriculumRes.total_curricula || 0);
 
+        const now = new Date();
+
         // Take latest 5 announcements and verify it's an array
         const newsList = Array.isArray(announcementsRes) ? announcementsRes : [];
-        setAnnouncements(newsList.slice(0, 5));
+        const activeNews = newsList.filter((n) => {
+          if (!n.expires_at) return true;
+          return new Date(n.expires_at) > now;
+        });
+        setAnnouncements(activeNews.slice(0, 5));
 
       } catch (error) {
         console.error("Failed to load dashboard data", error);
@@ -86,7 +92,7 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-700">
+    <div className="p-6 md:p-10 max-w-8xl mx-auto space-y-8 animate-in fade-in duration-700">
 
       {/* Welcome Section */}
       <div className="bg-gradient-to-br from-[#FF6B35] via-[#FF8F5A] to-[#FF512F] rounded-3xl p-8 md:p-12 text-white shadow-2xl relative overflow-hidden group min-h-[280px] flex flex-col justify-center border border-white/10">
@@ -100,10 +106,10 @@ export default function AdminPage() {
         </div>
 
         <div className="relative z-10 max-w-2xl mt-12 md:mt-0">
-          <h1 className="text-4xl md:text-6x font-black mb-4 tracking-tight drop-shadow-lg text-transparent bg-clip-text bg-gradient-to-r from-white to-orange-100">
+          <h1 className="text-5xl md:text-6x font-black mb-4 tracking-tight drop-shadow-lg text-transparent bg-clip-text bg-gradient-to-r from-white to-orange-100">
             สวัสดี, {userName}
           </h1>
-          <p className="text-orange-50 text-lg md:text-2x opacity-90 font-light leading-relaxed max-w-xl">
+          <p className="text-orange-50 text-2xl md:text-2x opacity-90 font-light leading-relaxed max-w-xl">
             ยินดีต้อนรับสู่แดชบอร์ดผู้ดูแลระบบ จัดการข้อมูลผู้ใช้และหลักสูตรได้ที่นี่
           </p>
         </div>
@@ -237,7 +243,11 @@ export default function AdminPage() {
 
                   <div className="hidden md:flex items-center justify-center px-4 border-l border-gray-200/50">
                     <div className="w-10 h-10 rounded-full bg-white text-gray-300 group-hover:bg-orange-500 group-hover:text-white flex items-center justify-center transition-all duration-300 shadow-sm">
-                      <ArrowUpRight className="w-5 h-5" />
+                      <ArrowUpRight className="w-5 h-5" 
+                      onClick={() => {
+                        router.push(`/admin/announcements/${news.ID}`);
+                      }}
+                      />
                     </div>
                   </div>
                 </div>

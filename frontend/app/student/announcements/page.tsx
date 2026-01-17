@@ -132,12 +132,12 @@ export default function StudentPage() {
   }
 
   return (
-    <div style={{ padding: '50px' }}>
-      <div className="min-h-screen bg-white to-red-50 p-4 md:p-8 rounded-2xl">
+    <div style={{ padding: '0px' }}>
+      <div className="min-h-screen bg-white to-red-50 p-6 md:p-10 rounded-2xl">
         {/* Announcements Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-orange-500 mb-2">ประชาสัมพันธ์</h1>
-          <p className="text-orange-400">ประกาศและประชาสัมพันธ์ทั้งหมดของมหาวิทยาลัยเทคโนโลยีสุรนารี</p>
+          <h1 className="text-3xl font-bold text-orange-500 mb-2">ประชาสัมพันธ์</h1>
+          <p className="text-gray-600">ประกาศและประชาสัมพันธ์ทั้งหมดของมหาวิทยาลัยเทคโนโลยีสุรนารี</p>
         </div>
 
         {/* Important Notices - Pinned Announcements */}

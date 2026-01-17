@@ -360,11 +360,11 @@ export default function TeacherCurriculaPage() {
   // ==================== List View ====================
   if (view === "list") {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
-        <div className="max-w-6xl mx-auto">
+      <div className="min-h-screen p-6 md:p-10">
+        <div className="max-w-8xl mx-auto">
           {/* Header */}
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-800">คำแนะนำหลักสูตร</h1>
+          <div className="mb-6 border-b border-gray-200 pb-4">
+            <h1 className="text-3xl font-bold text-orange-500">คำแนะนำหลักสูตร</h1>
             <p className="text-gray-600 mt-1">
               เลือกหลักสูตรเพื่อเพิ่มคำแนะนำ กลุ่มวิชา และทักษะที่จำเป็น
             </p>
@@ -381,7 +381,7 @@ export default function TeacherCurriculaPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="ค้นหาหลักสูตร..."
-                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                 aria-label="ค้นหาหลักสูตร"
               />
             </div>

@@ -446,8 +446,8 @@ export default function AdminEducationPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-amber-50 p-4 md:p-6">
-        <div className="max-w-6xl mx-auto space-y-6">
+      <div className="min-h-screen p-6 md:p-10">
+        <div className="max-w-8xl mx-auto space-y-6">
           {/* Header */}
           <header className="bg-white rounded-2xl shadow-lg border border-orange-100 overflow-hidden">
             <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-5">

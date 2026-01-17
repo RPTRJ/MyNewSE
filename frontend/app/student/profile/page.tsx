@@ -19,6 +19,24 @@ type Option = { id: number; name: string };
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
+const getFileUrl = (filePath?: string | null): string | null => {
+  if (!filePath) return null;
+  if (filePath.startsWith("http")) return filePath;
+
+  // Normalize path: replace backslashes with forward slashes
+  const normalizedPath = filePath.replace(/\\/g, '/');
+
+  // Ensure path starts with /
+  const path = normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`;
+
+  // Static files are usually served from the root, not from /api
+  // If the API URL ends with /api, we remove it for static file access
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+  const rootUrl = apiBaseUrl.endsWith('/api') ? apiBaseUrl.slice(0, -4) : apiBaseUrl;
+
+  return `${rootUrl}${path}`;
+};
+
 const formatDate = (dateString?: string) => {
   if (!dateString) return "-";
   const date = new Date(dateString);
@@ -53,7 +71,7 @@ function SectionCard({ title, subtitle, action, children, noDivider, icon, accen
     <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-shadow duration-300">
       {/* Accent bar */}
       <div className={`h-1 bg-gradient-to-r ${accentColors[accentColor]}`} />
-      
+
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-6 pt-5">
         <div className="flex items-center gap-3">
           {icon && (
@@ -99,7 +117,7 @@ export default function ProfilePage() {
     fetchMyProfile(authToken)
       .then((data) => {
         setProfile(data);
-        setProfileImageUrl(data.user?.profile_image_url);
+        setProfileImageUrl(getFileUrl(data.user?.profile_image_url) || undefined);
       })
       .catch((err: unknown) => {
         if (err instanceof HttpError && err.status === 401) {
@@ -281,7 +299,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50">
+    <div className="min-h-screen bg-white">
       {/* Hero Header */}
       <div className="relative bg-gradient-to-r from-orange-500 via-orange-400 to-amber-500">
         {/* Background Pattern */}
@@ -295,11 +313,11 @@ export default function ProfilePage() {
             <rect width="100" height="100" fill="url(#hero-pattern)" />
           </svg>
         </div>
-        
+
         {/* Decorative Shapes */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2" />
-        
+
         <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-12">
           <div className="flex items-center justify-between">
             <div>
@@ -314,7 +332,7 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
-        
+
         {/* Wave Bottom */}
         <div className="absolute bottom-0 left-0 right-0 h-6 overflow-hidden">
           <svg viewBox="0 0 1440 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full" preserveAspectRatio="none">
@@ -351,7 +369,7 @@ export default function ProfilePage() {
         {/* Personal Info Section - Special Card */}
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
           <div className="h-1.5 bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500" />
-          
+
           <div className="p-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
               <div className="flex items-center gap-3">
@@ -365,8 +383,8 @@ export default function ProfilePage() {
                   <p className="text-sm text-gray-500">ข้อมูลพื้นฐานของคุณ</p>
                 </div>
               </div>
-              <Link 
-                href="/student/profile/edit/personal" 
+              <Link
+                href="/student/profile/edit/personal"
                 className="inline-flex items-center gap-2 px-4 py-2 bg-orange-50 text-orange-600 rounded-xl hover:bg-orange-100 transition-colors font-medium text-sm"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -375,7 +393,7 @@ export default function ProfilePage() {
                 แก้ไข
               </Link>
             </div>
-            
+
             <div className="flex flex-col lg:flex-row gap-8">
               {/* Profile Image */}
               <div className="flex flex-col items-center">
@@ -387,20 +405,20 @@ export default function ProfilePage() {
                 />
                 <p className="mt-3 text-xs text-gray-500 text-center w-full">คลิกเพื่อเปลี่ยนรูป</p>
               </div>
-              
+
               {/* Personal Details */}
               <div className="flex-1">
                 {/* Name Display - Large */}
                 <div className="mb-6">
                   <h3 className="text-2xl font-bold text-gray-900">
-                    {nameLanguage === "thai" 
+                    {nameLanguage === "thai"
                       ? `${user.first_name_th || ""} ${user.last_name_th || ""}`.trim() || "ไม่ระบุชื่อ"
                       : `${user.first_name_en || ""} ${user.last_name_en || ""}`.trim() || "No Name"
                     }
                   </h3>
                   <p className="text-gray-500 text-sm">{user.email}</p>
                 </div>
-                
+
                 {/* Info Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {nameLanguage === "thai" && (
@@ -484,7 +502,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-{/* Education Info */}
+        {/* Education Info */}
         <SectionCard
           title="ข้อมูลการศึกษา"
           icon={
@@ -496,8 +514,8 @@ export default function ProfilePage() {
           }
           accentColor="blue"
           action={
-            <Link 
-              href="/student/profile/edit/education" 
+            <Link
+              href="/student/profile/edit/education"
               className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-colors font-medium text-sm"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -533,7 +551,7 @@ export default function ProfilePage() {
           </div>
         </SectionCard>
 
-{/* Academic Score */}
+        {/* Academic Score */}
         {!isGedStudent && (
           <SectionCard
             title="ข้อมูลคะแนนหลักสูตรแกนกลาง / GPAX"
@@ -544,8 +562,8 @@ export default function ProfilePage() {
             }
             accentColor="green"
             action={
-              <Link 
-                href="/student/profile/edit/academic-score" 
+              <Link
+                href="/student/profile/edit/academic-score"
                 className="inline-flex items-center gap-2 px-4 py-2 bg-green-50 text-green-600 rounded-xl hover:bg-green-100 transition-colors font-medium text-sm"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -604,7 +622,7 @@ export default function ProfilePage() {
           </SectionCard>
         )}
 
-{/* GED Score */}
+        {/* GED Score */}
         {isGedStudent && (
           <SectionCard
             title="ข้อมูลคะแนน GED"
@@ -615,8 +633,8 @@ export default function ProfilePage() {
             }
             accentColor="purple"
             action={
-              <Link 
-                href="/student/profile/edit/ged-score" 
+              <Link
+                href="/student/profile/edit/ged-score"
                 className="inline-flex items-center gap-2 px-4 py-2 bg-purple-50 text-purple-600 rounded-xl hover:bg-purple-100 transition-colors font-medium text-sm"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -666,7 +684,7 @@ export default function ProfilePage() {
             </div>
           </SectionCard>
         )}
-{/* Language Scores */}
+        {/* Language Scores */}
         <SectionCard
           title="ข้อมูลคะแนนภาษา"
           icon={
@@ -676,8 +694,8 @@ export default function ProfilePage() {
           }
           accentColor="purple"
           action={
-            <Link 
-              href="/student/profile/edit/language-scores" 
+            <Link
+              href="/student/profile/edit/language-scores"
               className="inline-flex items-center gap-2 px-4 py-2 bg-purple-50 text-purple-600 rounded-xl hover:bg-purple-100 transition-colors font-medium text-sm"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -721,7 +739,7 @@ export default function ProfilePage() {
                       </span>
                       {score.cert_file_path && (
                         <a
-                          href={score.cert_file_path}
+                          href={getFileUrl(score.cert_file_path) || "#"}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-xs text-purple-500 hover:text-purple-700 inline-flex items-center gap-1"

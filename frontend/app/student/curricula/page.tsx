@@ -215,14 +215,14 @@ export default function StudentCurriculaSearchPage() {
   else badgeText = `💡 หลักสูตรแนะนำ (${items.length})`;
 
   return (
-    <div className="min-h-screen bg-white p-4 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-white p-6 md:p-10">
+      <div className="max-w-8xl mx-auto space-y-6">
 
         {/* --- Header Section --- */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-2 border-b border-gray-200">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">ระบบรับสมัครนักศึกษา</h1>
-            <p className="text-sm text-gray-500 mt-1">ค้นหาและจัดการรายการหลักสูตรที่คุณสนใจ (Portfolio)</p>
+            <h1 className="text-3xl font-bold text-orange-500 tracking-tight">ระบบรับสมัครนักศึกษา</h1>
+            <p className="text-gray-600 mt-1">ค้นหาและจัดการรายการหลักสูตรที่คุณสนใจ (Portfolio)</p>
           </div>
           <div className="text-right hidden md:block">
             <span className={`text-xs font-bold px-3 py-1 rounded-full ${search ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'}`}>

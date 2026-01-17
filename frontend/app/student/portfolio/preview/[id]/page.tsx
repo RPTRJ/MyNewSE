@@ -254,19 +254,8 @@ export default function PortfolioPreviewPage() {
                         </div>
                     )}
 
-
-                    {/* ================================================= */}
-                    {/* 2. ส่วนรายการข้อความ (Text Blocks) */}
-                    {/* (ตัดกล่องชมพูทิ้งแล้ว เอาอันนี้มาต่อเลย) */}
-                    {/* ================================================= */}
                     {textBlocks.length > 0 && (
                         <div className="flex flex-col gap-4 w-full">
-                            {/* หัวข้อเล็กๆ ถ้าต้องการ (ถ้าไม่เอาก็ลบ div นี้ทิ้งได้) */}
-                            <div className="flex items-center gap-4">
-                                {/* <h3 className="text-xl font-bold text-gray-800">แนะนำตัว เพิ่มเติม</h3> */}
-                                {/* <div className="h-1 flex-1 rounded-full bg-gray-100"></div> */}
-                            </div>
-
                             {/* Loop แสดงกล่องข้อความ */}
                             {textBlocks.map((block: any, idx: number) => {
                                 const c = parseBlockContent(block.content);
@@ -429,7 +418,6 @@ export default function PortfolioPreviewPage() {
     }
     
     if (!portfolio) {
-        // This case might be handled by the error message now, but keep as a fallback.
         return (
             <div className="p-10 text-center">
                 <p>ไม่พบแฟ้มสะสมผลงาน</p>
@@ -442,9 +430,9 @@ export default function PortfolioPreviewPage() {
     const fontFamily = portfolio.font?.font_family || 'inherit';
 
     return (
-        <div className="min-h-screen bg-white p-6 pb-20"
+        <div className="min-h-screen bg-white p-6 md:p-10"
              style={{ backgroundColor: lightenColor(backgroundColor, 100), fontFamily }}>
-            <div className="mx-auto" style={{ maxWidth: 1500 }}>
+            <div className="mx-auto" style={{ maxWidth: 1800 }}>
                 <div className="flex justify-between items-center mb-6">
                     <button 
                         onClick={() => router.back()} 

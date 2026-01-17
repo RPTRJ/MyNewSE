@@ -452,10 +452,10 @@ export default function PortfolioPreviewPage() {
     const fontFamily = portfolio.font?.font_family || 'inherit';
 
     return (
-        <div className="min-h-screen bg-white p-6 pb-20"
+        <div className="min-h-screen bg-white p-6 md:p-10"
             style={{ backgroundColor: lightenColor(backgroundColor, 100), fontFamily }}>
 
-            <div className="mx-auto" style={{ maxWidth: 1500 }}>
+            <div className="mx-auto" style={{ maxWidth: 1800 }}>
                 <div className="flex justify-end items-center mb-6">
                     <button
                         onClick={() => router.push(`/student/portfolio/managePortfolio`)}

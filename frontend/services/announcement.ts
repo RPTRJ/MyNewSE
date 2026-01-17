@@ -116,8 +116,15 @@ export interface Notification {
 
 class AnnouncementService {
   deleteAttachment(attachmentId: number) {
-    throw new Error("Method not implemented.");
+    return fetch(`${API_URL}/attachments/${attachmentId}`, {
+      method: "DELETE",
+      headers: this.getAuthHeaders(),
+    }).then(res => {
+      if (!res.ok) throw new Error("Failed to delete attachment");
+      return res.json();
+    });
   }
+
   private getAuthHeaders() {
     const token = localStorage.getItem('token');
     

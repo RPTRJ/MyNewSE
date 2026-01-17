@@ -227,9 +227,8 @@ export default function TeacherStudentsPage() {
                         key={id}
                         type="button"
                         onClick={() => id && setSelectedStudentId(id)}
-                        className={`w-full text-left px-4 py-3 border-b last:border-b-0 transition-colors flex items-center gap-3 ${
-                          isActive ? "bg-orange-50 border-l-4 border-l-orange-500" : "hover:bg-gray-50"
-                        }`}
+                        className={`w-full text-left px-4 py-3 border-b last:border-b-0 transition-colors flex items-center gap-3 ${isActive ? "bg-orange-50 border-l-4 border-l-orange-500" : "hover:bg-gray-50"
+                          }`}
                       >
                         {/* Profile Image */}
                         <div className="flex-shrink-0">
@@ -245,9 +244,8 @@ export default function TeacherStudentsPage() {
                             />
                           ) : null}
                           <div
-                            className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm ${
-                              profileImg ? "hidden" : ""
-                            } ${isActive ? "bg-orange-500" : "bg-gray-400"}`}
+                            className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm ${profileImg ? "hidden" : ""
+                              } ${isActive ? "bg-orange-500" : "bg-gray-400"}`}
                           >
                             {initials}
                           </div>

@@ -2,16 +2,16 @@
 
 .admin-users-container {
   padding: 20px;
-  max-width: 1400px;
+  max-width: 1700px;
   margin: 0 auto;
-  background-color: #f9fafb;
+  background-color: #ffffff;
   min-height: 100vh;
 }
 
 .admin-users-title {
   font-size: 32px;
   margin-bottom: 10px;
-  color: #111827;
+  color: #f97316;
   font-weight: 700;
 }
 

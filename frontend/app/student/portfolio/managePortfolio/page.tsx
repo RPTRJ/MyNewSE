@@ -99,6 +99,7 @@ export default function MyPortfoliosPage() {
         portfolioName: ''
     });
     const [isDeleting, setIsDeleting] = useState(false);
+    const [pendingRedirect, setPendingRedirect] = useState<string | null>(null);
 
     const showAlert = (title: string, message: string, type: 'success' | 'error' | 'warning' = 'success', autoClose = true) => {
         setAlertModal({ show: true, title, message, type });
@@ -109,6 +110,12 @@ export default function MyPortfoliosPage() {
 
     const closeAlert = () => {
         setAlertModal({ show: false, title: '', message: '', type: 'success' });
+        // ถ้ามี pending redirect ให้ redirect ไป
+        if (pendingRedirect) {
+            const url = pendingRedirect;
+            setPendingRedirect(null);
+            router.push(url);
+        }
     };
 
     const showDeleteConfirm = (portfolioId: number, portfolioName: string) => {
@@ -335,7 +342,7 @@ export default function MyPortfoliosPage() {
 
     const handleCreatePortfolio = async () => {
         if (!newPortfolioName.trim()) {
-            alert("กรุณากรอกชื่อแฟ้มสะสมผลงาน");
+            showAlert("คำเตือน", "กรุณากรอกชื่อแฟ้มสะสมผลงาน", "warning", false);
             return;
         }
 
@@ -360,20 +367,24 @@ export default function MyPortfoliosPage() {
             // console.log('Create portfolio response:', result);
             // const newPortfolio = result.data;
 
-            alert("สร้างแฟ้มสะสมผลงานสำเร็จ!");
+            showAlert("สำเร็จ!", "สร้างแฟ้มสะสมผลงานเรียบร้อย", "success", false);
             setIsCreateModalOpen(false);
             setNewPortfolioName("");
             setSelectedTemplateForCreate(null);
             setPreviewTemplate(null);
 
+            // ตั้งค่า pending redirect เพื่อให้กดปุ่มตกลงแล้ว redirect ได้
             if (newPortfolio?.ID) {
-                router.push(`/student/portfolio/section?portfolio_id=${newPortfolio.ID}`);
-            } else {
-                loadPortfolios();
+                setPendingRedirect(`/student/portfolio/section?portfolio_id=${newPortfolio.ID}`);
             }
+
+            // รอ 2 วินาทีแล้ว auto redirect
+            setTimeout(() => {
+                closeAlert();
+            }, 2000);
         } catch (err) {
             console.error(err);
-            alert("เกิดข้อผิดพลาดในการสร้างแฟ้ม");
+            showAlert("เกิดข้อผิดพลาด", "ไม่สามารถสร้างแฟ้มได้", "error", false);
         }
     };
 
@@ -506,11 +517,11 @@ export default function MyPortfoliosPage() {
     const handleSubmitForReview = async (portfolioId: number) => {
     try {
         await SubmissionService.createSubmission({ portfolio_id: portfolioId });
-        alert('ส่งตรวจทานเรียบร้อย');
+        showAlert('สำเร็จ!', 'ส่งตรวจทานเรียบร้อย', 'success');
         await loadSubmissionStatuses();
     } catch (error) {
         console.error(error);
-        alert('ไม่สามารถส่งตรวจทานได้: ' + (error as Error).message);
+        showAlert('เกิดข้อผิดพลาด', 'ไม่สามารถส่งตรวจทานได้: ' + (error as Error).message, 'error', false);
     }
     };
 
@@ -854,11 +865,11 @@ export default function MyPortfoliosPage() {
             )}
            
             {/* Main Content */}
-            <div className="mx-auto" style={{ maxWidth: 1500 }}>
-            <div className="w-full mx-auto p-6">
-                <div className="flex items-center justify-between mb-8 mt-4">
+            <div className="mx-auto" style={{ maxWidth: 1600 }}>
+            <div className="w-full mx-auto p-6 md:p-10">
+                <div className="flex items-center justify-between mb-8 border-b pb-4 border-gray-200">
                     <div>
-                        <h2 className="text-3xl font-bold text-gray-900">แฟ้มสะสมผลงานทั้งหมด</h2>
+                        <h2 className="text-3xl font-bold text-orange-500">แฟ้มสะสมผลงานทั้งหมด</h2>
                         <p className="text-gray-600 mt-2">
                             จัดการและแสดงผลแฟ้มสะสมผลงานของคุณ
                         </p>
@@ -993,7 +1004,7 @@ export default function MyPortfoliosPage() {
                                                         }
                                                     } catch (err) {
                                                         console.error("Upload failed", err);
-                                                        alert("อัปโหลดรูปภาพไม่สำเร็จ");
+                                                        showAlert("เกิดข้อผิดพลาด", "อัปโหลดรูปภาพไม่สำเร็จ", "error", false);
                                                     } finally {
                                                         // Reset the input value so the same file can be selected again if needed
                                                         e.target.value = '';
@@ -1019,7 +1030,7 @@ export default function MyPortfoliosPage() {
                                                         loadPortfolios();
                                                     } catch (err) {
                                                         console.error("Update status failed", err);
-                                                        alert("ไม่สามารถเปลี่ยนสถานะได้");
+                                                        showAlert("เกิดข้อผิดพลาด", "ไม่สามารถเปลี่ยนสถานะได้", "error", false);
                                                     }
                                                 }}
                                                 className={`text-xs font-bold px-3 py-1.5 rounded-full border transition-all duration-200 ${status === 'active'
@@ -1095,7 +1106,6 @@ export default function MyPortfoliosPage() {
                 ) : (
                     <div className="mx-auto" style={{ maxWidth: 1600 }}>
                         <div className="text-center py-16">
-                        <div className="text-gray-400 text-6xl mb-4">📚</div>
                         <p className="text-xl text-gray-600 mb-2">ยังไม่มีแฟ้มสะสมผลงาน</p>
                         <p className="text-gray-500 mb-6">เริ่มต้นสร้างแฟ้มของคุณเพื่อรวบรวมผลงานและกิจกรรม</p>
                         <button

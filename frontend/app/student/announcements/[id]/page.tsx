@@ -240,7 +240,7 @@ const AnnouncementDetailPage = () => {
                             e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23ddd" width="100" height="100"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3ENo Image%3C/text%3E%3C/svg%3E';
                           }}
                         />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                           <Eye className="text-white drop-shadow-lg" size={48} />
                         </div>
                       </div>
@@ -264,8 +264,8 @@ const AnnouncementDetailPage = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3 flex-1 min-w-0">
                         <div className={`w-10 h-10 rounded flex items-center justify-center flex-shrink-0 ${attachment.file_name.endsWith('.pdf') ? 'bg-red-50' :
-                            attachment.file_name.endsWith('.xlsx') || attachment.file_name.endsWith('.xls') ? 'bg-green-50' :
-                              'bg-blue-50'
+                          attachment.file_name.endsWith('.xlsx') || attachment.file_name.endsWith('.xls') ? 'bg-green-50' :
+                            'bg-blue-50'
                           }`}>
                           {getFileIcon(attachment.file_name)}
                         </div>

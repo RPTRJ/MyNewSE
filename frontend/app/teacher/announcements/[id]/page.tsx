@@ -90,18 +90,23 @@ const AnnouncementDetailPage = () => {
   };
 
   const getFileUrl = (filePath: string) => {
-    // ถ้า filePath มี http อยู่แล้วให้ใช้เลย
-    if (filePath.startsWith('http')) {
-      return filePath;
-    }
+    if (!filePath) return '';
+    if (filePath.startsWith('http')) return filePath;
 
-    // ถ้าไม่มี ให้เพิ่ม base URL
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+    // Normalize path: replace backslashes with forward slashes
+    const normalizedPath = filePath.replace(/\\/g, '/');
 
-    // ตรวจสอบว่า filePath ขึ้นต้นด้วย / หรือไม่
-    const path = filePath.startsWith('/') ? filePath : `/${filePath}`;
+    // Ensure path starts with /
+    const path = normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`;
 
-    return `${baseUrl}${path}`;
+    // Get Base URL from env or default
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+
+    // Static files are usually served from the root, not from /api
+    // If the API URL ends with /api, we remove it for static file access
+    const rootUrl = apiBaseUrl.endsWith('/api') ? apiBaseUrl.slice(0, -4) : apiBaseUrl;
+
+    return `${rootUrl}${path}`;
   };
 
 
@@ -111,7 +116,7 @@ const AnnouncementDetailPage = () => {
     console.log('Opening file:', fileUrl);
     window.open(fileUrl, '_blank');
   };
-  
+
 
   const handleImageClick = (filePath: string) => {
     const imageUrl = getFileUrl(filePath);
@@ -242,7 +247,7 @@ const AnnouncementDetailPage = () => {
                             e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23ddd" width="100" height="100"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3ENo Image%3C/text%3E%3C/svg%3E';
                           }}
                         />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                           <Eye className="text-white drop-shadow-lg" size={48} />
                         </div>
                       </div>
@@ -266,8 +271,8 @@ const AnnouncementDetailPage = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3 flex-1 min-w-0">
                         <div className={`w-10 h-10 rounded flex items-center justify-center flex-shrink-0 ${attachment.file_name.endsWith('.pdf') ? 'bg-red-50' :
-                            attachment.file_name.endsWith('.xlsx') || attachment.file_name.endsWith('.xls') ? 'bg-green-50' :
-                              'bg-blue-50'
+                          attachment.file_name.endsWith('.xlsx') || attachment.file_name.endsWith('.xls') ? 'bg-green-50' :
+                            'bg-blue-50'
                           }`}>
                           {getFileIcon(attachment.file_name)}
                         </div>
@@ -288,7 +293,7 @@ const AnnouncementDetailPage = () => {
                         >
                           <Eye size={18} />
                         </button>
-                        
+
                       </div>
                     </div>
                   </div>

@@ -357,14 +357,14 @@ export default function AdminCurriculaPage() {
   if (!isAuthorized) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen p-6 md:p-10">
+      <div className="max-w-8xl mx-auto space-y-6">
         
         {/* Header Section */}
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">ระบบจัดการข้อมูลหลักสูตร</h1>
-            <p className="text-sm text-gray-500 mt-1">จัดการรายชื่อหลักสูตร การรับสมัคร และรายละเอียดโครงการ</p>
+            <h1 className="text-2xl font-bold text-orange-500 tracking-tight">ระบบจัดการข้อมูลหลักสูตร</h1>
+            <p className="text-gray-500 mt-1">จัดการรายชื่อหลักสูตร การรับสมัคร และรายละเอียดโครงการ</p>
           </div>
           <div className="flex gap-3">
              {/* 1. Export CSV */}

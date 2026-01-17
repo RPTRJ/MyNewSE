@@ -49,7 +49,7 @@ export default function SectionsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white-50">
+    <div className="min-h-screen">
       {/* Navbar */}
       <div className="sticky top-0 bg-white shadow-md z-40">
         <div className="max-w-7xl px-6">
@@ -71,11 +71,9 @@ export default function SectionsPage() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto p-6">
-        <div className="flex items-center justify-between mb-8 mt-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Section Templates</h1>
-          </div>
+      <div className="max-w-8xl mx-auto p-6 md:p-10">
+        <div className="flex items-center justify-between mb-8">
+            <h1 className="text-3xl font-bold text-orange-500">Section Templates</h1>
         </div>
 
         {/* Sections Grid */}

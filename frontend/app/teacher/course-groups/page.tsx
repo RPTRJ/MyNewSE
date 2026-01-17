@@ -422,11 +422,11 @@ export default function AdminCourseGroupsPage() {
   const availableSkills = skills.filter((s) => !linkedSkillIds.has(s.id));
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-orange-50/30 p-6">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen p-6 md:p-10">
+      <div className="max-w-8xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-800">
+        <div className="mb-8 border-b border-gray-200 pb-4">
+          <h1 className="text-3xl font-bold text-orange-500">
             จัดการกลุ่มวิชาและทักษะ
           </h1>
           <p className="text-gray-600 mt-1">

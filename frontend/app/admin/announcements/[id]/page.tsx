@@ -89,7 +89,7 @@ const AnnouncementDetailPage = () => {
     return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
   };
 
-  const getFileUrl = (filePath: string) => {
+ const getFileUrl = (filePath: string) => {
     // ถ้า filePath มี http อยู่แล้วให้ใช้เลย
     if (filePath.startsWith('http')) {
       return filePath;
@@ -104,32 +104,7 @@ const AnnouncementDetailPage = () => {
     return `${baseUrl}${path}`;
   };
 
-  const handleDownload = async (attachment: Attachment) => {
-    try {
-      const fileUrl = getFileUrl(attachment.file_path);
-      console.log('Downloading from:', fileUrl);
 
-      // ใช้ fetch เพื่อดาวน์โหลดไฟล์
-      const response = await fetch(fileUrl);
-
-      if (!response.ok) {
-        throw new Error('Failed to download file');
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = attachment.file_name;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Download error:', error);
-      alert('ไม่สามารถดาวน์โหลดไฟล์ได้ กรุณาลองใหม่อีกครั้ง');
-    }
-  };
 
   const handleViewFile = (attachment: Attachment) => {
     const fileUrl = getFileUrl(attachment.file_path);
@@ -262,12 +237,16 @@ const AnnouncementDetailPage = () => {
                           src={imageUrl}
                           alt={attachment.file_name}
                           className="w-full h-full object-cover"
+                          onLoad={(e) => {
+                            console.log('Image loaded successfully:', imageUrl);
+                          }}
                           onError={(e) => {
                             console.error('Image load error:', imageUrl);
+                            console.error('Error details:', e);
                             e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23ddd" width="100" height="100"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3ENo Image%3C/text%3E%3C/svg%3E';
                           }}
                         />
-                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all flex items-center justify-center">
+                        <div className="absolute inset-0  bg-opacity-0 group-hover:bg-opacity-40 transition-all flex items-center justify-center">
                           <Eye className="text-white opacity-0 group-hover:opacity-100 transition-opacity" size={32} />
                         </div>
                       </div>
@@ -312,13 +291,6 @@ const AnnouncementDetailPage = () => {
                           title="ดูไฟล์"
                         >
                           <Eye size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleDownload(attachment)}
-                          className="p-2 rounded hover:bg-white group-hover:text-orange-600 transition-colors"
-                          title="ดาวน์โหลด"
-                        >
-                          <Download size={18} />
                         </button>
                       </div>
                     </div>
