@@ -3,6 +3,7 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { uploadFile, deleteFile } from "@/services/upload";
 import { updateProfileImage } from "@/services/profile";
+import { getFileUrl } from "@/utils/fileUrl";
 
 // =============================================================================
 // Types & Interfaces
@@ -448,7 +449,7 @@ export function ProfileImageUploader({
         <div className={`relative group ${containerClassName}`}>
           <div className={imageContainerClassName}>
             {currentImageUrl ? (
-              <img src={currentImageUrl} alt="รูปโปรไฟล์" className="h-full w-full object-cover" />
+              <img src={getFileUrl(currentImageUrl) || currentImageUrl} alt="รูปโปรไฟล์" className="h-full w-full object-cover" />
             ) : (
               <DefaultAvatarIcon />
             )}

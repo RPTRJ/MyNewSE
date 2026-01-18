@@ -13,17 +13,9 @@ import {
   type ApiGEDScore,
   type ApiLanguageScore,
 } from "@/services/profile";
+import { getFileUrl } from "@/utils/fileUrl";
 
 // ============= Helper Functions =============
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
-
-// Helper function to get file URL
-const getFileUrl = (path: string | null | undefined): string | null => {
-  if (!path) return null;
-  if (path.startsWith("http://") || path.startsWith("https://")) return path;
-  return `${API_URL}${path.startsWith("/") ? "" : "/"}${path}`;
-};
-
 const getUserId = (user: ApiUser): number | null => {
   if (user.id !== undefined && user.id !== null) return Number(user.id);
   return null;

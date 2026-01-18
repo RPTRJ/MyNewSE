@@ -5,6 +5,7 @@ import { ChevronLeft, Calendar, User, Pin, Download, FileText, File, Loader2, Im
 import AnnouncementService, { type Announcement, type Attachment } from '@/services/announcement';
 import { useRouter, useParams } from 'next/navigation';
 import { AlertError } from '@/utils/alert';
+import { getFileUrl } from '@/utils/fileUrl';
 
 const AnnouncementDetailPage = () => {
   const router = useRouter();
@@ -89,22 +90,6 @@ const AnnouncementDetailPage = () => {
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
     return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
   };
-
-  const getFileUrl = (filePath: string) => {
-    // ถ้า filePath มี http อยู่แล้วให้ใช้เลย
-    if (filePath.startsWith('http')) {
-      return filePath;
-    }
-
-    // ถ้าไม่มี ให้เพิ่ม base URL
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-
-    // ตรวจสอบว่า filePath ขึ้นต้นด้วย / หรือไม่
-    const path = filePath.startsWith('/') ? filePath : `/${filePath}`;
-
-    return `${baseUrl}${path}`;
-  };
-
 
   const handleViewFile = (attachment: Attachment) => {
     const fileUrl = getFileUrl(attachment.file_path);

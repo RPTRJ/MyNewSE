@@ -166,10 +166,12 @@ export default function AuthPage() {
                     <form className="space-y-5" onSubmit={handleLogin}>
                       <div className="space-y-4">
                         <div>
-                          <label className="block text-sm font-semibold text-gray-700">อีเมล</label>
+                          <label htmlFor="login-email" className="block text-sm font-semibold text-gray-700">อีเมล</label>
                           <div className="relative mt-2">
                             <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#e66a0a]" />
                             <input
+                              id="login-email"
+                              name="login-email"
                               type="email"
                               required
                               value={loginEmail}
@@ -180,10 +182,12 @@ export default function AuthPage() {
                           </div>
                         </div>
                         <div>
-                          <label className="block text-sm font-semibold text-gray-700">รหัสผ่าน</label>
+                          <label htmlFor="login-password" className="block text-sm font-semibold text-gray-700">รหัสผ่าน</label>
                           <div className="relative mt-2">
                             <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#e66a0a]" />
                             <input
+                              id="login-password"
+                              name="login-password"
                               type="password"
                               required
                               value={loginPassword}
@@ -244,10 +248,12 @@ export default function AuthPage() {
                     <form className="space-y-5" onSubmit={handleRegister}>
                       <div className="space-y-4">
                         <div>
-                          <label className="block text-sm font-semibold text-gray-700">อีเมล</label>
+                          <label htmlFor="register-email" className="block text-sm font-semibold text-gray-700">อีเมล</label>
                           <div className="relative mt-2">
                             <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#e66a0a]" />
                             <input
+                              id="register-email"
+                              name="register-email"
                               type="email"
                               required
                               value={regData.email}
@@ -259,10 +265,12 @@ export default function AuthPage() {
                         </div>
 
                         <div>
-                          <label className="block text-sm font-semibold text-gray-700">รหัสผ่าน</label>
+                          <label htmlFor="register-password" className="block text-sm font-semibold text-gray-700">รหัสผ่าน</label>
                           <div className="relative mt-2">
                             <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#e66a0a]" />
                             <input
+                              id="register-password"
+                              name="register-password"
                               type="password"
                               required
                               minLength={6}
@@ -275,10 +283,12 @@ export default function AuthPage() {
                         </div>
 
                         <div>
-                          <label className="block text-sm font-semibold text-gray-700">ยืนยันรหัสผ่าน</label>
+                          <label htmlFor="register-confirm-password" className="block text-sm font-semibold text-gray-700">ยืนยันรหัสผ่าน</label>
                           <div className="relative mt-2">
                             <Check className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#e66a0a]" />
                             <input
+                              id="register-confirm-password"
+                              name="register-confirm-password"
                               type="password"
                               required
                               minLength={6}

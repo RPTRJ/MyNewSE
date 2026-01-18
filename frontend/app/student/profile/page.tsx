@@ -14,28 +14,11 @@ import {
   fetchMyProfile,
 } from "@/services/profile";
 import { ProfileImageUploader } from "@/components/ProfileImageUploader";
+import { getFileUrl } from "@/utils/fileUrl";
 
 type Option = { id: number; name: string };
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
-
-const getFileUrl = (filePath?: string | null): string | null => {
-  if (!filePath) return null;
-  if (filePath.startsWith("http")) return filePath;
-
-  // Normalize path: replace backslashes with forward slashes
-  const normalizedPath = filePath.replace(/\\/g, '/');
-
-  // Ensure path starts with /
-  const path = normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`;
-
-  // Static files are usually served from the root, not from /api
-  // If the API URL ends with /api, we remove it for static file access
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-  const rootUrl = apiBaseUrl.endsWith('/api') ? apiBaseUrl.slice(0, -4) : apiBaseUrl;
-
-  return `${rootUrl}${path}`;
-};
 
 const formatDate = (dateString?: string) => {
   if (!dateString) return "-";

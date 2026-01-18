@@ -540,8 +540,10 @@ export default function AdminCurriculaPage() {
                   {/* Row 1 */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
-                      <label className="block text-sm font-medium leading-6 text-gray-900">รหัสหลักสูตร <span className="text-red-500">*</span></label>
+                      <label htmlFor="curriculum-code" className="block text-sm font-medium leading-6 text-gray-900">รหัสหลักสูตร <span className="text-red-500">*</span></label>
                       <input
+                        id="curriculum-code"
+                        name="curriculum-code"
                         className="mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-orange-600 sm:text-sm sm:leading-6 transition-shadow"
                         value={form.code}
                         onChange={(e) => setForm({ ...form, code: e.target.value })}
@@ -550,8 +552,10 @@ export default function AdminCurriculaPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium leading-6 text-gray-900">ชื่อโครงการ <span className="text-red-500">*</span></label>
+                      <label htmlFor="curriculum-name" className="block text-sm font-medium leading-6 text-gray-900">ชื่อโครงการ <span className="text-red-500">*</span></label>
                       <input
+                        id="curriculum-name"
+                        name="curriculum-name"
                         className="mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-orange-600 sm:text-sm sm:leading-6 transition-shadow"
                         value={form.name}
                         onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -564,8 +568,10 @@ export default function AdminCurriculaPage() {
                   {/* Row 2 */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
-                      <label className="block text-sm font-medium leading-6 text-gray-900">สำนักวิชา <span className="text-red-500">*</span></label>
+                      <label htmlFor="curriculum-faculty" className="block text-sm font-medium leading-6 text-gray-900">สำนักวิชา <span className="text-red-500">*</span></label>
                       <select
+                        id="curriculum-faculty"
+                        name="curriculum-faculty"
                         className="mt-2 block w-full rounded-md border-0 py-2 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-orange-600 sm:text-sm sm:leading-6"
                         value={form.faculty_id}
                         onChange={(e) => {
@@ -581,8 +587,10 @@ export default function AdminCurriculaPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium leading-6 text-gray-900">สาขาวิชา <span className="text-red-500">*</span></label>
+                      <label htmlFor="curriculum-program" className="block text-sm font-medium leading-6 text-gray-900">สาขาวิชา <span className="text-red-500">*</span></label>
                       <select
+                        id="curriculum-program"
+                        name="curriculum-program"
                         className="mt-2 block w-full rounded-md border-0 py-2 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-orange-600 sm:text-sm sm:leading-6 disabled:bg-gray-100 disabled:text-gray-400"
                         value={form.program_id}
                         onChange={(e) => setForm({ ...form, program_id: e.target.value })}
@@ -598,11 +606,13 @@ export default function AdminCurriculaPage() {
                   {/* Row 3 */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
-                      <label className="block text-sm font-medium leading-6 text-gray-900">GPAX ขั้นต่ำ (0.00 - 4.00)</label>
+                      <label htmlFor="curriculum-gpax" className="block text-sm font-medium leading-6 text-gray-900">GPAX ขั้นต่ำ (0.00 - 4.00)</label>
                       <input
-                        type="number" 
-                        step="0.01" 
-                        min="0" 
+                        id="curriculum-gpax"
+                        name="curriculum-gpax"
+                        type="number"
+                        step="0.01"
+                        min="0"
                         max="4"
                         className="mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-orange-600 sm:text-sm sm:leading-6"
                         value={form.gpax_min}
@@ -612,8 +622,10 @@ export default function AdminCurriculaPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium leading-6 text-gray-900">เอกสาร/เงื่อนไขเพิ่มเติม</label>
+                      <label htmlFor="curriculum-documents" className="block text-sm font-medium leading-6 text-gray-900">เอกสาร/เงื่อนไขเพิ่มเติม</label>
                       <input
+                        id="curriculum-documents"
+                        name="curriculum-documents"
                         type="text"
                         className="mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-orange-600 sm:text-sm sm:leading-6"
                         placeholder="เช่น Portfolio ไม่เกิน 10 หน้า"
@@ -625,8 +637,10 @@ export default function AdminCurriculaPage() {
 
                    {/* URL */}
                    <div>
-                    <label className="block text-sm font-medium leading-6 text-gray-900">ลิงก์ระเบียบการ (URL) <span className="text-red-500">*</span></label>
+                    <label htmlFor="curriculum-link" className="block text-sm font-medium leading-6 text-gray-900">ลิงก์ระเบียบการ (URL) <span className="text-red-500">*</span></label>
                     <input
+                      id="curriculum-link"
+                      name="curriculum-link"
                       type="url"
                       className="mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-orange-600 sm:text-sm sm:leading-6"
                       placeholder="https://..."
@@ -644,8 +658,10 @@ export default function AdminCurriculaPage() {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">วันเปิดรับ (Start)</label>
+                        <label htmlFor="curriculum-start-date" className="block text-xs font-medium text-gray-700 mb-1">วันเปิดรับ (Start)</label>
                         <input
+                          id="curriculum-start-date"
+                          name="curriculum-start-date"
                           type="datetime-local"
                           className="block w-full rounded-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-orange-600 sm:text-sm sm:leading-6"
                           value={form.start_date}
@@ -654,8 +670,10 @@ export default function AdminCurriculaPage() {
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">วันปิดรับ (End)</label>
+                        <label htmlFor="curriculum-end-date" className="block text-xs font-medium text-gray-700 mb-1">วันปิดรับ (End)</label>
                         <input
+                          id="curriculum-end-date"
+                          name="curriculum-end-date"
                           type="datetime-local"
                           className="block w-full rounded-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-orange-600 sm:text-sm sm:leading-6"
                           value={form.end_date}
@@ -669,8 +687,10 @@ export default function AdminCurriculaPage() {
                   {/* Status & Quota */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
-                      <label className="block text-sm font-medium leading-6 text-gray-900">จำนวนรับ (คน)</label>
+                      <label htmlFor="curriculum-quota" className="block text-sm font-medium leading-6 text-gray-900">จำนวนรับ (คน)</label>
                       <input
+                        id="curriculum-quota"
+                        name="curriculum-quota"
                         type="number"
                         min="0"
                         step="1"
@@ -688,8 +708,10 @@ export default function AdminCurriculaPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium leading-6 text-gray-900">สถานะ</label>
+                      <label htmlFor="curriculum-status" className="block text-sm font-medium leading-6 text-gray-900">สถานะ</label>
                       <select
+                        id="curriculum-status"
+                        name="curriculum-status"
                         className="mt-2 block w-full rounded-md border-0 py-2 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-orange-600 sm:text-sm sm:leading-6 font-medium"
                         value={form.status}
                         onChange={(e) => setForm({ ...form, status: e.target.value })}

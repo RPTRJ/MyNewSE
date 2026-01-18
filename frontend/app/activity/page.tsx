@@ -239,14 +239,14 @@ const ActivityUI = () => {
 
                 {/* Activity Name */}
                 <div>
-                  <label className="font-medium">ชื่อกิจกรรม *</label>
-                  <input className="w-full mt-1 px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-[#FF6414]" />
+                  <label htmlFor="activity-name" className="font-medium">ชื่อกิจกรรม *</label>
+                  <input id="activity-name" name="activity-name" className="w-full mt-1 px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-[#FF6414]" />
                 </div>
 
                 {/* Type */}
                 <div>
-                  <label className="font-medium">ประเภทกิจกรรม *</label>
-                  <select className="w-full mt-1 px-4 py-2 border border-neutral-300 rounded-lg">
+                  <label htmlFor="activity-type" className="font-medium">ประเภทกิจกรรม *</label>
+                  <select id="activity-type" name="activity-type" className="w-full mt-1 px-4 py-2 border border-neutral-300 rounded-lg">
                     {typeActivities.map((t) => (
                       <option key={t.id}>{t.type_name}</option>
                     ))}
@@ -255,8 +255,8 @@ const ActivityUI = () => {
 
                 {/* Level */}
                 <div>
-                  <label className="font-medium">ระดับกิจกรรม *</label>
-                  <select className="w-full mt-1 px-4 py-2 border border-neutral-300 rounded-lg">
+                  <label htmlFor="activity-level" className="font-medium">ระดับกิจกรรม *</label>
+                  <select id="activity-level" name="activity-level" className="w-full mt-1 px-4 py-2 border border-neutral-300 rounded-lg">
                     {levelActivities.map((l) => (
                       <option key={l.id}>{l.level_name}</option>
                     ))}
@@ -265,8 +265,8 @@ const ActivityUI = () => {
 
                 {/* Reward */}
                 <div>
-                  <label className="font-medium">รางวัลที่ได้รับ (ถ้ามี)</label>
-                  <select className="w-full mt-1 px-4 py-2 border border-neutral-300 rounded-lg">
+                  <label htmlFor="activity-reward" className="font-medium">รางวัลที่ได้รับ (ถ้ามี)</label>
+                  <select id="activity-reward" name="activity-reward" className="w-full mt-1 px-4 py-2 border border-neutral-300 rounded-lg">
                     <option value="">-- ไม่มีรางวัล --</option>
                     {rewards.map((r) => (
                       <option key={r.id}>{r.reward_name}</option>
@@ -276,14 +276,16 @@ const ActivityUI = () => {
 
                 {/* Institution */}
                 <div>
-                  <label className="font-medium">จัดโดย *</label>
-                  <input className="w-full mt-1 px-4 py-2 border border-neutral-300 rounded-lg" />
+                  <label htmlFor="activity-institution" className="font-medium">จัดโดย *</label>
+                  <input id="activity-institution" name="activity-institution" className="w-full mt-1 px-4 py-2 border border-neutral-300 rounded-lg" />
                 </div>
 
                 {/* Date */}
                 <div>
-                  <label className="font-medium">วันที่ทำกิจกรรม *</label>
+                  <label htmlFor="activity-date" className="font-medium">วันที่ทำกิจกรรม *</label>
                   <input
+                    id="activity-date"
+                    name="activity-date"
                     type="datetime-local"
                     className="w-full mt-1 px-4 py-2 border border-neutral-300 rounded-lg"
                   />
@@ -291,8 +293,8 @@ const ActivityUI = () => {
 
                 {/* Description */}
                 <div>
-                  <label className="font-medium">รายละเอียด</label>
-                  <textarea rows={4} className="w-full mt-1 px-4 py-2 border border-neutral-300 rounded-lg"></textarea>
+                  <label htmlFor="activity-description" className="font-medium">รายละเอียด</label>
+                  <textarea id="activity-description" name="activity-description" rows={4} className="w-full mt-1 px-4 py-2 border border-neutral-300 rounded-lg"></textarea>
                 </div>
 
                 {/* Upload */}
@@ -335,7 +337,7 @@ const ActivityUI = () => {
                     {selectedActivity.activity_name}
                   </h2>
 
-                  <button onClick={() => setSelectedActivity(null)}>
+                  <button onClick={() => setSelectedActivity(null)} aria-label="ปิด">
                     <XCircle className="w-6 h-6 text-neutral-500 hover:text-[#FF6414]" />
                   </button>
                 </div>

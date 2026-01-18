@@ -712,10 +712,12 @@ export default function AdminCourseGroupsPage() {
             </div>
             <div className="p-5 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="course-group-name-th" className="block text-sm font-medium text-gray-700 mb-1">
                   ชื่อกลุ่มวิชา (ไทย) <span className="text-red-500">*</span>
                 </label>
                 <input
+                  id="course-group-name-th"
+                  name="course-group-name-th"
                   type="text"
                   value={groupForm.name}
                   onChange={(e) => setGroupForm({ ...groupForm, name: e.target.value })}
@@ -724,10 +726,12 @@ export default function AdminCourseGroupsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="course-group-name-en" className="block text-sm font-medium text-gray-700 mb-1">
                   ชื่อกลุ่มวิชา (อังกฤษ)
                 </label>
                 <input
+                  id="course-group-name-en"
+                  name="course-group-name-en"
                   type="text"
                   value={groupForm.name_en}
                   onChange={(e) => setGroupForm({ ...groupForm, name_en: e.target.value })}
@@ -736,10 +740,12 @@ export default function AdminCourseGroupsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="course-group-description" className="block text-sm font-medium text-gray-700 mb-1">
                   รายละเอียด
                 </label>
                 <textarea
+                  id="course-group-description"
+                  name="course-group-description"
                   value={groupForm.description}
                   onChange={(e) => setGroupForm({ ...groupForm, description: e.target.value })}
                   className="w-full px-4 py-2.5 border-2 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
@@ -748,10 +754,12 @@ export default function AdminCourseGroupsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="course-group-icon" className="block text-sm font-medium text-gray-700 mb-1">
                   ไอคอน
                 </label>
                 <select
+                  id="course-group-icon"
+                  name="course-group-icon"
                   value={groupForm.icon}
                   onChange={(e) => setGroupForm({ ...groupForm, icon: e.target.value })}
                   className="w-full px-4 py-2.5 border-2 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
@@ -811,10 +819,12 @@ export default function AdminCourseGroupsPage() {
             </div>
             <div className="p-5 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="skill-name-th" className="block text-sm font-medium text-gray-700 mb-1">
                   ชื่อทักษะ (ไทย) <span className="text-red-500">*</span>
                 </label>
                 <input
+                  id="skill-name-th"
+                  name="skill-name-th"
                   type="text"
                   value={skillForm.skill_name_th}
                   onChange={(e) => setSkillForm({ ...skillForm, skill_name_th: e.target.value })}
@@ -823,10 +833,12 @@ export default function AdminCourseGroupsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="skill-name-en" className="block text-sm font-medium text-gray-700 mb-1">
                   ชื่อทักษะ (อังกฤษ)
                 </label>
                 <input
+                  id="skill-name-en"
+                  name="skill-name-en"
                   type="text"
                   value={skillForm.skill_name_en}
                   onChange={(e) => setSkillForm({ ...skillForm, skill_name_en: e.target.value })}
@@ -835,10 +847,12 @@ export default function AdminCourseGroupsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="skill-category" className="block text-sm font-medium text-gray-700 mb-1">
                   หมวดหมู่
                 </label>
                 <select
+                  id="skill-category"
+                  name="skill-category"
                   value={skillForm.category}
                   onChange={(e) => setSkillForm({ ...skillForm, category: parseInt(e.target.value) })}
                   className="w-full px-4 py-2.5 border-2 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
@@ -853,10 +867,12 @@ export default function AdminCourseGroupsPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="skill-description" className="block text-sm font-medium text-gray-700 mb-1">
                   รายละเอียด
                 </label>
                 <textarea
+                  id="skill-description"
+                  name="skill-description"
                   value={skillForm.description}
                   onChange={(e) => setSkillForm({ ...skillForm, description: e.target.value })}
                   className="w-full px-4 py-2.5 border-2 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500"

@@ -103,12 +103,14 @@ function ResetPasswordContent() {
 
             <form onSubmit={handleSubmit}>
               <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label htmlFor="reset-new-password" className="block text-sm font-semibold text-gray-700 mb-2">
                   รหัสผ่านใหม่
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#e66a0a]" />
                   <input
+                    id="reset-new-password"
+                    name="reset-new-password"
                     type="password"
                     required
                     minLength={6}
@@ -121,12 +123,14 @@ function ResetPasswordContent() {
               </div>
 
               <div className="mb-6">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label htmlFor="reset-confirm-password" className="block text-sm font-semibold text-gray-700 mb-2">
                   ยืนยันรหัสผ่านใหม่
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#e66a0a]" />
                   <input
+                    id="reset-confirm-password"
+                    name="reset-confirm-password"
                     type="password"
                     required
                     minLength={6}
