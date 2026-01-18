@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import PageLayout from "@/src/components/layout/pagelayout";
 import NotificationSocket from "@/components/NotificationPoller";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 type MeUser = {
   id: number;

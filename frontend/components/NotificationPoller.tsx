@@ -1,59 +1,59 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef } from "react";
 import toast from 'react-hot-toast';
 import { markNotificationReadAPI } from "@/services/curriculum";
 
 export default function NotificationSocket() {
   const socketRef = useRef<WebSocket | null>(null);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const retryDelayRef = useRef(3000);
 
-  const connect = useCallback(() => {
-    // 1. Get User ID from LocalStorage
-    let currentUserId = 0;
-    try {
-      const userStr = localStorage.getItem("user");
-      if (userStr) {
-        const u = JSON.parse(userStr);
-        currentUserId = u.ID || u.id || 0;
+  useEffect(() => {
+    let socket: WebSocket | null = null;
+    let reconnectTimeout: NodeJS.Timeout | null = null;
+    let isMounted = true;
+    let retryDelay = 3000; // Start with 3s delay
+
+    const connect = () => {
+      if (!isMounted) return;
+
+      // 1. Get User ID from LocalStorage
+      let currentUserId = 0;
+      try {
+        const userStr = localStorage.getItem("user");
+        if (userStr) {
+          const u = JSON.parse(userStr);
+          currentUserId = u.ID || u.id || 0;
+        }
+      } catch (e) {
+        console.error("Error parsing user:", e);
       }
-    } catch (e) {
-      console.error("Error parsing user:", e);
-    }
 
-    if (!currentUserId) {
-      console.log("❌ No User ID found, skipping WebSocket connection.");
-      return;
-    }
+      if (!currentUserId) {
+        // If no user, retry later (maybe login happens later)
+        console.log("❌ No User ID found, skipping WebSocket connection.");
+        return;
+      }
 
-    // 2. Close existing connection if any
-    if (socketRef.current) {
-      socketRef.current.close();
-      socketRef.current = null;
-    }
+      // 2. Connect
+      const baseUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8080/ws";
+      const wsUrl = `${baseUrl}?user_id=${currentUserId}`;
 
-    // 3. Build WebSocket URL dynamically from window.location
-    let wsUrl: string;
-    if (typeof window !== 'undefined') {
-      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      wsUrl = `${wsProtocol}//${window.location.host}/api/ws?user_id=${currentUserId}`;
-    } else {
-      wsUrl = `ws://localhost/api/ws?user_id=${currentUserId}`;
-    }
+      console.log(`Connecting to WebSocket: ${baseUrl} (User: ${currentUserId})`);
 
-    console.log(`🔗 Connecting to WebSocket: ${wsUrl}`);
-
-    try {
-      const socket = new WebSocket(wsUrl);
+      socket = new WebSocket(wsUrl);
       socketRef.current = socket;
 
       socket.onopen = () => {
-        console.log("✅ WebSocket Connected!");
-        retryDelayRef.current = 3000;
+        if (!isMounted) {
+          socket?.close();
+          return;
+        }
+        console.log("✅ WebSocket Connected");
+        retryDelay = 3000; // Reset delay on success
       };
 
       socket.onmessage = (event) => {
+        if (!isMounted) return;
         try {
           const data = JSON.parse(event.data);
           const message = data.notification_message || data.message || data.Notification_Message || event.data;
@@ -82,48 +82,52 @@ export default function NotificationSocket() {
             },
           });
 
+          // Allow other components to refresh data
           window.dispatchEvent(new Event("refresh_data"));
+
+          // Optional: Mark as read immediately
           if (id) markNotificationReadAPI(id);
         } catch (e) {
-          toast(event.data, { icon: '🔔', duration: Infinity });
+          toast(event.data, {
+            icon: '🔔',
+            duration: Infinity
+          });
         }
       };
 
-      socket.onclose = (event) => {
-        console.log(`❌ WebSocket Disconnected. Retrying in ${retryDelayRef.current / 1000}s...`);
-        socketRef.current = null;
+      socket.onclose = () => {
+        if (!isMounted) return;
+        console.log(`❌ WebSocket Disconnected. Retrying in ${retryDelay / 1000}s...`);
 
-        reconnectTimeoutRef.current = setTimeout(() => {
-          retryDelayRef.current = Math.min(retryDelayRef.current * 1.5, 30000);
+        // Exponential backoff
+        // Cap at 30 seconds
+        reconnectTimeout = setTimeout(() => {
+          retryDelay = Math.min(retryDelay * 1.5, 30000);
           connect();
-        }, retryDelayRef.current);
+        }, retryDelay);
       };
 
-      socket.onerror = (error) => {
-        console.error("❌ WebSocket Error:", error);
-        socket.close();
+      socket.onerror = (err) => {
+        // Error will trigger onclose, so we don't need to double-handle reconnect here usually,
+        // but explicit close ensures onclose fires.
+        socket?.close();
       };
-    } catch (error) {
-      console.error("❌ Failed to create WebSocket:", error);
-      reconnectTimeoutRef.current = setTimeout(() => {
-        retryDelayRef.current = Math.min(retryDelayRef.current * 1.5, 30000);
-        connect();
-      }, retryDelayRef.current);
-    }
-  }, []);
+    };
 
-  useEffect(() => {
-    const initTimer = setTimeout(() => connect(), 500);
+    // Initial connection attempt
+    // Small delay to ensure client-side hydration or auth is ready
+    const timer = setTimeout(() => connect(), 100);
 
     return () => {
-      clearTimeout(initTimer);
-      if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
+      isMounted = false;
+      clearTimeout(timer);
+      if (reconnectTimeout) clearTimeout(reconnectTimeout);
       if (socketRef.current) {
         socketRef.current.close();
         socketRef.current = null;
       }
     };
-  }, [connect]);
+  }, []);
 
   return null;
 }

@@ -99,9 +99,14 @@ const AnnouncementDetailPage = () => {
     // Ensure path starts with /
     const path = normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`;
 
-    // Return absolute URL using API base URL
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-    return `${API_URL}${path}`;
+    // Get Base URL from env or default
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+
+    // Static files are usually served from the root, not from /api
+    // If the API URL ends with /api, we remove it for static file access
+    const rootUrl = apiBaseUrl.endsWith('/api') ? apiBaseUrl.slice(0, -4) : apiBaseUrl;
+
+    return `${rootUrl}${path}`;
   };
 
 
@@ -163,7 +168,6 @@ const AnnouncementDetailPage = () => {
           <button
             onClick={() => setPreviewImage(null)}
             className="absolute top-4 right-4 text-white hover:text-gray-300 z-10"
-            aria-label="ปิดตัวอย่างรูปภาพ"
           >
             <X size={32} />
           </button>
@@ -182,7 +186,6 @@ const AnnouncementDetailPage = () => {
           <button
             onClick={() => router.back()}
             className="flex items-left gap-2 text-gray-600 hover:text-gray-900 mb-4 text-md"
-            aria-label="กลับไปหน้าประกาศ"
           >
             <ArrowLeftIcon size={20} />
             กลับไปหน้าประกาศ
@@ -218,7 +221,8 @@ const AnnouncementDetailPage = () => {
           <div className="px-8 py-6">
             <div className="prose max-w-none">
               <div
-                className="text-gray-700 leading-relaxed whitespace-pre-wrap text-lg"
+                className="text-gray-700 leading-relaxed whitespace-pre-wrap"
+                style={{ fontSize: "18px", lineHeight: "1.9" }}
                 dangerouslySetInnerHTML={{ __html: announcement.content }}
               />
             </div>
@@ -287,7 +291,6 @@ const AnnouncementDetailPage = () => {
                           onClick={() => handleViewFile(attachment)}
                           className="p-2 rounded hover:bg-white group-hover:text-orange-600 transition-colors"
                           title="ดูไฟล์"
-                          aria-label={`ดูไฟล์ ${attachment.file_name}`}
                         >
                           <Eye size={18} />
                         </button>

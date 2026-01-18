@@ -15,23 +15,13 @@ import {
 } from "@/services/profile";
 
 // ============= Helper Functions =============
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 // Helper function to get file URL
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-
 const getFileUrl = (path: string | null | undefined): string | null => {
   if (!path) return null;
   if (path.startsWith("http://") || path.startsWith("https://")) return path;
-  
-  // Normalize path: replace backslashes with forward slashes
-  const normalizedPath = path.replace(/\\/g, '/');
-  
-  // Ensure path starts with /
-  const cleanPath = normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`;
-  
-  // Return absolute URL
-  return `${API_URL}${cleanPath}`;
+  return `${API_URL}${path.startsWith("/") ? "" : "/"}${path}`;
 };
 
 const getUserId = (user: ApiUser): number | null => {

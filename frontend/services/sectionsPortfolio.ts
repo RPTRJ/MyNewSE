@@ -1,6 +1,6 @@
 import { get } from "http";
 
-export const API = process.env.NEXT_PUBLIC_API_URL || "/api";
+export const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 // Color Theme
 export const theme = {

@@ -1061,11 +1061,38 @@ export default function MyPortfoliosPage() {
                                         {/* Action Buttons */}
                                         <div className="flex gap-2 ">
                                             <button
-                                                onClick={() => router.push(`/student/portfolio/section?portfolio_id=${portfolio.ID}`)}
-                                                className="flex-1 text-white px-4 py-2 rounded-lg text-sm font-medium transition"
-                                                style={{ backgroundColor: portfolioTheme.primary }}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                const submission = submissionData.get(portfolio.ID)?.submission;
+
+                                                // 🔒 ถ้ารอตรวจ ห้ามแก้
+                                            if (submission?.status === 'awaiting_review') {
+                                                showAlert(
+                                                    "ไม่สามารถแก้ไขได้",
+                                                    "แฟ้มนี้ถูกล็อกระหว่างรออาจารย์ตรวจ",
+                                                    "warning",
+                                                    false
+                                                );
+                                                return;
+                                            }
+
+                                            // 🔒 ถ้า approved แล้ว ห้ามแก้ถาวร
+                                            if (submission?.status === 'approved') {
+                                                showAlert(
+                                                    "ไม่สามารถแก้ไขได้",
+                                                    "แฟ้มนี้ได้รับการอนุมัติแล้ว ไม่สามารถแก้ไขเพิ่มเติมได้",
+                                                    "warning",
+                                                    false
+                                                );
+                                                return;
+                                            }
+
+                                                router.push(`/student/portfolio/section?portfolio_id=${portfolio.ID}`);
+                                            }}
+                                            className="flex-1 text-white px-4 py-2 rounded-lg text-sm font-medium transition"
+                                            style={{ backgroundColor: portfolioTheme.primary }}
                                             >
-                                                จัดการเนื้อหา
+                                            จัดการเนื้อหา
                                             </button>
                                             <button
                                                 onClick={(e) => {

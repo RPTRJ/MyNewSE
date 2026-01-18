@@ -17,7 +17,7 @@ import { ProfileImageUploader } from "@/components/ProfileImageUploader";
 
 type Option = { id: number; name: string };
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 const getFileUrl = (filePath?: string | null): string | null => {
   if (!filePath) return null;
@@ -29,8 +29,12 @@ const getFileUrl = (filePath?: string | null): string | null => {
   // Ensure path starts with /
   const path = normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`;
 
-  // Return absolute URL using API base URL
-  return `${API_URL}${path}`;
+  // Static files are usually served from the root, not from /api
+  // If the API URL ends with /api, we remove it for static file access
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+  const rootUrl = apiBaseUrl.endsWith('/api') ? apiBaseUrl.slice(0, -4) : apiBaseUrl;
+
+  return `${rootUrl}${path}`;
 };
 
 const formatDate = (dateString?: string) => {

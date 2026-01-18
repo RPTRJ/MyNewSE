@@ -1,4 +1,4 @@
-const API = process.env.NEXT_PUBLIC_API_URL || "/api";
+const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 // API functions for templates
 

@@ -391,28 +391,11 @@ export function ProfileImageUploader({
       const croppedFile = new File([croppedBlob], "profile.png", { type: "image/png" });
       const uploadedUrl = await uploadFile(croppedFile);
 
-      console.log("Uploaded URL from server:", uploadedUrl);
-
-      // Validate uploaded URL
-      if (!uploadedUrl || uploadedUrl.trim() === "") {
-        throw new Error("ไม่สามารถอัพโหลดรูปภาพได้ กรุณาลองใหม่อีกครั้ง");
-      }
-
-      // Convert relative URL to absolute URL if needed
-      let fullUrl = uploadedUrl;
-      if (uploadedUrl.startsWith("/")) {
-        // Relative URL - convert to absolute using API base URL
-        const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
-        fullUrl = `${apiBaseUrl}${uploadedUrl}`;
-      }
-
-      console.log("Full URL to send to backend:", fullUrl);
-
       // Update database
       const token = localStorage.getItem("token");
       if (!token) throw new Error("ไม่พบ token");
 
-      await updateProfileImage(token, fullUrl);
+      await updateProfileImage(token, uploadedUrl);
 
       // Delete old image if exists (after successful upload)
       if (currentImageUrl) {
@@ -424,8 +407,8 @@ export function ProfileImageUploader({
         }
       }
 
-      // Cleanup and notify parent (send the full URL, not relative)
-      onImageUpdated(fullUrl);
+      // Cleanup and notify parent
+      onImageUpdated(uploadedUrl);
       setShowEditor(false);
       setSelectedFile(null);
       if (selectedFileUrl) {

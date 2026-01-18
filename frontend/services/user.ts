@@ -1,7 +1,7 @@
 // @ts-nocheck
 // ^^^ IGNORE ME. This is a temporary directive to suppress irrelevant TypeScript errors during this debugging phase.
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 // A dummy logger to use as a default to avoid errors.
 const noOpLogger = (message: string) => {};

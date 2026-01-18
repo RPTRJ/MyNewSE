@@ -206,11 +206,11 @@ func (pc *ProfileController) UpdateProfileImage(ctx *gin.Context) {
 	}
 
 	var req struct {
-		ProfileImageURL string `json:"profile_image_url" binding:"omitempty,url"`
+		ProfileImageURL string `json:"profile_image_url" binding:"required,url"`
 	}
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		respondError(ctx, http.StatusBadRequest, errors.New("profile_image_url must be a valid URL"))
+		respondError(ctx, http.StatusBadRequest, errors.New("profile_image_url is required and must be a valid URL"))
 		return
 	}
 

@@ -1,0 +1,127 @@
+# ==============================================================================
+# Docker Compose - Student Web Application
+# ==============================================================================
+
+services:
+  # Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres_db
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-myapp}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Database Init (run once)
+  backend_init:
+    build:
+      context: ./backend
+    container_name: backend_init
+    env_file:
+      - .env
+    environment:
+      GIN_MODE: release
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${POSTGRES_USER:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      DB_NAME: ${POSTGRES_DB:-myapp}
+    volumes:
+      - init_flag:/flag_data
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        if [ -f /flag_data/init.lock ]; then
+          echo "Database already initialized. Skipping..."
+        else
+          echo "Running database initialization..."
+          ./server &
+          sleep 5
+          kill $$!
+          echo "Running seed..."
+          ./seed
+          touch /flag_data/init.lock
+          echo "Done!"
+        fi
+    networks:
+      - app_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+    container_name: backend_api
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      GIN_MODE: release
+      PORT: 8080
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${POSTGRES_USER:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      DB_NAME: ${POSTGRES_DB:-myapp}
+    volumes:
+      - uploads_data:/app/uploads
+    networks:
+      - app_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      backend_init:
+        condition: service_completed_successfully
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+    container_name: frontend_ui
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost/api}
+    networks:
+      - app_network
+    depends_on:
+      - backend
+
+  # Nginx Proxy
+  nginx:
+    build:
+      context: ./nginx
+    container_name: nginx_proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    networks:
+      - app_network
+    depends_on:
+      - backend
+      - frontend
+
+volumes:
+  postgres_data:
+  uploads_data:
+  init_flag:
+
+networks:
+  app_network:
+    driver: bridge

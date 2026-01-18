@@ -1,4 +1,4 @@
-export const API = process.env.NEXT_PUBLIC_API_URL || "/api";
+export const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");
