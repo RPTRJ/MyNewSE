@@ -346,10 +346,11 @@ const CreateAnnouncementForm: React.FC = () => {
           <div className="lg:col-span-2 space-y-6">
             {/* Announcement Title */}
             <div className="bg-white rounded-lg shadow-sm p-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="announcement-title" className="block text-sm font-medium text-gray-700 mb-2">
                 หัวข้อประกาศ
               </label>
               <input
+                id="announcement-title"
                 type="text"
                 name="title"
                 value={formData.title}
@@ -362,10 +363,11 @@ const CreateAnnouncementForm: React.FC = () => {
 
             {/* Content */}
             <div className="bg-white rounded-lg shadow-sm p-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="announcement-content" className="block text-sm font-medium text-gray-700 mb-2">
                 เนื้อหา
               </label>
               <textarea
+                id="announcement-content"
                 name="content"
                 value={formData.content}
                 onChange={handleInputChange}
@@ -479,10 +481,11 @@ const CreateAnnouncementForm: React.FC = () => {
 
               {/* Category */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="announcement-category" className="block text-sm font-medium text-gray-700 mb-2">
                   หมวดหมู่
                 </label>
                 <select
+                  id="announcement-category"
                   name="cetagory_id"
                   value={formData.cetagory_id}
                   onChange={(e) => {
@@ -513,11 +516,13 @@ const CreateAnnouncementForm: React.FC = () => {
                 {/* New Category Input */}
                 {showNewCategoryInput && (
                   <div className="mt-3 p-3 bg-orange-50 rounded-md border border-orange-200">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="new-category-name" className="block text-sm font-medium text-gray-700 mb-2">
                       ชื่อหมวดหมู่ใหม่
                     </label>
                     <input
+                      id="new-category-name"
                       type="text"
+                      name="new-category-name"
                       value={newCategoryName}
                       onChange={(e) => setNewCategoryName(e.target.value)}
                       placeholder="เช่น ทั่วไป, วิชาการ, กิจกรรม"
@@ -548,10 +553,11 @@ const CreateAnnouncementForm: React.FC = () => {
 
               {/* Publish Date & Time */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="scheduled-publish" className="block text-sm font-medium text-gray-700 mb-2">
                   วัน/เวลา ที่ต้องการเผยแพร่
                 </label>
                 <input
+                  id="scheduled-publish"
                   type="datetime-local"
                   name="scheduled_publish_at"
                   value={formData.scheduled_publish_at}
@@ -563,10 +569,11 @@ const CreateAnnouncementForm: React.FC = () => {
 
               {/* Expires At */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="expires-at" className="block text-sm font-medium text-gray-700 mb-2">
                   เวลาที่หมดการเผยแพร่ (ถ้ามี)
                 </label>
                 <input
+                  id="expires-at"
                   type="datetime-local"
                   name="expires_at"
                   value={formData.expires_at ?? ""}
