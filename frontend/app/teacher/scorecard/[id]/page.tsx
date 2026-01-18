@@ -629,8 +629,6 @@ const PortfolioReview = () => {
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg appearance-none bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="draft">Draft</option>
-                      <option value="submitted">Submitted</option>
-                      <option value="under_review">Under Review</option>
                       <option value="revision_requested">Revision Requested</option>
                       <option value="approved">Approved</option>
                     </select>

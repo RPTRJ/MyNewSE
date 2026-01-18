@@ -21,9 +21,18 @@ func InitLocalStorage() error {
 		uploadDir = "./uploads"
 	}
 
+	// ===== FIX: BASE_URL ต้องเป็น URL ที่ผู้ใช้งานสามารถเข้าถึงได้ =====
+	// ตัวอย่าง:
+	// - Development: http://localhost:8080
+	// - Production via nginx: http://sutportfolio.online/api
+	//
+	// ถ้าไม่กำหนด BASE_URL จะใช้ relative path แทน (/uploads/filename.ext)
+	// ซึ่ง frontend จะต้องจัดการ prepend domain เอง
 	baseURL := os.Getenv("BASE_URL")
+	// ถ้าไม่กำหนด BASE_URL ให้ใช้ empty string เพื่อ return relative path
+	// Frontend จะจัดการ prepend API URL เอง
 	if baseURL == "" {
-		baseURL = "http://localhost:8080"
+		baseURL = ""
 	}
 
 	// Create upload directory if not exists
@@ -59,8 +68,16 @@ func (s *LocalStorageService) UploadFile(file io.Reader, fileName string, conten
 		return "", fmt.Errorf("failed to write file: %v", err)
 	}
 
-	// Return the URL
-	url := fmt.Sprintf("%s/uploads/%s", s.baseURL, uniqueName)
+	// ===== FIX: Return URL based on BASE_URL setting =====
+	var url string
+	if s.baseURL != "" {
+		// ถ้ามี BASE_URL ให้ใช้ full URL
+		url = fmt.Sprintf("%s/uploads/%s", s.baseURL, uniqueName)
+	} else {
+		// ถ้าไม่มี BASE_URL ให้ใช้ relative path
+		// Frontend จะ prepend API URL เอง
+		url = fmt.Sprintf("/uploads/%s", uniqueName)
+	}
 
 	return url, nil
 }

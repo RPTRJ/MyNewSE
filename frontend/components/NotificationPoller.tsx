@@ -4,6 +4,35 @@ import { useEffect, useRef } from "react";
 import toast from 'react-hot-toast';
 import { markNotificationReadAPI } from "@/services/curriculum";
 
+/**
+ * Get WebSocket URL dynamically based on current window location
+ * This allows the WebSocket to work in both development and production
+ */
+function getWebSocketUrl(): string {
+  // 1. Environment variable (Priority)
+  if (process.env.NEXT_PUBLIC_WS_URL) {
+    return process.env.NEXT_PUBLIC_WS_URL;
+  }
+
+  // Server-side: fallback (shouldn't really run here, but safety)
+  if (typeof window === 'undefined') {
+    return "ws://localhost:8080/ws";
+  }
+
+  // 2. Dynamic generation based on window location
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const host = window.location.host;
+
+  // Production heuristic: using a domain name or not port 3000/localhost
+  const isProduction = !host.includes('localhost') && !host.includes('127.0.0.1') && !host.includes(':3000');
+
+  // In production (via Nginx proxy), typically /api/ws.
+  // In dev (direct), /ws.
+  const wsPath = isProduction ? '/api/ws' : '/ws';
+
+  return `${protocol}//${host}${wsPath}`;
+}
+
 export default function NotificationSocket() {
   const socketRef = useRef<WebSocket | null>(null);
 
@@ -34,8 +63,8 @@ export default function NotificationSocket() {
         return;
       }
 
-      // 2. Connect
-      const baseUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8080/ws";
+      // 2. Connect using dynamic URL
+      const baseUrl = getWebSocketUrl();
       const wsUrl = `${baseUrl}?user_id=${currentUserId}`;
 
       console.log(`Connecting to WebSocket: ${baseUrl} (User: ${currentUserId})`);
@@ -108,6 +137,7 @@ export default function NotificationSocket() {
       };
 
       socket.onerror = (err) => {
+        console.error("WebSocket Error:", err);
         // Error will trigger onclose, so we don't need to double-handle reconnect here usually,
         // but explicit close ensures onclose fires.
         socket?.close();

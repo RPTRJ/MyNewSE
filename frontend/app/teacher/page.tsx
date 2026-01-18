@@ -198,10 +198,6 @@ export default function TeacherPage() {
                 <div className={style.stat_label}>จำนวนรอการตรวจทาน</div>
                 <div className={`${style.stat_value} ${style.submitted}`}>{stats.awaiting}</div>
               </div>
-              <div className={style.stat_card}>
-                <div className={style.stat_label}>อยู่ในการตรวจทาน</div>
-                <div className={`${style.stat_value} ${style.under_review}`}>{stats.reviewing}</div>
-              </div>
                 <div className={style.stat_card}>
                 <div className={style.stat_label}>ตรวจทานแล้วแต่ต้องมีการแก้ไข</div>
                 <div className={`${style.stat_value} ${style.revision_requested}`}>{stats.revisions}</div>
