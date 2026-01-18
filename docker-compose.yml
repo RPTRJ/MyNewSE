@@ -38,8 +38,6 @@ services:
       DB_USER: ${POSTGRES_USER:-postgres}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       DB_NAME: ${POSTGRES_DB:-myapp}
-      # ===== FIX: เพิ่ม BASE_URL สำหรับ file uploads =====
-      BASE_URL: ${BASE_URL:-}
     volumes:
       - init_flag:/flag_data
     entrypoint: ["/bin/sh", "-c"]
@@ -79,10 +77,6 @@ services:
       DB_USER: ${POSTGRES_USER:-postgres}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       DB_NAME: ${POSTGRES_DB:-myapp}
-      # ===== FIX: เพิ่ม BASE_URL สำหรับ file uploads =====
-      # URL ที่ใช้สร้าง full path สำหรับไฟล์ที่ upload
-      # ต้องเป็น URL ที่ผู้ใช้งานจริงสามารถเข้าถึงได้
-      BASE_URL: ${BASE_URL:-}
     volumes:
       - uploads_data:/app/uploads
     networks:
@@ -97,19 +91,13 @@ services:
   frontend:
     build:
       context: ./frontend
-      args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://sutportfolio.online/api}
-        # ===== FIX: เพิ่ม NEXT_PUBLIC_WS_URL สำหรับ WebSocket =====
-        NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL:-wss://sutportfolio.online/api/ws}
     container_name: frontend_ui
     restart: unless-stopped
     env_file:
       - .env
     environment:
       NODE_ENV: production
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://sutportfolio.online/api}
-      # ===== FIX: เพิ่ม NEXT_PUBLIC_WS_URL สำหรับ WebSocket =====
-      NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL:-wss://sutportfolio.online/api/ws}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost/api}
     networks:
       - app_network
     depends_on:
