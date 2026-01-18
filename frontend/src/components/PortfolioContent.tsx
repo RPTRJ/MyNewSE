@@ -1,6 +1,7 @@
 // PortfolioContent.tsx - Shared rendering logic for portfolio sections
 
 import React from 'react';
+import { getFileUrl } from '@/utils/fileUrl';
 
 // ===================== Helper Functions =====================
 
@@ -44,7 +45,8 @@ export function parseBlockContent(content: any): any {
 const placeholderImage = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cuc3ZnLm9yZyI+PHJlY3Qgd2lkdGg9IjE1MCIgaGVpZ2h0PSIxNTAiIGZpbGw9IiNFNUU3RUIiLz48L3N2Zz4=";
 
 export function getImageUrl(image: any): string {
-  return image?.file_path || image?.FilePath || image?.image_url || image?.ImageUrl || image?.working_image_url || placeholderImage;
+  const rawPath = image?.file_path || image?.FilePath || image?.image_url || image?.ImageUrl || image?.working_image_url;
+  return getFileUrl(rawPath) || placeholderImage;
 }
 
 export function extractImages(data: any, type: 'activity' | 'working'): any[] {
@@ -101,11 +103,11 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({ user, isRight = 
   const gpax = user.academic_score?.gpax || user.gpa || "-";
 
   return (
-    <div className={`flex flex-col items-center gap-6 p-6 bg-white border border-gray-100 rounded-xl shadow-sm h-full w-full 
+    <div className={`flex flex-col items-center gap-6 p-6 bg-white border border-gray-100 rounded-xl shadow-sm h-full w-full
                      ${isRight ? 'md:flex-row-reverse text-right' : 'md:flex-row text-left'}`}>
       <div className="w-32 h-32 flex-shrink-0 rounded-full overflow-hidden border-4 border-blue-100 shadow-md">
         <img
-          src={user.profile_image || placeholderImage}
+          src={getFileUrl(user.profile_image) || placeholderImage}
           alt="Profile"
           className="w-full h-full object-cover"
           onError={(e) => (e.currentTarget as HTMLImageElement).src = placeholderImage}

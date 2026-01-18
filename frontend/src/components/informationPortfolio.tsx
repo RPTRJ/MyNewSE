@@ -1,9 +1,11 @@
 "use client";
 
+import { getFileUrl } from "@/utils/fileUrl";
+
 // สำหรับแสดง Profile User (ดึงข้อมูล User มาแสดง)
 export const ProfileBlock = ({ user }: { user: any }) => {
     // สมมติถ้าไม่มีรูป ให้ใช้ Placeholder
-    const profileImg = user?.profile_image || "https://via.placeholder.com/150"; 
+    const profileImg = getFileUrl(user?.profile_image) || "https://via.placeholder.com/150"; 
     const name = user ? `${user.firstname} ${user.lastname}` : "Loading...";
     const position = user?.position || "Student";
     const bio = user?.bio || "ยังไม่มีข้อมูลสังเขป";
@@ -30,11 +32,11 @@ export const ProfileBlock = ({ user }: { user: any }) => {
 // สำหรับแสดง Activity/Working (Showcase)
 export const ShowcaseBlock = ({ data, type }: { data: any, type: string }) => {
     // ดึงรูปแรกมาโชว์
-    const images = type === 'activity' 
-        ? (data?.ActivityDetail?.Images || data?.activity_detail?.images || []) 
+    const images = type === 'activity'
+        ? (data?.ActivityDetail?.Images || data?.activity_detail?.images || [])
         : (data?.WorkingDetail?.Images || data?.working_detail?.images || []);
-    
-    const coverImage = images.length > 0 ? (images[0].file_path || images[0].image_url) : "/placeholder.jpg";
+
+    const coverImage = images.length > 0 ? getFileUrl(images[0].file_path || images[0].image_url) || "/placeholder.jpg" : "/placeholder.jpg";
     const title = type === 'activity' ? data.activity_name : data.working_name;
     const desc = type === 'activity' ? data.activity_detail?.description : data.working_detail?.description;
 

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { ChevronLeft, Calendar, User, Pin, Download, FileText, File, Loader2, Image as ImageIcon, Eye, X, AlignLeft, ArrowDownLeftIcon, ArrowLeftIcon } from 'lucide-react';
 import AnnouncementService, { type Announcement, type Attachment } from '@/services/announcement';
 import { useRouter, useParams } from 'next/navigation';
+import { getFileUrl } from '@/utils/fileUrl';
 
 const AnnouncementDetailPage = () => {
   const router = useRouter();
@@ -88,28 +89,6 @@ const AnnouncementDetailPage = () => {
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
     return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
   };
-
-  const getFileUrl = (filePath: string) => {
-    if (!filePath) return '';
-    if (filePath.startsWith('http')) return filePath;
-
-    // Normalize path: replace backslashes with forward slashes
-    const normalizedPath = filePath.replace(/\\/g, '/');
-
-    // Ensure path starts with /
-    const path = normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`;
-
-    // Get Base URL from env or default
-    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-
-    // Static files are usually served from the root, not from /api
-    // If the API URL ends with /api, we remove it for static file access
-    const rootUrl = apiBaseUrl.endsWith('/api') ? apiBaseUrl.slice(0, -4) : apiBaseUrl;
-
-    return `${rootUrl}${path}`;
-  };
-
-
 
   const handleViewFile = (attachment: Attachment) => {
     const fileUrl = getFileUrl(attachment.file_path);
