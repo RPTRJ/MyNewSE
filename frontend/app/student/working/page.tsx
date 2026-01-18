@@ -29,6 +29,7 @@ import {
   TypeWorking,
   uploadImage,
 } from "../../../services/working";
+import { getFileUrl } from "@/utils/url";
 
 /* ================= COMPONENT ================= */
 
@@ -339,11 +340,11 @@ export default function WorkingUI() {
                             {w.working_detail.images.slice(0, 3).map((img, idx) => (
                               <img
                                 key={img.ID}
-                                src={img.working_image_url}
+                                src={getFileUrl(img.working_image_url) || ''}
                                 alt="work"
                                 onClick={() =>
                                   openImageViewer(
-                                    w.working_detail!.images!.map((i) => i.working_image_url),
+                                    w.working_detail!.images!.map((i) => getFileUrl(i.working_image_url) || ''),
                                     idx
                                   )
                                 }
@@ -611,11 +612,11 @@ export default function WorkingUI() {
                           {viewModal.working_detail.images.map((img, idx) => (
                             <img
                               key={img.ID}
-                              src={img.working_image_url}
+                              src={getFileUrl(img.working_image_url) || ''}
                               alt="work"
                               onClick={() =>
                                 openImageViewer(
-                                  viewModal.working_detail!.images!.map((i) => i.working_image_url),
+                                  viewModal.working_detail!.images!.map((i) => getFileUrl(i.working_image_url) || ''),
                                   idx
                                 )
                               }
@@ -751,7 +752,7 @@ export default function WorkingUI() {
                       {editModal.working_detail.images.map((img) => (
                         <div key={img.ID} className="relative group">
                           <img
-                            src={img.working_image_url}
+                            src={getFileUrl(img.working_image_url) || ''}
                             alt="work"
                             className="w-full h-24 object-cover rounded-xl border-2 border-neutral-200"
                           />

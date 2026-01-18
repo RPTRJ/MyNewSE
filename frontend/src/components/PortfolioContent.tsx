@@ -1,6 +1,7 @@
 // PortfolioContent.tsx - Shared rendering logic for portfolio sections
 
 import React from 'react';
+import { getFileUrl } from '@/utils/url';
 
 // ===================== Helper Functions =====================
 
@@ -44,7 +45,8 @@ export function parseBlockContent(content: any): any {
 const placeholderImage = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cuc3ZnLm9yZyI+PHJlY3Qgd2lkdGg9IjE1MCIgaGVpZ2h0PSIxNTAiIGZpbGw9IiNFNUU3RUIiLz48L3N2Zz4=";
 
 export function getImageUrl(image: any): string {
-  return image?.file_path || image?.FilePath || image?.image_url || image?.ImageUrl || image?.working_image_url || placeholderImage;
+  const imagePath = image?.file_path || image?.FilePath || image?.image_url || image?.ImageUrl || image?.working_image_url;
+  return getFileUrl(imagePath) || placeholderImage;
 }
 
 export function extractImages(data: any, type: 'activity' | 'working'): any[] {

@@ -99,8 +99,9 @@ const AnnouncementDetailPage = () => {
     // Ensure path starts with /
     const path = normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`;
 
-    // Use relative path for static files - works with both localhost and VM
-    return path;
+    // Return absolute URL using API base URL
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+    return `${API_URL}${path}`;
   };
 
 

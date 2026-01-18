@@ -71,9 +71,11 @@ export default function Sidebar({userRole, userName, isOpen, setIsOpen }: Sideba
         {/* {isOpen && <h1 className="text-xl font-bold text-orange-500 ">MyPortfolio</h1>} */}
         <button
           onClick={() => setIsOpen(!isOpen)}
+          aria-label="Toggle sidebar"
+          title="Toggle sidebar"
           className="rounded-md hover:bg-white focus:outline-none focus:ring-2 focus:ring-white transition-colors p-1 z-10"
         >
-          <Menu className="h-6 w-6 text-gray-400" />
+          <Menu className="h-6 w-6 text-gray-400" aria-hidden="true" />
         </button>
       </div>
 
@@ -127,7 +129,7 @@ export default function Sidebar({userRole, userName, isOpen, setIsOpen }: Sideba
                 ? "bottom-full mb-2 left-3 right-3" 
                 : "left-full ml-2 bottom-0 w-48"
             }`}>
-              {profileHref && (
+              {profileHref && userRole === "student" && (
                 <Link
                   href={profileHref}
                   onClick={() => setProfileMenuOpen(false)}
@@ -155,12 +157,14 @@ export default function Sidebar({userRole, userName, isOpen, setIsOpen }: Sideba
           <button
             type="button"
             onClick={() => setProfileMenuOpen((prev) => !prev)}
+            aria-label={profileMenuOpen ? "Close profile menu" : "Open profile menu"}
+            title={profileMenuOpen ? "Close profile menu" : "Open profile menu"}
             className={`flex w-full items-center gap-3 p-4 hover:bg-orange-50 transition-colors ${
               isOpen ? "justify-start" : "justify-center"
             }`}
           >
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-200 flex-shrink-0">
-              <User className="h-5 w-5 text-orange-600" />
+              <User className="h-5 w-5 text-orange-600" aria-hidden="true" />
             </div>
             {isOpen && (
               <>

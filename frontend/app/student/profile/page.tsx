@@ -29,8 +29,8 @@ const getFileUrl = (filePath?: string | null): string | null => {
   // Ensure path starts with /
   const path = normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`;
 
-  // Use relative path for static files - works with both localhost and VM
-  return path;
+  // Return absolute URL using API base URL
+  return `${API_URL}${path}`;
 };
 
 const formatDate = (dateString?: string) => {
