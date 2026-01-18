@@ -814,8 +814,10 @@ export default function AdminEducationPage() {
               {/* Level Form */}
               {activeTab === "levels" && (
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">ชื่อระดับการศึกษา</label>
+                  <label htmlFor="new-level-name" className="text-sm font-medium text-gray-700">ชื่อระดับการศึกษา</label>
                   <input
+                    id="new-level-name"
+                    name="new-level-name"
                     type="text"
                     value={newLevelName}
                     onChange={(e) => setNewLevelName(e.target.value)}
@@ -829,8 +831,10 @@ export default function AdminEducationPage() {
               {/* School Type Form */}
               {activeTab === "schoolTypes" && (
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">ชื่อประเภทสถานศึกษา</label>
+                  <label htmlFor="new-school-type-name" className="text-sm font-medium text-gray-700">ชื่อประเภทสถานศึกษา</label>
                   <input
+                    id="new-school-type-name"
+                    name="new-school-type-name"
                     type="text"
                     value={newSchoolTypeName}
                     onChange={(e) => setNewSchoolTypeName(e.target.value)}
@@ -845,8 +849,10 @@ export default function AdminEducationPage() {
               {activeTab === "curriculum" && (
                 <>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">ชื่อประเภทหลักสูตร</label>
+                    <label htmlFor="new-curriculum-name" className="text-sm font-medium text-gray-700">ชื่อประเภทหลักสูตร</label>
                     <input
+                      id="new-curriculum-name"
+                      name="new-curriculum-name"
                       type="text"
                       value={newCurriculumForm.name}
                       onChange={(e) => setNewCurriculumForm((prev) => ({ ...prev, name: e.target.value }))}
@@ -917,8 +923,10 @@ export default function AdminEducationPage() {
               {activeTab === "schools" && (
                 <>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">ชื่อสถานศึกษา <span className="text-red-500">*</span></label>
+                    <label htmlFor="new-school-name" className="text-sm font-medium text-gray-700">ชื่อสถานศึกษา <span className="text-red-500">*</span></label>
                     <input
+                      id="new-school-name"
+                      name="new-school-name"
                       type="text"
                       value={newSchoolForm.name}
                       onChange={(e) => setNewSchoolForm((prev) => ({ ...prev, name: e.target.value }))}
@@ -928,8 +936,10 @@ export default function AdminEducationPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">รหัส (ถ้ามี)</label>
+                    <label htmlFor="new-school-code" className="text-sm font-medium text-gray-700">รหัส (ถ้ามี)</label>
                     <input
+                      id="new-school-code"
+                      name="new-school-code"
                       type="text"
                       value={newSchoolForm.code}
                       onChange={(e) => setNewSchoolForm((prev) => ({ ...prev, code: e.target.value }))}
@@ -1040,8 +1050,10 @@ export default function AdminEducationPage() {
               {/* Edit Level Form */}
               {editLevelForm && (
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">ชื่อระดับการศึกษา</label>
+                  <label htmlFor="edit-level-name" className="text-sm font-medium text-gray-700">ชื่อระดับการศึกษา</label>
                   <input
+                    id="edit-level-name"
+                    name="edit-level-name"
                     type="text"
                     value={editLevelForm.name}
                     onChange={(e) => setEditLevelForm({ ...editLevelForm, name: e.target.value })}
@@ -1055,8 +1067,10 @@ export default function AdminEducationPage() {
               {/* Edit School Type Form */}
               {editSchoolTypeForm && (
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">ชื่อประเภทสถานศึกษา</label>
+                  <label htmlFor="edit-school-type-name" className="text-sm font-medium text-gray-700">ชื่อประเภทสถานศึกษา</label>
                   <input
+                    id="edit-school-type-name"
+                    name="edit-school-type-name"
                     type="text"
                     value={editSchoolTypeForm.name}
                     onChange={(e) => setEditSchoolTypeForm({ ...editSchoolTypeForm, name: e.target.value })}
@@ -1071,8 +1085,10 @@ export default function AdminEducationPage() {
               {editCurriculumForm && (
                 <>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">ชื่อประเภทหลักสูตร</label>
+                    <label htmlFor="edit-curriculum-name" className="text-sm font-medium text-gray-700">ชื่อประเภทหลักสูตร</label>
                     <input
+                      id="edit-curriculum-name"
+                      name="edit-curriculum-name"
                       type="text"
                       value={editCurriculumForm.name}
                       onChange={(e) => setEditCurriculumForm({ ...editCurriculumForm, name: e.target.value })}
@@ -1143,8 +1159,10 @@ export default function AdminEducationPage() {
               {editSchoolForm && (
                 <>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">ชื่อสถานศึกษา <span className="text-red-500">*</span></label>
+                    <label htmlFor="edit-school-name" className="text-sm font-medium text-gray-700">ชื่อสถานศึกษา <span className="text-red-500">*</span></label>
                     <input
+                      id="edit-school-name"
+                      name="edit-school-name"
                       type="text"
                       value={editSchoolForm.name}
                       onChange={(e) => setEditSchoolForm({ ...editSchoolForm, name: e.target.value })}
@@ -1154,8 +1172,10 @@ export default function AdminEducationPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">รหัส (ถ้ามี)</label>
+                    <label htmlFor="edit-school-code" className="text-sm font-medium text-gray-700">รหัส (ถ้ามี)</label>
                     <input
+                      id="edit-school-code"
+                      name="edit-school-code"
                       type="text"
                       value={editSchoolForm.code}
                       onChange={(e) => setEditSchoolForm({ ...editSchoolForm, code: e.target.value })}

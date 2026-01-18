@@ -96,10 +96,12 @@ export default function ForgotPasswordPage() {
 
         <form onSubmit={handleSubmit}>
           <div className="mb-6">
-            <label className="block text-sm font-semibold text-gray-700 mb-2">อีเมล</label>
+            <label htmlFor="forgot-email" className="block text-sm font-semibold text-gray-700 mb-2">อีเมล</label>
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#e66a0a]" />
               <input
+                id="forgot-email"
+                name="forgot-email"
                 type="email"
                 required
                 value={email}
