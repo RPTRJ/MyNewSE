@@ -399,8 +399,10 @@ export default function ActivityUI() {
             />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-sm font-medium text-neutral-700 ml-1">ชื่อกิจกรรม</label>
+                <label htmlFor="activity-name-create" className="text-sm font-medium text-neutral-700 ml-1">ชื่อกิจกรรม</label>
                 <input
+                  id="activity-name-create"
+                  name="activity-name-create"
                   className="w-full px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors"
                   placeholder="กรอกชื่อกิจกรรม"
                   value={name}
@@ -409,8 +411,10 @@ export default function ActivityUI() {
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-sm font-medium text-neutral-700 ml-1">หน่วยงานที่จัด</label>
+                <label htmlFor="activity-institution-create" className="text-sm font-medium text-neutral-700 ml-1">หน่วยงานที่จัด</label>
                 <input
+                  id="activity-institution-create"
+                  name="activity-institution-create"
                   className="w-full px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors"
                   placeholder="กรอกชื่อหน่วยงานที่จัด"
                   value={institution}
@@ -421,8 +425,10 @@ export default function ActivityUI() {
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="space-y-1">
-                <label className="text-sm font-medium text-neutral-700 ml-1">วันที่เข้าร่วม</label>
+                <label htmlFor="activity-date-create" className="text-sm font-medium text-neutral-700 ml-1">วันที่เข้าร่วม</label>
                 <input
+                  id="activity-date-create"
+                  name="activity-date-create"
                   type="date"
                   className="w-full px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors"
                   style={{ color: activityDate === "" ? "#9ca3af" : "black" }}
@@ -433,12 +439,15 @@ export default function ActivityUI() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-sm font-medium text-neutral-700 ml-1">ประเภทกิจกรรม</label>
+                <label htmlFor="activity-type-create" className="text-sm font-medium text-neutral-700 ml-1">ประเภทกิจกรรม</label>
                 <select
+                  id="activity-type-create"
+                  name="activity-type-create"
                   className="w-full px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors"
                   style={{ color: typeId === "" ? "#9ca3af" : "black" }}
                   value={typeId}
                   onChange={(e) => setTypeId(e.target.value)}
+                  aria-label="เลือกประเภทกิจกรรม"
                 >
                   <option value="" className="text-gray-400">เลือกประเภท</option>
                   {types.map((t) => (
@@ -450,12 +459,15 @@ export default function ActivityUI() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-sm font-medium text-neutral-700 ml-1">ระดับกิจกรรม</label>
+                <label htmlFor="activity-level-create" className="text-sm font-medium text-neutral-700 ml-1">ระดับกิจกรรม</label>
                 <select
+                  id="activity-level-create"
+                  name="activity-level-create"
                   className="w-full px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors"
                   style={{ color: levelId === "" ? "#9ca3af" : "black" }}
                   value={levelId}
                   onChange={(e) => setLevelId(e.target.value)}
+                  aria-label="เลือกระดับกิจกรรม"
                 >
                   <option value="" className="text-gray-400">เลือกระดับ</option>
                   {levels.map((l) => (
@@ -467,12 +479,15 @@ export default function ActivityUI() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-sm font-medium text-neutral-700 ml-1">รางวัลที่ได้รับ</label>
+                <label htmlFor="activity-reward-create" className="text-sm font-medium text-neutral-700 ml-1">รางวัลที่ได้รับ</label>
                 <select
+                  id="activity-reward-create"
+                  name="activity-reward-create"
                   className="w-full px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors"
                   style={{ color: rewardId === "" ? "#9ca3af" : "black" }}
                   value={rewardId}
                   onChange={(e) => setRewardId(e.target.value)}
+                  aria-label="เลือกรางวัลที่ได้รับ"
                 >
                   <option value="" className="text-gray-400">เลือกรางวัล</option>
                   {rewards.map((r) => (
@@ -485,8 +500,10 @@ export default function ActivityUI() {
             </div>
 
             <div className="space-y-1">
-              <label className="text-sm font-medium text-neutral-700 ml-1">รายละเอียดเพิ่มเติม</label>
+              <label htmlFor="activity-description-create" className="text-sm font-medium text-neutral-700 ml-1">รายละเอียดเพิ่มเติม</label>
               <textarea
+                id="activity-description-create"
+                name="activity-description-create"
                 className="w-full px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors resize-none"
                 rows={4}
                 placeholder="รายละเอียดสิ่งทีทำ..."
@@ -507,12 +524,15 @@ export default function ActivityUI() {
                   <div key={i} className="relative group">
                     <img
                       src={URL.createObjectURL(img)}
+                      alt={`รูปกิจกรรม ${i + 1}`}
                       className="w-24 h-24 object-cover rounded-xl border-2 border-neutral-200"
                     />
                     <button
                       type="button"
                       onClick={() => setImages(images.filter((_, idx) => idx !== i))}
                       className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                      aria-label={`ลบรูปที่ ${i + 1}`}
+                      title={`ลบรูปที่ ${i + 1}`}
                     >
                       <XCircle size={14} />
                     </button>
@@ -685,8 +705,10 @@ export default function ActivityUI() {
               <div className="p-6 space-y-6 overflow-y-auto">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-sm font-medium text-neutral-700 ml-1">ชื่อกิจกรรม</label>
+                    <label htmlFor="activity-name-edit" className="text-sm font-medium text-neutral-700 ml-1">ชื่อกิจกรรม</label>
                     <input
+                      id="activity-name-edit"
+                      name="activity-name-edit"
                       className="w-full px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors"
                       placeholder="กรอกชื่อกิจกรรม"
                       value={name}
@@ -695,8 +717,10 @@ export default function ActivityUI() {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-sm font-medium text-neutral-700 ml-1">หน่วยงานที่จัด</label>
+                    <label htmlFor="activity-institution-edit" className="text-sm font-medium text-neutral-700 ml-1">หน่วยงานที่จัด</label>
                     <input
+                      id="activity-institution-edit"
+                      name="activity-institution-edit"
                       className="w-full px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors"
                       placeholder="กรอกชื่อหน่วยงานที่จัด"
                       value={institution}
@@ -707,8 +731,10 @@ export default function ActivityUI() {
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div className="space-y-1">
-                    <label className="text-sm font-medium text-neutral-700 ml-1">วันที่เข้าร่วม</label>
+                    <label htmlFor="activity-date-edit" className="text-sm font-medium text-neutral-700 ml-1">วันที่เข้าร่วม</label>
                     <input
+                      id="activity-date-edit"
+                      name="activity-date-edit"
                       type="date"
                       className="w-full px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors"
                       style={{ color: activityDate === "" ? "#9ca3af" : "black" }}
@@ -718,12 +744,15 @@ export default function ActivityUI() {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-sm font-medium text-neutral-700 ml-1">ประเภทกิจกรรม</label>
+                    <label htmlFor="activity-type-edit" className="text-sm font-medium text-neutral-700 ml-1">ประเภทกิจกรรม</label>
                     <select
+                      id="activity-type-edit"
+                      name="activity-type-edit"
                       className="w-full px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors"
                       style={{ color: typeId === "" ? "#9ca3af" : "black" }}
                       value={typeId}
                       onChange={(e) => setTypeId(e.target.value)}
+                      aria-label="เลือกประเภทกิจกรรม"
                     >
                       <option value="" className="text-gray-400">เลือกประเภท</option>
                       {types.map((t) => (
@@ -735,12 +764,15 @@ export default function ActivityUI() {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-sm font-medium text-neutral-700 ml-1">ระดับกิจกรรม</label>
+                    <label htmlFor="activity-level-edit" className="text-sm font-medium text-neutral-700 ml-1">ระดับกิจกรรม</label>
                     <select
+                      id="activity-level-edit"
+                      name="activity-level-edit"
                       className="w-full px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors"
                       style={{ color: levelId === "" ? "#9ca3af" : "black" }}
                       value={levelId}
                       onChange={(e) => setLevelId(e.target.value)}
+                      aria-label="เลือกระดับกิจกรรม"
                     >
                       <option value="" className="text-gray-400">เลือกระดับ</option>
                       {levels.map((l) => (
@@ -752,12 +784,15 @@ export default function ActivityUI() {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-sm font-medium text-neutral-700 ml-1">รางวัลที่ได้รับ</label>
+                    <label htmlFor="activity-reward-edit" className="text-sm font-medium text-neutral-700 ml-1">รางวัลที่ได้รับ</label>
                     <select
+                      id="activity-reward-edit"
+                      name="activity-reward-edit"
                       className="w-full px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors"
                       style={{ color: rewardId === "" ? "#9ca3af" : "black" }}
                       value={rewardId}
                       onChange={(e) => setRewardId(e.target.value)}
+                      aria-label="เลือกรางวัลที่ได้รับ"
                     >
                       <option value="" className="text-gray-400">เลือกรางวัล</option>
                       {rewards.map((r) => (
@@ -770,8 +805,10 @@ export default function ActivityUI() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-sm font-medium text-neutral-700 ml-1">รายละเอียดเพิ่มเติม</label>
+                  <label htmlFor="activity-description-edit" className="text-sm font-medium text-neutral-700 ml-1">รายละเอียดเพิ่มเติม</label>
                   <textarea
+                    id="activity-description-edit"
+                    name="activity-description-edit"
                     className="w-full px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors resize-none"
                     rows={4}
                     placeholder="รายละเอียดสิ่งทีทำ..."

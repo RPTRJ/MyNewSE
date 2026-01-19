@@ -252,9 +252,12 @@ const AnnouncementDashboard = () => {
               {/* Status Filter */}
               <div className="relative">
                 <select
+                  id="announcement-status-filter"
+                  name="announcement-status-filter"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                   className="appearance-none px-4 py-2 pr-8 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white cursor-pointer"
+                  aria-label="กรองตามสถานะ"
                 >
                   <option value="All">สถานะ: ทั้งหมด</option>
                   {statuses.slice(1).map(status => (
@@ -269,9 +272,12 @@ const AnnouncementDashboard = () => {
               {/* Category Filter */}
               <div className="relative">
                 <select
+                  id="announcement-category-filter"
+                  name="announcement-category-filter"
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value)}
                   className="appearance-none px-4 py-2 pr-8 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white cursor-pointer"
+                  aria-label="กรองตามหมวดหมู่"
                 >
                   <option value="All">หมวดหมู่: ทั้งหมด</option>
                   {categories.slice(1).map(category => (
@@ -350,6 +356,7 @@ const AnnouncementDashboard = () => {
                         checked={selectedItems.length === filteredAnnouncements.length && filteredAnnouncements.length > 0}
                         onChange={handleSelectAll}
                         className="w-4 h-4 text-orange-600 rounded border-gray-300 focus:ring-orange-500"
+                        aria-label="เลือกทั้งหมด"
                       />
                     </th>
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -383,6 +390,7 @@ const AnnouncementDashboard = () => {
                             checked={selectedItems.includes(announcement.ID!)}
                             onChange={() => handleSelectItem(announcement.ID!)}
                             className="w-4 h-4 text-orange-600 rounded border-gray-300 focus:ring-orange-500"
+                            aria-label={`เลือกประกาศ ${announcement.title}`}
                           />
                         </td>
                         <td className="px-6 py-4">
@@ -415,6 +423,8 @@ const AnnouncementDashboard = () => {
                             <button
                               onClick={() => setActionMenuOpen(actionMenuOpen === announcement.ID ? null : announcement.ID!)}
                               className="p-1 rounded hover:bg-gray-100"
+                              aria-label="เมนูการดำเนินการ"
+                              title="เมนูการดำเนินการ"
                             >
                               <MoreVertical size={18} className="text-gray-400" />
                             </button>
