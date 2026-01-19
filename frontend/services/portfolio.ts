@@ -1,3 +1,5 @@
+import { getFileUrl } from "@/utils/fileUrl";
+
 export const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 const getAuthHeaders = () => {
@@ -263,7 +265,12 @@ export async function uploadImage(file: File) {
     body: formData,
   });
   if (!response.ok) throw new Error("Failed to upload image");
-  return response.json();
+  const data = await response.json();
+  const rawUrl = data?.url || data?.path || data?.file_path;
+  if (!rawUrl) {
+    return data;
+  }
+  return { ...data, url: getFileUrl(rawUrl) || rawUrl };
 }
 
 export async function updatePortfolio(id: number, data: any) {

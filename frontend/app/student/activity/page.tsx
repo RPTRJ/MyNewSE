@@ -38,6 +38,7 @@ import {
   Reward,
   uploadImage,
 } from "../../../services/activity";
+import { getFileUrl } from "@/utils/fileUrl";
 
 export default function ActivityUI() {
   const [activeTab, setActiveTab] = useState<"list" | "create">("list");
@@ -122,7 +123,7 @@ export default function ActivityUI() {
 
       const existingImages = editModal.activity_detail?.images || [];
       const imagePayload = [
-        ...existingImages.map(img => ({ image_url: img.image_url })),
+        ...existingImages.map(img => ({ image_url: getFileUrl(img.image_url) || img.image_url })),
         ...uploadedUrls.map(url => ({ image_url: url }))
       ];
 
@@ -344,11 +345,11 @@ export default function ActivityUI() {
                       {act.activity_detail.images.slice(0, 3).map((img, idx) => (
                         <img
                           key={img.ID}
-                          src={img.image_url}
+                          src={getFileUrl(img.image_url) || img.image_url || ""}
                           alt="activity"
                           onClick={() =>
                             openImageViewer(
-                              act.activity_detail!.images!.map((i) => i.image_url),
+                              act.activity_detail!.images!.map((i) => getFileUrl(i.image_url) || i.image_url),
                               idx
                             )
                           }
@@ -652,11 +653,11 @@ export default function ActivityUI() {
                       {viewModal.activity_detail.images.map((img, idx) => (
                         <img
                           key={img.ID}
-                          src={img.image_url}
+                          src={getFileUrl(img.image_url) || img.image_url || ""}
                           alt="activity"
                           onClick={() =>
                             openImageViewer(
-                              viewModal.activity_detail!.images!.map((i) => i.image_url),
+                              viewModal.activity_detail!.images!.map((i) => getFileUrl(i.image_url) || i.image_url),
                               idx
                             )
                           }
@@ -826,7 +827,7 @@ export default function ActivityUI() {
                       {editModal.activity_detail.images.map((img) => (
                         <div key={img.ID} className="relative group">
                           <img
-                            src={img.image_url}
+                            src={getFileUrl(img.image_url) || img.image_url || ""}
                             alt="activity"
                             className="w-full h-24 object-cover rounded-xl border-2 border-neutral-200"
                           />

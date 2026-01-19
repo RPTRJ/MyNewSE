@@ -10,6 +10,7 @@ import {
   upsertAcademicScore,
 } from "@/services/profile";
 import { uploadFile } from "@/services/upload";
+import { getFileUrl } from "@/utils/fileUrl";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
@@ -420,7 +421,7 @@ export default function EditAcademicScorePage() {
                       <div className="flex-1">
                         <p className="text-sm font-medium text-gray-700">มีไฟล์อัพโหลดแล้ว</p>
                         <a
-                          href={form.transcript_file_path}
+                          href={getFileUrl(form.transcript_file_path)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-orange-600 hover:text-orange-700 font-semibold inline-flex items-center gap-1 text-sm"

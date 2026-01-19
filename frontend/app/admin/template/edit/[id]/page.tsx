@@ -7,6 +7,7 @@ import { fetchSections } from "@/services/sections";
 import { fetchTemplateById, updateTemplate } from "@/services/templates";
 import { fetchCategoryTemplates } from "@/services/categoryTemplates";
 import { uploadImage } from "@/services/upload";
+import { getFileUrl } from "@/utils/fileUrl";
 import html2canvas from "html2canvas";
 
 export default function EditTemplatePage() {
@@ -150,7 +151,7 @@ export default function EditTemplatePage() {
           template_name: templateData.template_name || "",
           category_template_id: templateData.category_template_id || 0,
           description: templateData.description || "",
-          thumbnail: templateData.thumbnail || "",
+          thumbnail: getFileUrl(templateData.thumbnail) || "",
         });
         
         // Set selected sections from template_section_links

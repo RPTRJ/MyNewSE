@@ -12,6 +12,7 @@ import {
   AlertWarning,
   AlertConfirm
 } from "@/utils/alert";
+import { getFileUrl } from "@/utils/fileUrl";
 
 import {
   lightenColor,
@@ -375,7 +376,7 @@ const PortfolioReview = () => {
             <div className="flex items-start gap-6 pb-6 border-b border-gray-200">
               {profile.user?.profile_image_url && (
                 <img
-                  src={profile.user.profile_image_url}
+                  src={getFileUrl(profile.user.profile_image_url) || profile.user.profile_image_url}
                   alt="Profile"
                   className="w-32 h-32 rounded-2xl object-cover shadow-lg ring-4 ring-blue-100"
                 />

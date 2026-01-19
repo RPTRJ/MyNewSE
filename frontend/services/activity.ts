@@ -1,3 +1,5 @@
+import { getFileUrl } from "@/utils/fileUrl";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 // Interfaces
@@ -91,7 +93,11 @@ export const uploadImage = async (file: File): Promise<string> => {
         throw new Error("Failed to upload image");
     }
     const json = await res.json();
-    return json.url;
+    const rawUrl = json?.url || json?.path || json?.file_path;
+    if (!rawUrl) {
+        throw new Error("Upload response missing file URL");
+    }
+    return getFileUrl(rawUrl) || rawUrl;
 };
 
 // Pagination options

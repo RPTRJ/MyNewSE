@@ -10,6 +10,7 @@ import {
   replaceLanguageScores,
 } from "@/services/profile";
 import { uploadFile } from "@/services/upload";
+import { getFileUrl } from "@/utils/fileUrl";
 
 // Configuration for each test type
 type TestTypeConfig = {
@@ -548,7 +549,7 @@ export default function EditLanguageScoresPage() {
                               {item.cert_file_path && !item.cert_file && (
                                 <div className="mt-2 text-sm">
                                   <a
-                                    href={item.cert_file_path}
+                                    href={getFileUrl(item.cert_file_path)}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="text-orange-500 hover:underline inline-flex items-center"

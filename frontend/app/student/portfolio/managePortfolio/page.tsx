@@ -18,6 +18,7 @@ import { pre } from "framer-motion/client";
 // เพิ่มบรรทัดนี้ที่ส่วน imports
 import { Loader2 } from 'lucide-react';
 import ScorecardPopup from "@/components/Scorecardpopup";
+import { getFileUrl } from "@/utils/fileUrl";
 
 // Helper functions for color manipulation
 function lightenColor(hex: string, percent: number): string {
@@ -254,7 +255,7 @@ export default function MyPortfoliosPage() {
                      {/* รูปวงกลม */}
                      <div className="w-32 h-32 flex-shrink-0 rounded-full overflow-hidden border-4 border-blue-100 shadow-md">
                          <img 
-                            src={user.profile_image || "/placeholder.jpg"} 
+                            src={getFileUrl(user.profile_image) || "/placeholder.jpg"} 
                             alt="Profile" 
                             className="w-full h-full object-cover" 
                             onError={(e) => e.currentTarget.src = 'https://via.placeholder.com/150'}
@@ -690,7 +691,18 @@ export default function MyPortfoliosPage() {
     };
 
     const getImageUrl = (image: any): string => {
-        return image?.file_path || image?.FilePath || image?.image_url || image?.ImageUrl || image?.working_image_url || '/placeholder.jpg';
+        const rawUrl = image?.file_path || image?.FilePath || image?.image_url || image?.ImageUrl || image?.working_image_url;
+        return getFileUrl(rawUrl) || "/placeholder.jpg";
+    };
+
+    const getTemplateImageUrl = (url?: string): string => {
+        if (!url) return "";
+        if (url.startsWith("data:") || url.startsWith("blob:")) return url;
+        if (url.startsWith("/uploads") || url.startsWith("uploads/")) {
+            return getFileUrl(url) || url;
+        }
+        if (url.startsWith("http://") || url.startsWith("https://")) return url;
+        return url;
     };
 
     const extractImages = (data: any, type: 'activity' | 'working'): any[] => {
@@ -924,7 +936,7 @@ export default function MyPortfoliosPage() {
                                         <div
                                             className="w-full h-full cursor-pointer overflow-hidden"
                                             onClick={() => {
-                                                const imgUrl = portfolio.cover_image || portfolio.CoverImage;
+                                                const imgUrl = getFileUrl(portfolio.cover_image || portfolio.CoverImage) || "";
                                                 if (imgUrl) {
                                                     setLightboxState({
                                                         isOpen: true,
@@ -936,7 +948,7 @@ export default function MyPortfoliosPage() {
                                         >
                                             {portfolio.cover_image || portfolio.CoverImage ? (
                                                 <img
-                                                    src={portfolio.cover_image || portfolio.CoverImage}
+                                                    src={getFileUrl(portfolio.cover_image || portfolio.CoverImage) || ""}
                                                     alt="Cover"
                                                     className="w-full h-full object-contain bg-gray-200 transition-transform duration-500 group-hover:scale-105"
                                                     onError={(e) => {
@@ -1204,7 +1216,7 @@ export default function MyPortfoliosPage() {
                                             return (
                                                 <div className={`bg-gray-200 flex items-center justify-center border-2 border-gray-300 overflow-hidden ${isCircle ? 'rounded-full aspect-square w-40 h-40 mx-auto' : 'rounded-lg w-full h-48'}`}>
                                                     {content.url ? (
-                                                        <img src={content.url} alt="preview" className="w-full h-full object-cover" />
+                                                        <img src={getTemplateImageUrl(content.url)} alt="preview" className="w-full h-full object-cover" />
                                                     ) : (
                                                         <span className="text-4xl text-gray-400">🖼️</span>
                                                     )}

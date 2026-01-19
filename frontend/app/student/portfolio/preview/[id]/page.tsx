@@ -14,6 +14,7 @@ import type { UserDTO } from "@/services/user";
 import type { DisplayUser } from "@/src/interfaces/portfolio";
 import { fetchMyProfile } from "@/services/user";
 import { log } from "util";
+import { getFileUrl } from "@/utils/fileUrl";
 
 
 // --- Helper Functions ---
@@ -50,7 +51,8 @@ function parseBlockContent(content: any): any {
 const placeholderImage = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cuc3ZnLm9yZyI+PHJlY3Qgd2lkdGg9IjE1MCIgaGVpZ2h0PSIxNTAiIGZpbGw9IiNFNUU3RUIiLz48L3N2Zz4=";
 
 function getImageUrl(image: any): string {
-    return image?.file_path || image?.FilePath || image?.image_url || image?.ImageUrl || image?.working_image_url || '/placeholder.jpg';
+    const rawUrl = image?.file_path || image?.FilePath || image?.image_url || image?.ImageUrl || image?.working_image_url;
+    return getFileUrl(rawUrl) || "/placeholder.jpg";
 }
 
 function extractImages(data: any, type: 'activity' | 'working'): any[] {
@@ -217,7 +219,7 @@ export default function PortfolioPreviewPage() {
                                      ${isRight ? 'md:flex-row-reverse text-right' : 'md:flex-row text-left'}`}>
                             <div className="w-32 h-32 flex-shrink-0 rounded-full overflow-hidden border-4 border-blue-100 shadow-md">
                                 <img
-                                    src={user.profile_image || placeholderImage}
+                                    src={getFileUrl(user.profile_image) || placeholderImage}
                                     alt="Profile"
                                     className="w-full h-full object-cover"
                                     onError={(e) => e.currentTarget.src = placeholderImage}

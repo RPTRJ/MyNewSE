@@ -28,6 +28,7 @@ import { CirclePlus, Settings,Trophy, BriefcaseBusiness,ScrollText } from "lucid
 import EditorSidebar from "@/src/components/editorSidebar";
 import CustomSelect from "@/components/CustomSelect";
 import { ColorTheme, FontTheme } from "@/src/interfaces/design";
+import { getFileUrl } from "@/utils/fileUrl";
 // Utility Functions
 function parseBlockContent(content: any): any {
     if (!content) return null;
@@ -43,7 +44,8 @@ function parseBlockContent(content: any): any {
 }
 
 function getImageUrl(image: any): string {
-    return image?.file_path || image?.FilePath || image?.image_url || image?.ImageUrl || image?.working_image_url || '/placeholder.jpg';
+    const rawUrl = image?.file_path || image?.FilePath || image?.image_url || image?.ImageUrl || image?.working_image_url;
+    return getFileUrl(rawUrl) || "/placeholder.jpg";
 }
 
 function extractImages(data: any, type: 'activity' | 'working'): any[] {

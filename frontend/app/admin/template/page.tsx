@@ -10,6 +10,7 @@ import { Camera,
          ImageIcon,
          FileText,
  } from "lucide-react";
+import { getFileUrl } from "@/utils/fileUrl";
 
 export default function TemplatesPage() {
   const router = useRouter();
@@ -134,7 +135,7 @@ export default function TemplatesPage() {
               <div className="mb-4">
                 <div className="w-full h-32 rounded-lg overflow-hidden bg-gray-100">
                   <img 
-                    src={deleteConfirm.template.thumbnail} 
+                    src={getFileUrl(deleteConfirm.template.thumbnail) || deleteConfirm.template.thumbnail} 
                     alt={deleteConfirm.template.template_name}
                     className="w-full h-full object-cover"
                   />
@@ -394,7 +395,7 @@ export default function TemplatesPage() {
                  !template.thumbnail.includes('soundcloud.com') &&
                  !template.thumbnail.endsWith('/test.jpg') && (
                   <img
-                    src={template.thumbnail}
+                    src={getFileUrl(template.thumbnail) || template.thumbnail}
                     alt={template.template_name}
                     className="w-full h-full object-cover absolute inset-0 z-10"
                     onLoad={(e) => {

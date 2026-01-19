@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Search, User } from 'lucide-react';
 import SubmissionService, { PortfolioSubmission } from "@/services/submission";
 import { useRouter } from "next/navigation";
+import { getFileUrl } from "@/utils/fileUrl";
 
 
 
@@ -126,7 +127,7 @@ export default function CheckPortfolioPage() {
                   {/* Header */}
                   <div className="p-4 flex items-center gap-3">
                     <div className="bg-white/10 backdrop-blur-sm p-2 rounded-full">
-                      <img src={item.user.profile_image_url || ""} alt="Profile" className="w-10 h-10 rounded-full" />
+                      <img src={getFileUrl(item.user.profile_image_url) || ""} alt="Profile" className="w-10 h-10 rounded-full" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-black font-medium text-l truncate">
