@@ -296,7 +296,7 @@ export default function EditLanguageScoresPage() {
           {/* Header */}
           <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-6">
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-white">แก้ไขคะแนนภาษา</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-white">แก้ไขคะแนนสอบวัดทักษะภาษาอังกฤษ</h1>
               <p className="mt-1 text-orange-100 text-sm">คะแนนสอบภาษาต่างๆ ของคุณ</p>
             </div>
           </div>

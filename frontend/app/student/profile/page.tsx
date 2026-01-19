@@ -549,36 +549,53 @@ export default function ProfilePage() {
           >
             <div className="px-6 py-5">
               {academic ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                  <div className="bg-gradient-to-br from-green-100 to-emerald-100 rounded-xl p-4 border border-green-200 col-span-2 sm:col-span-1">
-                    <div className="text-xs text-green-700 mb-1 font-medium">GPAX</div>
-                    <div className="text-2xl font-bold text-green-800">{formatScore(academic.gpax)}</div>
+                <>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <div className="bg-gradient-to-br from-green-100 to-emerald-100 rounded-xl p-4 border border-green-200 col-span-2 sm:col-span-1">
+                      <div className="text-xs text-green-700 mb-1 font-medium">GPAX</div>
+                      <div className="text-2xl font-bold text-green-800">{formatScore(academic.gpax)}</div>
+                    </div>
+                    <div className="bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-xl p-4 border border-gray-200">
+                      <div className="text-xs text-gray-500 mb-1">เทอม</div>
+                      <div className="text-lg font-semibold text-gray-900">{academic.gpax_semesters ?? "-"}</div>
+                    </div>
+                    <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl p-4 border border-blue-100">
+                      <div className="text-xs text-blue-600 mb-1">คณิตศาสตร์</div>
+                      <div className="text-lg font-semibold text-gray-900">{formatScore(academic.gpa_math)}</div>
+                    </div>
+                    <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-xl p-4 border border-purple-100">
+                      <div className="text-xs text-purple-600 mb-1">วิทยาศาสตร์</div>
+                      <div className="text-lg font-semibold text-gray-900">{formatScore(academic.gpa_science)}</div>
+                    </div>
+                    <div className="bg-gradient-to-br from-orange-50 to-orange-100/50 rounded-xl p-4 border border-orange-100">
+                      <div className="text-xs text-orange-600 mb-1">ภาษาไทย</div>
+                      <div className="text-lg font-semibold text-gray-900">{formatScore(academic.gpa_thai)}</div>
+                    </div>
+                    <div className="bg-gradient-to-br from-pink-50 to-pink-100/50 rounded-xl p-4 border border-pink-100">
+                      <div className="text-xs text-pink-600 mb-1">ภาษาอังกฤษ</div>
+                      <div className="text-lg font-semibold text-gray-900">{formatScore(academic.gpa_english)}</div>
+                    </div>
+                    <div className="bg-gradient-to-br from-amber-50 to-amber-100/50 rounded-xl p-4 border border-amber-100">
+                      <div className="text-xs text-amber-600 mb-1">สังคมศึกษา</div>
+                      <div className="text-lg font-semibold text-gray-900">{formatScore(academic.gpa_social)}</div>
+                    </div>
                   </div>
-                  <div className="bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-xl p-4 border border-gray-200">
-                    <div className="text-xs text-gray-500 mb-1">เทอม</div>
-                    <div className="text-lg font-semibold text-gray-900">{academic.gpax_semesters ?? "-"}</div>
-                  </div>
-                  <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl p-4 border border-blue-100">
-                    <div className="text-xs text-blue-600 mb-1">คณิตศาสตร์</div>
-                    <div className="text-lg font-semibold text-gray-900">{formatScore(academic.gpa_math)}</div>
-                  </div>
-                  <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-xl p-4 border border-purple-100">
-                    <div className="text-xs text-purple-600 mb-1">วิทยาศาสตร์</div>
-                    <div className="text-lg font-semibold text-gray-900">{formatScore(academic.gpa_science)}</div>
-                  </div>
-                  <div className="bg-gradient-to-br from-orange-50 to-orange-100/50 rounded-xl p-4 border border-orange-100">
-                    <div className="text-xs text-orange-600 mb-1">ภาษาไทย</div>
-                    <div className="text-lg font-semibold text-gray-900">{formatScore(academic.gpa_thai)}</div>
-                  </div>
-                  <div className="bg-gradient-to-br from-pink-50 to-pink-100/50 rounded-xl p-4 border border-pink-100">
-                    <div className="text-xs text-pink-600 mb-1">ภาษาอังกฤษ</div>
-                    <div className="text-lg font-semibold text-gray-900">{formatScore(academic.gpa_english)}</div>
-                  </div>
-                  <div className="bg-gradient-to-br from-amber-50 to-amber-100/50 rounded-xl p-4 border border-amber-100">
-                    <div className="text-xs text-amber-600 mb-1">สังคมศึกษา</div>
-                    <div className="text-lg font-semibold text-gray-900">{formatScore(academic.gpa_social)}</div>
-                  </div>
-                </div>
+                  {academic.transcript_file_path && (
+                    <div className="mt-4 flex justify-end">
+                      <a
+                        href={getFileUrl(academic.transcript_file_path) || "#"}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-green-600 hover:text-green-800 inline-flex items-center gap-1"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        ดูไฟล์ผลการเรียน
+                      </a>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="text-center py-8">
                   <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -620,28 +637,45 @@ export default function ProfilePage() {
           >
             <div className="px-6 py-5">
               {ged ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  <div className="bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl p-4 border border-purple-200 col-span-2 sm:col-span-1">
-                    <div className="text-xs text-purple-700 mb-1 font-medium">คะแนนรวม</div>
-                    <div className="text-2xl font-bold text-purple-800">{ged.total_score ?? "-"}</div>
+                <>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    <div className="bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl p-4 border border-purple-200 col-span-2 sm:col-span-1">
+                      <div className="text-xs text-purple-700 mb-1 font-medium">คะแนนรวม</div>
+                      <div className="text-2xl font-bold text-purple-800">{ged.total_score ?? "-"}</div>
+                    </div>
+                    <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl p-4 border border-blue-100">
+                      <div className="text-xs text-blue-600 mb-1">Reasoning (RLA)</div>
+                      <div className="text-lg font-semibold text-gray-900">{ged.rla_score ?? "-"}</div>
+                    </div>
+                    <div className="bg-gradient-to-br from-green-50 to-green-100/50 rounded-xl p-4 border border-green-100">
+                      <div className="text-xs text-green-600 mb-1">Math</div>
+                      <div className="text-lg font-semibold text-gray-900">{ged.math_score ?? "-"}</div>
+                    </div>
+                    <div className="bg-gradient-to-br from-amber-50 to-amber-100/50 rounded-xl p-4 border border-amber-100">
+                      <div className="text-xs text-amber-600 mb-1">Science</div>
+                      <div className="text-lg font-semibold text-gray-900">{ged.science_score ?? "-"}</div>
+                    </div>
+                    <div className="bg-gradient-to-br from-pink-50 to-pink-100/50 rounded-xl p-4 border border-pink-100">
+                      <div className="text-xs text-pink-600 mb-1">Social Studies</div>
+                      <div className="text-lg font-semibold text-gray-900">{ged.social_score ?? "-"}</div>
+                    </div>
                   </div>
-                  <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl p-4 border border-blue-100">
-                    <div className="text-xs text-blue-600 mb-1">Reasoning (RLA)</div>
-                    <div className="text-lg font-semibold text-gray-900">{ged.rla_score ?? "-"}</div>
-                  </div>
-                  <div className="bg-gradient-to-br from-green-50 to-green-100/50 rounded-xl p-4 border border-green-100">
-                    <div className="text-xs text-green-600 mb-1">Math</div>
-                    <div className="text-lg font-semibold text-gray-900">{ged.math_score ?? "-"}</div>
-                  </div>
-                  <div className="bg-gradient-to-br from-amber-50 to-amber-100/50 rounded-xl p-4 border border-amber-100">
-                    <div className="text-xs text-amber-600 mb-1">Science</div>
-                    <div className="text-lg font-semibold text-gray-900">{ged.science_score ?? "-"}</div>
-                  </div>
-                  <div className="bg-gradient-to-br from-pink-50 to-pink-100/50 rounded-xl p-4 border border-pink-100">
-                    <div className="text-xs text-pink-600 mb-1">Social Studies</div>
-                    <div className="text-lg font-semibold text-gray-900">{ged.social_score ?? "-"}</div>
-                  </div>
-                </div>
+                  {ged.cert_file_path && (
+                    <div className="mt-4 flex justify-end">
+                      <a
+                        href={getFileUrl(ged.cert_file_path) || "#"}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-purple-600 hover:text-purple-800 inline-flex items-center gap-1"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        ดูใบรับรอง GED
+                      </a>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="text-center py-8">
                   <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -660,7 +694,7 @@ export default function ProfilePage() {
         )}
         {/* Language Scores */}
         <SectionCard
-          title="ข้อมูลคะแนนภาษา"
+          title="คะแนนสอบวัดทักษะภาษาอังกฤษ"
           icon={
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
@@ -742,7 +776,7 @@ export default function ProfilePage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
                 </div>
-                <p className="text-gray-500">ยังไม่มีข้อมูลคะแนนภาษา</p>
+                <p className="text-gray-500">ยังไม่มีข้อมูลคะแนนสอบวัดทักษะภาษาอังกฤษ</p>
                 <Link href="/student/profile/edit/language-scores" className="text-purple-500 hover:underline text-sm mt-1 inline-block">
                   + เพิ่มข้อมูล
                 </Link>

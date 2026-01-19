@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -206,10 +207,16 @@ func (pc *ProfileController) UpdateProfileImage(ctx *gin.Context) {
 	}
 
 	var req struct {
-		ProfileImageURL string `json:"profile_image_url" binding:"required,url"`
+		ProfileImageURL string `json:"profile_image_url"`
 	}
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
+		respondError(ctx, http.StatusBadRequest, errors.New("profile_image_url is required and must be a valid URL"))
+		return
+	}
+
+	profileImageURL := strings.TrimSpace(req.ProfileImageURL)
+	if !isValidFileURL(profileImageURL) {
 		respondError(ctx, http.StatusBadRequest, errors.New("profile_image_url is required and must be a valid URL"))
 		return
 	}
@@ -220,7 +227,7 @@ func (pc *ProfileController) UpdateProfileImage(ctx *gin.Context) {
 		return
 	}
 
-	user.ProfileImageURL = strings.TrimSpace(req.ProfileImageURL)
+	user.ProfileImageURL = profileImageURL
 
 	if err := pc.DB.Save(user).Error; err != nil {
 		respondError(ctx, http.StatusInternalServerError, err)
@@ -718,6 +725,25 @@ func isValidEducationStatus(status string) bool {
 		}
 	}
 	return false
+}
+
+func isValidFileURL(value string) bool {
+	if value == "" {
+		return false
+	}
+
+	if strings.HasPrefix(value, "/uploads/") || strings.HasPrefix(value, "uploads/") {
+		return true
+	}
+
+	parsed, err := url.Parse(value)
+	if err != nil {
+		return false
+	}
+	if parsed.Scheme != "http" && parsed.Scheme != "https" {
+		return false
+	}
+	return parsed.Host != ""
 }
 
 func derefTime(t *time.Time) time.Time {
