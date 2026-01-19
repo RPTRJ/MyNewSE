@@ -54,4 +54,3 @@ coverage/
 
 # Docker
 docker-compose.override.yml
-manual_deploy_team14.sh
