@@ -64,9 +64,13 @@ echo "--------------------------------------"
 echo "   Stopping old containers..."
 docker compose down
 
-echo "   Starting new containers..."
-docker compose up -d
+echo "   Rebuilding services with no cache..."
+docker compose build --no-cache
 
+echo "   Starting new containers..."
+docker compose up -d --force-recreate
+
+echo "   Cleaning up unused images..."
 docker image prune -f
 
 echo "--------------------------------------"
