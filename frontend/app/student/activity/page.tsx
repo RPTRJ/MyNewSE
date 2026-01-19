@@ -123,7 +123,7 @@ export default function ActivityUI() {
 
       const existingImages = editModal.activity_detail?.images || [];
       const imagePayload = [
-        ...existingImages.map(img => ({ image_url: getFileUrl(img.image_url) || img.image_url })),
+        ...existingImages.map(img => ({ image_url: img.image_url })),
         ...uploadedUrls.map(url => ({ image_url: url }))
       ];
 
