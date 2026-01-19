@@ -320,7 +320,11 @@ export default function MyPortfoliosPage() {
                     return (
                         <div key={idx} className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition flex flex-col group">
                             <div className="h-40 w-full bg-gray-100 relative">
-                                <img src={cover} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                <img
+                                    src={cover}
+                                    alt={c.type === 'activity' ? finalData.activity_name : finalData.working_name}
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                />
                                 <span className={`absolute top-2 right-2 text-[10px] text-white px-2 py-1 rounded font-bold uppercase ${c.type === 'activity' ? 'bg-orange-400' : 'bg-blue-400'}`}>
                                     {c.type}
                                 </span>
