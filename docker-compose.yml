@@ -77,12 +77,6 @@ services:
       DB_USER: ${POSTGRES_USER:-postgres}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       DB_NAME: ${POSTGRES_DB:-myapp}
-      # ✅ เพิ่ม: Frontend URL สำหรับ CORS
-      FRONTEND_URL: ${FRONTEND_URL:-https://sutportfolio.online}
-      # ✅ เพิ่ม: BASE_URL สำหรับ file uploads (ใช้ empty string)
-      BASE_URL: ${BASE_URL:-}
-      # Upload directory
-      UPLOAD_DIR: /app/uploads
     volumes:
       - uploads_data:/app/uploads
     networks:
@@ -93,24 +87,28 @@ services:
       backend_init:
         condition: service_completed_successfully
 
-  # Frontend
+  # Cloudflare Tunnel
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared-tunnel
+    restart: unless-stopped
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=eyJhIjoiZWY4YTI0NTkwNWViMzA5YzY0ZTFiYjZkZDRjODJjZDIiLCJ0IjoiZDQ4NjJkOWYtOWVkMS00MjBhLWJmMDMtYzk1YjI4M2FhNTQyIiwicyI6Ik1USTVNakZpTlRNdE5EZzNOaTAwWm1RM0xUaGtNakV0WldFek16UmhNVFJsTURkaSJ9
+    networks:
+      - app_network
+
   # Frontend
   frontend:
     build:
       context: ./frontend
-      args:
-        # ✅ เพิ่ม: Build-time environment variables
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://sutportfolio.online/api}
-        NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL:-wss://sutportfolio.online/api/ws}
     container_name: frontend_ui
     restart: unless-stopped
     env_file:
       - .env
     environment:
       NODE_ENV: production
-      # ✅ Runtime override (สำคัญ!)
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://sutportfolio.online/api}
-      NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL:-wss://sutportfolio.online/api/ws}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost/api}
     networks:
       - app_network
     depends_on:
