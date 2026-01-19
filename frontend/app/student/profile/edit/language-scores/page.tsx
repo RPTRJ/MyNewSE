@@ -56,7 +56,7 @@ const testTypeConfigs: Record<string, TestTypeConfig> = {
     scorePlaceholder: "10-990",
     scoreMin: 10,
     scoreMax: 990,
-    scoreStep: 5,
+    scoreStep: 1,
     description: "Test of English for International Communication",
   },
   CEFR: {
@@ -167,37 +167,12 @@ export default function EditLanguageScoresPage() {
       prev.map((item, i) => {
         if (i !== index) return item;
 
-        // ถ้ากำลังเปลี่ยน test_type ให้เคลียร์ฟิลด์ที่ไม่เกี่ยวข้อง
+        // ถ้ากำลังเปลี่ยน test_type ให้รีเซ็ตฟิลด์อื่นทั้งหมดสำหรับรายการนั้น
         if (key === "test_type") {
-          const newConfig = testTypeConfigs[value];
-          const oldConfig = testTypeConfigs[item.test_type];
-
-          const clearedItem: LanguageItem = {
-            ...item,
+          return {
+            ...emptyItem,
             test_type: value,
           };
-
-          // เคลียร์ score ถ้า test type ใหม่ไม่มี score หรือ test type เดิมเป็น CEFR
-          if (!newConfig?.scoreLabel || item.test_type === "CEFR") {
-            clearedItem.score = "";
-          }
-
-          // เคลียร์ test_level ถ้า test type ใหม่ไม่มี level หรือ test type เดิมมี level
-          if (!newConfig?.hasLevel || oldConfig?.hasLevel) {
-            clearedItem.test_level = "";
-          }
-
-          // เคลียร์ sat_math ถ้า test type ใหม่ไม่ใช่ SAT
-          if (!newConfig?.hasSatMath) {
-            clearedItem.sat_math = "";
-          }
-
-          // เคลียร์ subject ถ้า test type ใหม่ไม่มี subject field
-          if (!newConfig?.hasSubject) {
-            clearedItem.subject = "";
-          }
-
-          return clearedItem;
         }
 
         return { ...item, [key]: value };

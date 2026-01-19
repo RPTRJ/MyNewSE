@@ -262,13 +262,8 @@ export default function PortfolioPreviewPage() {
                                 return (
                                     <div key={block.ID || idx} className="p-6 rounded-xl bg-white border border-gray-200 shadow-sm hover:shadow-md transition">
                                         <div className="flex items-start gap-4">
-                                            {/* ไอคอน */}
-                                            <div className="w-10 h-10 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-xl flex-shrink-0">
-                                                📝
-                                            </div>
                                             {/* เนื้อหา */}
                                             <div className="flex-1">
-                                                {c.title && <h4 className="font-bold text-gray-800 mb-2 text-lg">{c.title}</h4>}
                                                 <div className="text-gray-600 whitespace-pre-wrap leading-relaxed">
                                                     {c.detail}
                                                 </div>

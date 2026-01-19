@@ -662,9 +662,24 @@ function SectionsContent() {
             } else {
                 setSelectedDataId(c?.data_id?.toString() || "");
             }
-            // setSelectedDataId(c?.data_id?.toString() || "");
         } else {
-            setSelectedDataType('activity');
+            // ตั้ง selectedDataType ตามชื่อ section อัตโนมัติ
+            const sectionTitle = selectedSection?.section_title?.toLowerCase() || '';
+            const sectionKey = selectedSection?.section_port_key?.toLowerCase() || '';
+            
+            const isActivitySection = sectionTitle.includes('กิจกรรม') || sectionTitle.includes('activity') || sectionKey.includes('กิจกรรม') || sectionKey.includes('activity');
+            const isWorkingSection = sectionTitle.includes('ผลงาน') || sectionTitle.includes('working') || sectionKey.includes('ผลงาน') || sectionKey.includes('working');
+            const isTextSection = sectionTitle.includes('ข้อความ') || sectionTitle.includes('text') || sectionTitle.includes('แนะนำตัว') || sectionKey.includes('ข้อความ') || sectionKey.includes('text') || sectionKey.includes('แนะนำตัว');
+            
+            if (isActivitySection && !isWorkingSection && !isTextSection) {
+                setSelectedDataType('activity');
+            } else if (isWorkingSection && !isActivitySection && !isTextSection) {
+                setSelectedDataType('working');
+            } else if (isTextSection && !isActivitySection && !isWorkingSection) {
+                setSelectedDataType('text');
+            } else {
+                setSelectedDataType('activity');
+            }
             setSelectedDataId("");
         }
         setIsEditingItem(true);
@@ -682,34 +697,51 @@ function SectionsContent() {
     };
 
     const handleSaveItem = async () => {
-        if (!selectedSection || (selectedDataType !== 'profile' && selectedDataType !== 'text' && !selectedDataId)) {
+        // ตรวจสอบประเภท section เพื่อกำหนด dataType ที่ถูกต้อง
+        const sectionTitle = selectedSection?.section_title?.toLowerCase() || '';
+        const sectionKey = selectedSection?.section_port_key?.toLowerCase() || '';
+        
+        const isActivitySection = sectionTitle.includes('กิจกรรม') || sectionTitle.includes('activity') || sectionKey.includes('กิจกรรม') || sectionKey.includes('activity');
+        const isWorkingSection = sectionTitle.includes('ผลงาน') || sectionTitle.includes('working') || sectionKey.includes('ผลงาน') || sectionKey.includes('working');
+        const isTextSection = sectionTitle.includes('ข้อความ') || sectionTitle.includes('text') || sectionTitle.includes('แนะนำตัว') || sectionKey.includes('ข้อความ') || sectionKey.includes('text') || sectionKey.includes('แนะนำตัว');
+        
+        // กำหนด dataType ตาม section (ถ้า section กำหนดชัดเจน)
+        let actualDataType = selectedDataType;
+        if (isActivitySection && !isWorkingSection && !isTextSection) {
+            actualDataType = 'activity';
+        } else if (isWorkingSection && !isActivitySection && !isTextSection) {
+            actualDataType = 'working';
+        } else if (isTextSection && !isActivitySection && !isWorkingSection) {
+            actualDataType = 'text';
+        }
+        
+        if (!selectedSection || (actualDataType !== 'profile' && actualDataType !== 'text' && !selectedDataId)) {
             showModal("คำเตือน", "กรุณาเลือกข้อมูลก่อน", "warning", false);
             return;
         }
 
         try {
             let contentData = {};
-            if (selectedDataType === 'profile') {
+            if (actualDataType === 'profile') {
                 contentData = {
                     type: 'profile',
                     title: 'My Profile'
                 };
-            } else if (selectedDataType === 'text') {
+            } else if (actualDataType === 'text') {
                 if (!customText.trim()) {
                     showModal("คำเตือน", "กรุณากรอกข้อความ", "warning", false);
                     return;
                 }
                 contentData = {
                     type: 'text',
-                    title: 'ข้อความ', // หรือจะตัดคำแรกๆ มาเป็น title ก็ได้
-                    detail: customText // เก็บข้อความไว้ใน key ชื่อ detail
+                    title: 'ข้อความ',
+                    detail: customText
                 };
             } else {
                 let dataItem: any = null;
                 let dataName = "";
 
-
-                if (selectedDataType === 'activity') {
+                if (actualDataType === 'activity') {
                     dataItem = activities.find(a => a.ID.toString() === selectedDataId);
                     dataName = dataItem?.activity_name || "";
                 } else {
@@ -723,8 +755,8 @@ function SectionsContent() {
                 }
 
                 contentData = {
-                    title: selectedDataType === 'activity' ? dataItem.activity_name : dataItem.working_name,
-                    type: selectedDataType,
+                    title: actualDataType === 'activity' ? dataItem.activity_name : dataItem.working_name,
+                    type: actualDataType,
                     data_id: parseInt(selectedDataId),
                     data: dataItem
                 };
@@ -1288,61 +1320,168 @@ function SectionsContent() {
                                                 {currentBlock ? ' แก้ไขข้อมูล' : ' เพิ่มข้อมูลใหม่'}
                                             </h4>
                                         </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">ประเภทข้อมูล</label>
-                                            <CustomSelect
-                                                isSearchable={false}
-                                                options={[
-                                                    { value: 'activity', label: 'กิจกรรม (Activity)', icon: <Trophy className="w-5 h-5 text-orange-500" /> },
-                                                    { value: 'working', label: 'ผลงาน (Working)', icon: <BriefcaseBusiness className="w-5 h-5 text-blue-500" /> },
-                                                    { value: 'text', label: 'ข้อความ / แนะนำตัว (Text)', icon: <ScrollText className="w-5 h-5 text-green-500" /> }
-                                                ]}
-                                                value={selectedDataType}
-                                                onChange={(value) => {
-                                                    setSelectedDataType(value as any);
-                                                    setSelectedDataId("");
-                                                }}
-                                            />
-                                        </div>
-                                        {selectedDataType === 'text' ? (
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">รายละเอียดข้อความ</label>
-                                                <textarea
-                                                    className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-orange-200 outline-none min-h-[150px]"
-                                                    placeholder="พิมพ์ข้อความแนะนำตัว หรือรายละเอียดที่ต้องการแสดง..."
-                                                    value={customText}
-                                                    onChange={(e) => setCustomText(e.target.value)}
-                                                />
-                                            </div>
-                                        ) : selectedDataType !== 'profile' ? (
-                                            // === กรณีเลือก Activity หรือ Working ===
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">เลือกรายการ</label>
-                                                <CustomSelect
-                                                    placeholder="-- กรุณาเลือกรายการ --"
-                                                    options={
-                                                        (selectedDataType === 'activity' ? activities : workings).map(item => {
-                                                            const isActivity = selectedDataType === 'activity';
-                                                            return {
-                                                                value: item.ID.toString(),
-                                                                label: item.activity_name || item.working_name,
-                                                                icon: isActivity
-                                                                    ? <Trophy className="w-5 h-5 text-orange-500 flex-shrink-0" />
-                                                                    : <BriefcaseBusiness className="w-5 h-5 text-blue-500 flex-shrink-0" />,
-                                                                searchable_fields: [
-                                                                    isActivity ? item.reward?.level_name : null,
-                                                                    isActivity ? item.activity_detail?.type_activity?.type_name : item.working_detail?.type_working?.type_name,
-                                                                ].filter(Boolean) as string[] // Filter out null/undefined values
-                                                            };
-                                                        })
-                                                    }
-                                                    value={selectedDataId}
-                                                    onChange={(value) => setSelectedDataId(value)}
-                                                />
-                                            </div>
-                                        ) : null}
+                                        
+                                        {/* ตรวจสอบประเภท section และแสดง UI ตามประเภท */}
+                                        {(() => {
+                                            const sectionTitle = selectedSection?.section_title?.toLowerCase() || '';
+                                            const sectionKey = selectedSection?.section_port_key?.toLowerCase() || '';
+                                            
+                                            const isActivitySection = sectionTitle.includes('กิจกรรม') || sectionTitle.includes('activity') || sectionKey.includes('กิจกรรม') || sectionKey.includes('activity');
+                                            const isWorkingSection = sectionTitle.includes('ผลงาน') || sectionTitle.includes('working') || sectionKey.includes('ผลงาน') || sectionKey.includes('working');
+                                            const isTextSection = sectionTitle.includes('ข้อความ') || sectionTitle.includes('text') || sectionTitle.includes('แนะนำตัว') || sectionKey.includes('ข้อความ') || sectionKey.includes('text') || sectionKey.includes('แนะนำตัว');
+                                            
+                                            // Section กิจกรรม - แสดงเฉพาะกิจกรรมให้เลือก
+                                            if (isActivitySection && !isWorkingSection && !isTextSection) {
+                                                return (
+                                                    <>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-sm text-gray-600">ประเภท:</span>
+                                                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-100 text-orange-700 rounded-full font-medium text-sm">
+                                                                <Trophy className="w-4 h-4" /> กิจกรรม
+                                                            </span>
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-sm font-medium text-gray-700 mb-1">เลือกกิจกรรม</label>
+                                                            <CustomSelect
+                                                                placeholder="-- กรุณาเลือกกิจกรรม --"
+                                                                options={
+                                                                    activities.map(item => ({
+                                                                        value: item.ID.toString(),
+                                                                        label: item.activity_name,
+                                                                        icon: <Trophy className="w-5 h-5 text-orange-500 flex-shrink-0" />,
+                                                                        searchable_fields: [
+                                                                            item.reward?.level_name,
+                                                                            item.activity_detail?.type_activity?.type_name,
+                                                                            item.activity_detail?.level_activity?.level_name,
+                                                                        ].filter(Boolean) as string[]
+                                                                    }))
+                                                                }
+                                                                value={selectedDataId}
+                                                                onChange={(value) => setSelectedDataId(value)}
+                                                            />
+                                                        </div>
+                                                    </>
+                                                );
+                                            }
+                                            
+                                            // Section ผลงาน - แสดงเฉพาะผลงานให้เลือก
+                                            if (isWorkingSection && !isActivitySection && !isTextSection) {
+                                                return (
+                                                    <>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-sm text-gray-600">ประเภท:</span>
+                                                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-100 text-blue-700 rounded-full font-medium text-sm">
+                                                                <BriefcaseBusiness className="w-4 h-4" /> ผลงาน
+                                                            </span>
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-sm font-medium text-gray-700 mb-1">เลือกผลงาน</label>
+                                                            <CustomSelect
+                                                                placeholder="-- กรุณาเลือกผลงาน --"
+                                                                options={
+                                                                    workings.map(item => ({
+                                                                        value: item.ID.toString(),
+                                                                        label: item.working_name,
+                                                                        icon: <BriefcaseBusiness className="w-5 h-5 text-blue-500 flex-shrink-0" />,
+                                                                        searchable_fields: [
+                                                                            item.working_detail?.type_working?.type_name,
+                                                                        ].filter(Boolean) as string[]
+                                                                    }))
+                                                                }
+                                                                value={selectedDataId}
+                                                                onChange={(value) => setSelectedDataId(value)}
+                                                            />
+                                                        </div>
+                                                    </>
+                                                );
+                                            }
+                                            
+                                            // Section ข้อความ - แสดงช่องกรอกข้อความ
+                                            if (isTextSection && !isActivitySection && !isWorkingSection) {
+                                                return (
+                                                    <>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-sm text-gray-600">ประเภท:</span>
+                                                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-100 text-green-700 rounded-full font-medium text-sm">
+                                                                <ScrollText className="w-4 h-4" /> ข้อความ
+                                                            </span>
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-sm font-medium text-gray-700 mb-1">รายละเอียดข้อความ</label>
+                                                            <textarea
+                                                                className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-orange-200 outline-none min-h-[150px]"
+                                                                placeholder="พิมพ์ข้อความแนะนำตัว หรือรายละเอียดที่ต้องการแสดง..."
+                                                                value={customText}
+                                                                onChange={(e) => setCustomText(e.target.value)}
+                                                            />
+                                                        </div>
+                                                    </>
+                                                );
+                                            }
+                                            
+                                            // Section ทั่วไป - แสดง dropdown เลือกประเภทก่อน
+                                            const options = [
+                                                { value: 'activity', label: 'กิจกรรม (Activity)', icon: <Trophy className="w-5 h-5 text-orange-500" /> },
+                                                { value: 'working', label: 'ผลงาน (Working)', icon: <BriefcaseBusiness className="w-5 h-5 text-blue-500" /> },
+                                                { value: 'text', label: 'ข้อความ / แนะนำตัว (Text)', icon: <ScrollText className="w-5 h-5 text-green-500" /> }
+                                            ];
+                                            return (
+                                                <>
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-1">ประเภทข้อมูล</label>
+                                                        <CustomSelect
+                                                            isSearchable={false}
+                                                            options={options}
+                                                            value={selectedDataType}
+                                                            onChange={(value) => {
+                                                                setSelectedDataType(value as any);
+                                                                setSelectedDataId("");
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    
+                                                    {selectedDataType === 'text' ? (
+                                                        <div>
+                                                            <label className="block text-sm font-medium text-gray-700 mb-1">รายละเอียดข้อความ</label>
+                                                            <textarea
+                                                                className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-orange-200 outline-none min-h-[150px]"
+                                                                placeholder="พิมพ์ข้อความแนะนำตัว หรือรายละเอียดที่ต้องการแสดง..."
+                                                                value={customText}
+                                                                onChange={(e) => setCustomText(e.target.value)}
+                                                            />
+                                                        </div>
+                                                    ) : (
+                                                        <div>
+                                                            <label className="block text-sm font-medium text-gray-700 mb-1">เลือกรายการ</label>
+                                                            <CustomSelect
+                                                                placeholder={`-- กรุณาเลือก${selectedDataType === 'activity' ? 'กิจกรรม' : 'ผลงาน'} --`}
+                                                                options={
+                                                                    (selectedDataType === 'activity' ? activities : workings).map(item => {
+                                                                        const isActivity = selectedDataType === 'activity';
+                                                                        return {
+                                                                            value: item.ID.toString(),
+                                                                            label: isActivity ? item.activity_name : item.working_name,
+                                                                            icon: isActivity
+                                                                                ? <Trophy className="w-5 h-5 text-orange-500 flex-shrink-0" />
+                                                                                : <BriefcaseBusiness className="w-5 h-5 text-blue-500 flex-shrink-0" />,
+                                                                            searchable_fields: [
+                                                                                isActivity ? item.reward?.level_name : null,
+                                                                                isActivity ? item.activity_detail?.type_activity?.type_name : item.working_detail?.type_working?.type_name,
+                                                                                isActivity ? item.activity_detail?.level_activity?.level_name : null,
+                                                                            ].filter(Boolean) as string[]
+                                                                        };
+                                                                    })
+                                                                }
+                                                                value={selectedDataId}
+                                                                onChange={(value) => setSelectedDataId(value)}
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </>
+                                            );
+                                        })()}
 
-                                        {/* 4. ปุ่มบันทึก/ยกเลิก */}
+                                        {/* ปุ่มบันทึก/ยกเลิก */}
                                         <div className="flex gap-3 pt-4">
                                             <button onClick={() => { setIsEditingItem(false); setViewMode('list'); }} className="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-lg hover:bg-gray-200 font-medium transition">
                                                 ยกเลิก
@@ -1351,9 +1490,6 @@ function SectionsContent() {
                                                 บันทึก
                                             </button>
                                         </div>
-                                        {/* } */}
-                                        {/* {selectedDataType !== 'profile' && (<div><label className="block text-sm font-medium text-gray-700 mb-1">เลือกรายการ</label><select className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-orange-200 outline-none" value={selectedDataId} onChange={e => setSelectedDataId(e.target.value)}><option value="">-- กรุณาเลือกรายการ --</option>{selectedDataType === 'activity' && activities.map(a => <option key={a.ID} value={a.ID}>{a.activity_name}</option>)}{selectedDataType === 'working' && workings.map(w => <option key={w.ID} value={w.ID}>{w.working_name}</option>)}</select></div>)} */}
-                                        {/* <div className="flex gap-3 pt-4"><button onClick={() => { setIsEditingItem(false); setViewMode('list'); }} className="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-lg hover:bg-gray-200 font-medium transition">ยกเลิก</button><button onClick={handleSaveItem} className="flex-1 text-white py-2.5 rounded-lg font-medium transition shadow-sm hover:opacity-90" style={{ backgroundColor: currentPrimaryColor }}>บันทึก</button></div> */}
                                     </motion.div>
                                 ) : (
                                     /* List View */
