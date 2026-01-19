@@ -270,7 +270,9 @@ export async function uploadImage(file: File) {
   if (!rawUrl) {
     return data;
   }
-  return { ...data, url: getFileUrl(rawUrl) || rawUrl };
+  // Return raw URL from backend (relative path like /uploads/123.png)
+  // Frontend will use getFileUrl() only for display purposes
+  return { ...data, url: rawUrl };
 }
 
 export async function updatePortfolio(id: number, data: any) {

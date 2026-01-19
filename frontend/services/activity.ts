@@ -97,7 +97,9 @@ export const uploadImage = async (file: File): Promise<string> => {
     if (!rawUrl) {
         throw new Error("Upload response missing file URL");
     }
-    return getFileUrl(rawUrl) || rawUrl;
+    // Return raw URL from backend (relative path like /uploads/123.png)
+    // Frontend will use getFileUrl() only for display purposes
+    return rawUrl;
 };
 
 // Pagination options
