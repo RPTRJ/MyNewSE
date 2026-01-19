@@ -8,6 +8,17 @@ echo "   Starting LOCAL Deployment for Team 14"
 echo "=========================================="
 
 # ==========================================
+# 0. CLEANUP OLD IMAGES
+# ==========================================
+echo "--------------------------------------"
+echo "Step 0: Cleaning up old images..."
+echo "--------------------------------------"
+
+echo "   Removing old backend and frontend images..."
+docker rmi -f rppskptrj/sut_team14_backend:latest 2>/dev/null || true
+docker rmi -f rppskptrj/sut_team14_frontend:latest 2>/dev/null || true
+
+# ==========================================
 # 1. BUILD BACKEND
 # ==========================================
 echo "--------------------------------------"
@@ -65,7 +76,7 @@ echo "   Stopping old containers..."
 docker compose down
 
 echo "   Starting new containers..."
-docker compose up -d --force-recreate --pull always
+docker compose up -d --force-recreate
 
 echo "   Cleaning up unused images..."
 docker image prune -f
