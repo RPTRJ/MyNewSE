@@ -403,10 +403,13 @@ export default function WorkingUI() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <select
+                id="working-type-create"
+                name="working-type-create"
                 className="px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors"
                 style={{ color: typeId === "" ? "#9ca3af" : "black" }}
                 value={typeId}
                 onChange={(e) => setTypeId(e.target.value)}
+                aria-label="เลือกประเภทงาน"
               >
                 <option value="" className="text-gray-400">เลือกประเภทงาน</option>
                 {types.map((t) => (
@@ -417,10 +420,13 @@ export default function WorkingUI() {
               </select>
 
               <select
+                id="working-status-create"
+                name="working-status-create"
                 className="px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors"
                 style={{ color: status === "" ? "#9ca3af" : "black" }}
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
+                aria-label="เลือกสถานะงาน"
               >
                 <option value="" className="text-gray-400">เลือกสถานะงาน</option>
                 <option value="in_development" className="text-black">อยู่ในระหว่างพัฒนา</option>
@@ -428,17 +434,23 @@ export default function WorkingUI() {
               </select>
 
               <input
+                id="working-date-create"
+                name="working-date-create"
                 type="date"
                 className="px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors"
                 style={{ color: date === "" ? "#9ca3af" : "black" }}
                 value={date}
                 max={new Date().toLocaleDateString('en-CA')}
                 onChange={(e) => setDate(e.target.value)}
+                aria-label="วันที่เสร็จสิ้น"
               />
             </div>
 
             <div className="space-y-1">
+              <label htmlFor="working-description-create" className="sr-only">รายละเอียดผลงาน</label>
               <textarea
+                id="working-description-create"
+                name="working-description-create"
                 className="w-full px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors resize-none"
                 rows={4}
                 placeholder="รายละเอียด"
@@ -460,12 +472,15 @@ export default function WorkingUI() {
                   <div key={i} className="relative group">
                     <img
                       src={URL.createObjectURL(img)}
+                      alt={`รูปผลงาน ${i + 1}`}
                       className="w-24 h-24 object-cover rounded-xl border-2 border-neutral-200"
                     />
                     <button
                       type="button"
                       onClick={() => setImages(images.filter((_, idx) => idx !== i))}
                       className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                      aria-label={`ลบรูปที่ ${i + 1}`}
+                      title={`ลบรูปที่ ${i + 1}`}
                     >
                       <XCircle size={14} />
                     </button>
@@ -491,6 +506,8 @@ export default function WorkingUI() {
               {links.map((l, i) => (
                 <div key={i} className="flex gap-2 mb-2">
                   <input
+                    id={`working-link-${i}`}
+                    name={`working-link-${i}`}
                     className="flex-1 px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors"
                     placeholder="https://..."
                     value={l}
@@ -499,11 +516,14 @@ export default function WorkingUI() {
                       copy[i] = e.target.value;
                       setLinks(copy);
                     }}
+                    aria-label={`ลิงก์ผลงาน ${i + 1}`}
                   />
                   <button
                     type="button"
                     onClick={() => setLinks(links.filter((_, idx) => idx !== i))}
                     className="text-red-500 p-3 hover:bg-red-50 rounded-lg transition-colors"
+                    aria-label={`ลบลิงก์ที่ ${i + 1}`}
+                    title={`ลบลิงก์ที่ ${i + 1}`}
                   >
                     <XCircle size={20} />
                   </button>
