@@ -26,8 +26,7 @@ services:
 
   # Database Init (run once)
   backend_init:
-    build:
-      context: ./backend
+    image: rppskptrj/sut_team14_backend:latest
     container_name: backend_init
     env_file:
       - .env
@@ -63,8 +62,7 @@ services:
 
   # Backend API
   backend:
-    build:
-      context: ./backend
+    image: rppskptrj/sut_team14_backend:latest
     container_name: backend_api
     restart: unless-stopped
     env_file:
@@ -100,8 +98,7 @@ services:
 
   # Frontend
   frontend:
-    build:
-      context: ./frontend
+    image: rppskptrj/sut_team14_frontend:latest
     container_name: frontend_ui
     restart: unless-stopped
     env_file:
