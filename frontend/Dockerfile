@@ -24,8 +24,15 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
-ARG NEXT_PUBLIC_API_URL=http://sutportfolio.online/api
+# ✅ API URL สำหรับ HTTP requests
+ARG NEXT_PUBLIC_API_URL=https://sutportfolio.online/api
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
+# ✅ เพิ่มใหม่: WebSocket URL สำหรับ real-time notifications
+# ใช้ wss:// (WebSocket Secure) สำหรับ HTTPS
+# ใช้ ws:// สำหรับ HTTP
+ARG NEXT_PUBLIC_WS_URL=wss://sutportfolio.online/api/ws
+ENV NEXT_PUBLIC_WS_URL=$NEXT_PUBLIC_WS_URL
 
 RUN npm run build
 

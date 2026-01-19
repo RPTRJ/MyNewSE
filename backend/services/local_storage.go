@@ -21,10 +21,10 @@ func InitLocalStorage() error {
 		uploadDir = "./uploads"
 	}
 
+	// ✅ BASE_URL: ถ้าไม่กำหนด ให้ใช้ empty string (จะ return relative path)
 	baseURL := os.Getenv("BASE_URL")
-	if baseURL == "" {
-		baseURL = "http://localhost:8080"
-	}
+	// baseURL จะเป็น empty string เป็นค่า default
+	// ถ้าต้องการ absolute URL ให้กำหนดใน .env (เช่น development)
 
 	// Create upload directory if not exists
 	if err := os.MkdirAll(uploadDir, 0755); err != nil {
@@ -59,8 +59,16 @@ func (s *LocalStorageService) UploadFile(file io.Reader, fileName string, conten
 		return "", fmt.Errorf("failed to write file: %v", err)
 	}
 
-	// Return the URL
-	url := fmt.Sprintf("%s/uploads/%s", s.baseURL, uniqueName)
+	// ✅ Return URL based on BASE_URL
+	var url string
+	if s.baseURL != "" {
+		// ถ้ามี BASE_URL (development) ให้ใช้ absolute URL
+		url = fmt.Sprintf("%s/uploads/%s", s.baseURL, uniqueName)
+	} else {
+		// ✅ ถ้าไม่มี BASE_URL (production) ให้ใช้ relative path
+		// Frontend จะต้อง prepend API_URL เอง หรือใช้ผ่าน nginx proxy
+		url = fmt.Sprintf("/uploads/%s", uniqueName)
+	}
 
 	return url, nil
 }
