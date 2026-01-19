@@ -621,12 +621,15 @@ const PortfolioReview = () => {
             {activeTab === 'general' && (
               <>
                 <div className="mb-6">
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">Status</label>
+                  <label htmlFor="scorecard-status" className="block text-sm font-semibold text-gray-900 mb-2">Status</label>
                   <div className="relative">
                     <select
+                      id="scorecard-status"
+                      name="scorecard-status"
                       value={status}
                       onChange={(e) => setStatus(e.target.value)}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg appearance-none bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      aria-label="เลือกสถานะ"
                     >
                       <option value="draft">Draft</option>
                       <option value="revision_requested">Revision Requested</option>
@@ -637,8 +640,10 @@ const PortfolioReview = () => {
                 </div>
 
                 <div className="mb-6">
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">Overall Comment</label>
+                  <label htmlFor="scorecard-overall-comment" className="block text-sm font-semibold text-gray-900 mb-2">Overall Comment</label>
                   <textarea
+                    id="scorecard-overall-comment"
+                    name="scorecard-overall-comment"
                     disabled={isLocked}
                     value={feedback.overall_comment}
                     onChange={(e) => setFeedback((prev: any) => ({ ...prev, overall_comment: e.target.value }))}
@@ -648,8 +653,10 @@ const PortfolioReview = () => {
                 </div>
 
                 <div className="mb-6">
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">Strengths</label>
+                  <label htmlFor="scorecard-strengths" className="block text-sm font-semibold text-gray-900 mb-2">Strengths</label>
                   <textarea
+                    id="scorecard-strengths"
+                    name="scorecard-strengths"
                     disabled={isLocked}
                     value={feedback.strengths}
                     onChange={(e) => setFeedback((prev: any) => ({ ...prev, strengths: e.target.value }))}
@@ -659,8 +666,10 @@ const PortfolioReview = () => {
                 </div>
 
                 <div className="mb-6">
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">Areas for Improvement</label>
+                  <label htmlFor="scorecard-improvement" className="block text-sm font-semibold text-gray-900 mb-2">Areas for Improvement</label>
                   <textarea
+                    id="scorecard-improvement"
+                    name="scorecard-improvement"
                     disabled={isLocked}
                     value={feedback.areas_for_improvement}
                     onChange={(e) => setFeedback((prev: any) => ({ ...prev, areas_for_improvement: e.target.value }))}
@@ -703,10 +712,12 @@ const PortfolioReview = () => {
                       </div>
 
                       <div className="mb-3">
-                        <label className="block text-xs text-gray-600 mb-2">
+                        <label htmlFor={`criteria-score-${Criteria.criteria_number}`} className="block text-xs text-gray-600 mb-2">
                           Score (max: {Criteria.max_score})
                         </label>
                         <input
+                          id={`criteria-score-${Criteria.criteria_number}`}
+                          name={`criteria-score-${Criteria.criteria_number}`}
                           disabled={isLocked}
                           type="number"
                           min="0"
@@ -719,8 +730,10 @@ const PortfolioReview = () => {
                       </div>
 
                       <div>
-                        <label className="block text-xs text-gray-600 mb-2">Comment</label>
+                        <label htmlFor={`criteria-comment-${Criteria.criteria_number}`} className="block text-xs text-gray-600 mb-2">Comment</label>
                         <textarea
+                          id={`criteria-comment-${Criteria.criteria_number}`}
+                          name={`criteria-comment-${Criteria.criteria_number}`}
                           disabled={isLocked}
                           value={Criteria.comment}
                           onChange={(e) => updateScoreCriteriaComment(Criteria.criteria_number, e.target.value)}
