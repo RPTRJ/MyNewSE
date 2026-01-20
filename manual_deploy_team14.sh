@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ตั้งค่าชื่อ Image 
+# ตั้งค่าชื่อ Image
 DOCKER_USERNAME="rppskptrj"
 
 echo "=========================================="
@@ -8,15 +8,25 @@ echo "   Starting LOCAL Deployment for Team 14"
 echo "=========================================="
 
 # ==========================================
-# 0. CLEANUP OLD IMAGES
+# 0. CLEANUP OLD IMAGES & CONTAINERS
 # ==========================================
 echo "--------------------------------------"
-echo "Step 0: Cleaning up old images..."
+echo "Step 0: Cleaning up old images and containers..."
 echo "--------------------------------------"
 
-echo "   Removing old backend and frontend images..."
-docker rmi -f rppskptrj/sut_team14_backend:latest 2>/dev/null || true
-docker rmi -f rppskptrj/sut_team14_frontend:latest 2>/dev/null || true
+echo "   Stopping and removing old containers..."
+docker compose down
+
+echo "   Removing ALL old team14 images..."
+docker rmi -f team14-backend:latest 2>/dev/null || true
+docker rmi -f team14-frontend:latest 2>/dev/null || true
+docker rmi -f team14-nginx:latest 2>/dev/null || true
+docker rmi -f team14-backend_init:latest 2>/dev/null || true
+docker rmi -f $DOCKER_USERNAME/sut_team14_backend:latest 2>/dev/null || true
+docker rmi -f $DOCKER_USERNAME/sut_team14_frontend:latest 2>/dev/null || true
+
+echo "   Pruning unused images..."
+docker image prune -f
 
 # ==========================================
 # 1. BUILD BACKEND
@@ -27,19 +37,11 @@ echo "--------------------------------------"
 
 cd backend
 
-# Run Tests
-# echo "   Running Go Tests..."
-# go test -v ./...
-# if [ $? -ne 0 ]; then
-#     echo "Backend Tests Failed! Stopping."
-#     exit 1
-# fi
-
 # Build Docker Image
 echo "   Building Backend Docker Image..."
-docker build -t $DOCKER_USERNAME/sut_team14_backend:latest .
+docker build --no-cache -t $DOCKER_USERNAME/sut_team14_backend:latest .
 
-cd .. 
+cd ..
 
 # ==========================================
 # 2. BUILD FRONTEND
@@ -49,7 +51,6 @@ echo "Step 2: Building Frontend..."
 echo "--------------------------------------"
 
 cd frontend
-
 
 echo "   Installing Dependencies & Building..."
 npm install
@@ -61,30 +62,32 @@ fi
 
 # Build Docker Image
 echo "   Building Frontend Docker Image..."
-docker build -t $DOCKER_USERNAME/sut_team14_frontend:latest .
+docker build --no-cache -t $DOCKER_USERNAME/sut_team14_frontend:latest .
 
-cd .. 
+cd ..
 
 # ==========================================
-# 3. RESTART DOCKER COMPOSE 
+# 3. RESTART DOCKER COMPOSE
 # ==========================================
 echo "--------------------------------------"
 echo "Step 3: Restarting Local Docker Compose..."
 echo "--------------------------------------"
 
-echo "   Stopping old containers..."
-docker compose down
-
-echo "   Starting new containers..."
+echo "   Starting new containers with fresh images..."
 docker compose up -d --force-recreate
 
-echo "   Cleaning up unused images..."
+echo "   Cleaning up dangling images..."
 docker image prune -f
 
 echo "--------------------------------------"
 echo "ALL DONE FOR LOCAL DEPLOYMENT!"
 echo "--------------------------------------"
 
+echo ""
+echo "Listing running containers:"
+docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Status}}"
+
 # เปิด
+echo ""
 echo "Opening Browser (https://sutportfolio.online)..."
 start https://sutportfolio.online
