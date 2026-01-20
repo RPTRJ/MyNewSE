@@ -16,14 +16,6 @@ echo "--------------------------------------"
 
 cd backend
 
-# Run Tests
-# echo "   Running Go Tests..."
-# go test -v ./...
-# if [ $? -ne 0 ]; then
-#     echo "Backend Tests Failed! Stopping."
-#     exit 1
-# fi
-
 # Build Docker Image
 echo "   Building Backend Docker Image..."
 docker build -t $DOCKER_USERNAME/sut_team14_backend:latest .
@@ -64,13 +56,9 @@ echo "--------------------------------------"
 echo "   Stopping old containers..."
 docker compose down
 
-echo "   Rebuilding services with no cache..."
-docker compose build --no-cache
-
 echo "   Starting new containers..."
-docker compose up -d --force-recreate
+docker compose up -d
 
-echo "   Cleaning up unused images..."
 docker image prune -f
 
 echo "--------------------------------------"

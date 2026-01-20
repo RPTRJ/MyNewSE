@@ -477,7 +477,7 @@ export default function TeacherStudentsPage() {
                 {/* คะแนนภาษา */}
                 {profile.language_scores && profile.language_scores.length > 0 && (
                   <Section 
-                    title="คะแนนภาษา"
+                    title="คะแนนสอบวัดทักษะภาษาอังกฤษ"
                     icon={
                       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
@@ -490,50 +490,46 @@ export default function TeacherStudentsPage() {
                           key={score.id ?? idx}
                           className="group bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-100 rounded-2xl p-5 hover:shadow-lg hover:border-purple-200 transition-all duration-300"
                         >
-                          <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-start justify-between">
                             <div className="flex items-center gap-3">
                               <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-lg group-hover:scale-110 transition-transform">
                                 {score.test_type?.substring(0, 2).toUpperCase() || "LA"}
                               </div>
                               <div>
                                 <div className="font-bold text-gray-900">{score.test_type}</div>
-                                <div className="text-xs text-gray-500">
-                                  {score.test_date ? formatDate(score.test_date) : "ไม่ระบุวันที่"}
-                                </div>
+                                <div className="text-xs text-gray-500">{score.test_date ? formatDate(score.test_date) : "ไม่ระบุวันที่"}</div>
+                                {score.test_type === "TOEFL" && score.test_level ? (
+                                  <div className="mt-1 text-xs text-gray-400">{score.test_level}</div>
+                                ) : null}
                               </div>
                             </div>
                             <div className="text-right">
-                              <div className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                                {score.test_type === "CEFR" 
+                              <div className={`${score.test_type === "SAT" ? "text-xl" : "text-2xl"} font-bold text-purple-600`}>
+                                {score.test_type === "CEFR"
                                   ? (score.test_level?.split(' ')[0] || score.test_level || "-")
-                                  : (score.score || "-")
-                                }
-                              </div>
-                              <div className="text-xs text-gray-500 mt-1">
-                                {score.test_type === "CEFR" ? "ระดับ" : "คะแนน"}
+                                  : score.test_type === "SAT"
+                                    ? `English ${score.score || "-"} / Math ${score.sat_math ?? "-"}`
+                                    : (score.score || "-")}
                               </div>
                             </div>
                           </div>
-                          <div className="pt-4 border-t border-purple-100 flex items-center justify-between">
-                            <span className="text-xs text-gray-600">
-                              <span className="font-medium">ระดับ:</span> {score.test_level || "-"}
-                              {score.sat_math !== undefined && score.sat_math !== null && (
-                                <> | <span className="font-medium">SAT Math:</span> {score.sat_math}</>
-                              )}
-                            </span>
-                            {score.cert_file_path && (
-                              <a
-                                href={getFileUrl(score.cert_file_path) || "#"}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-xs text-purple-600 hover:text-purple-700 inline-flex items-center gap-1 font-medium"
-                              >
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                                ดูใบรับรอง
-                              </a>
-                            )}
+                          <div className="mt-3 flex items-center justify-between text-xs text-gray-600">
+                            <div />
+                            <div>
+                              {score.cert_file_path ? (
+                                <a
+                                  href={getFileUrl(score.cert_file_path) || "#"}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-purple-600 hover:text-purple-700 inline-flex items-center gap-1 font-medium"
+                                >
+                                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                  </svg>
+                                  ดูใบรับรอง
+                                </a>
+                              ) : null}
+                            </div>
                           </div>
                         </div>
                       ))}

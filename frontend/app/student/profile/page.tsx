@@ -223,7 +223,7 @@ export default function ProfilePage() {
       if (isGedStudent) {
         if (!ged) missing.push("ข้อมูลคะแนน GED");
       } else if (!academic) {
-        missing.push("ข้อมูลคะแนนหลักสูตรแกนกลาง / GPAX");
+        missing.push("ผลการเรียน (GPAX)");
       }
     }
     return missing;
@@ -528,7 +528,7 @@ export default function ProfilePage() {
         {/* Academic Score */}
         {!isGedStudent && (
           <SectionCard
-            title="ข้อมูลคะแนนหลักสูตรแกนกลาง / GPAX"
+            title="ผลการเรียน (GPAX)"
             icon={
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -728,43 +728,42 @@ export default function ProfilePage() {
                         </div>
                         <div>
                           <div className="font-bold text-gray-900">{score.test_type}</div>
-                          <div className="text-xs text-gray-500">
-                            {score.test_date ? formatDate(score.test_date) : "ไม่ระบุวันที่"}
-                          </div>
+                          <div className="text-xs text-gray-500">{score.test_date ? formatDate(score.test_date) : "ไม่ระบุวันที่"}</div>
+                            {score.test_type === "TOEFL" && score.test_level ? (
+                              <div className="mt-1">
+                                <div className="text-xs text-gray-400">{score.test_level}</div>
+                              </div>
+                            ) : null}
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-2xl font-bold text-purple-600">
-                          {score.test_type === "CEFR" 
+                        <div className={`${score.test_type === "SAT" ? "text-xl" : "text-2xl"} font-bold text-purple-600`}>
+                          {score.test_type === "CEFR"
                             ? (score.test_level?.split(' ')[0] || score.test_level || "-")
-                            : (score.score || "-")
-                          }
+                            : score.test_type === "SAT"
+                              ? `English ${score.score || "-"} / Math ${score.sat_math ?? "-"}`
+                              : (score.score || "-")}
                         </div>
-                        <div className="text-xs text-gray-500">
-                          {score.test_type === "CEFR" ? "ระดับ" : "คะแนน"}
-                        </div>
+                        {score.cert_file_path ? (
+                          <div className="mt-2 text-xs text-right">
+                            <a
+                              href={getFileUrl(score.cert_file_path) || "#"}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-purple-500 hover:text-purple-700 inline-flex items-center gap-1 justify-end"
+                            >
+                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              </svg>
+                              ดูใบรับรอง
+                            </a>
+                          </div>
+                        ) : null}
                       </div>
                     </div>
-                    <div className="mt-3 pt-3 border-t border-purple-100 flex items-center justify-between">
-                      <span className="text-xs text-gray-600">
-                        ระดับ: <span className="font-medium text-gray-900">{score.test_level || "-"}</span>
-                        {score.sat_math !== undefined && score.sat_math !== null && (
-                          <> | SAT Math: <span className="font-medium text-gray-900">{score.sat_math}</span></>
-                        )}
-                      </span>
-                      {score.cert_file_path && (
-                        <a
-                          href={getFileUrl(score.cert_file_path) || "#"}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-purple-500 hover:text-purple-700 inline-flex items-center gap-1"
-                        >
-                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
-                          ดูใบรับรอง
-                        </a>
-                      )}
+                    <div className="mt-3 flex items-center justify-between text-xs text-gray-600">
+                      <div />
+                      <div />
                     </div>
                   </div>
                 ))}

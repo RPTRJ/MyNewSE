@@ -80,7 +80,8 @@ export default function EditAcademicScorePage() {
   const parseNumber = (value: string) => {
     const num = Number(value);
     if (!Number.isFinite(num)) return 0;
-    return num < 0 ? 0 : num;
+    const clamped = Math.max(0, Math.min(4, num));
+    return Math.round(clamped * 100) / 100;
   };
 
   const handleTranscriptFileChange = (file: File | null) => {
