@@ -17,8 +17,7 @@ interface SidebarProps {
 
 const profileLinkByRole: Record<string, string | undefined> = {
   student: "/student/profile",
-  teacher: "/teacher/profile",
-  admin:   "/admin/profile"
+  // teacher and admin profile links removed so profile menu shows only for students
 
 };
 export default function Sidebar({userRole, userName, isOpen, setIsOpen }: SidebarProps) {
@@ -127,7 +126,7 @@ export default function Sidebar({userRole, userName, isOpen, setIsOpen }: Sideba
                 ? "bottom-full mb-2 left-3 right-3" 
                 : "left-full ml-2 bottom-0 w-48"
             }`}>
-              {profileHref && (
+              {currentRole === "student" && profileHref && (
                 <Link
                   href={profileHref}
                   onClick={() => setProfileMenuOpen(false)}

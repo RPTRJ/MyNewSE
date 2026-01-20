@@ -1,0 +1,57 @@
+# Environment Variables
+.env
+.env.local
+.env.production
+.env.*.local
+*.env
+
+# Dependencies
+node_modules/
+backend/vendor/
+
+# Build outputs
+.next/
+out/
+dist/
+build/
+*.exe
+*.bin
+*.dll
+*.so
+*.dylib
+
+# User uploads
+backend/uploads/
+uploads/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+postgres_data/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# Docker
+docker-compose.override.yml
+manual_deploy_team14.sh

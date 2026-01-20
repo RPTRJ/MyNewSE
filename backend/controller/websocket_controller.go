@@ -5,12 +5,15 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gin-gonic/gin"         
+	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/sut68/team14/backend/services"
 )
 
 var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+	// ✅✅✅ แก้ไข: อนุญาตทุก Origin (สำคัญมากสำหรับ Production) ✅✅✅
 	CheckOrigin: func(r *http.Request) bool {
 		return true
 	},
@@ -24,7 +27,7 @@ func WebSocketHandler(c *gin.Context) {
 
 	// ถ้าไม่ส่ง ID มา หรือแปลงไม่ได้ ให้ Reject
 	if err != nil || userID == 0 {
-		fmt.Println("❌ WebSocket Rejected: No user_id")
+		// fmt.Println("❌ WebSocket Rejected: No user_id")
 		c.JSON(400, gin.H{"error": "User ID is required"})
 		return
 	}
@@ -35,20 +38,17 @@ func WebSocketHandler(c *gin.Context) {
 		fmt.Println("Error upgrading:", err)
 		return
 	}
-	// ข้อควรระวัง: อย่าเพิ่ง defer conn.Close() ตรงนี้ทันที
 
 	fmt.Printf("✅ User %d connected via WebSocket\n", userID)
 
-	// 3. ลงทะเบียนเข้าสมุดรายชื่อ (เพื่อให้ระบบ Test Noti หาเจอ)
+	// 3. ลงทะเบียนเข้าสมุดรายชื่อ
 	services.RegisterClient(userID, conn)
 
 	// 4. วนลูปเพื่อเลี้ยง Connection ไว้ (Keep Alive)
 	for {
-		// รอรับข้อความ
 		_, _, err := conn.ReadMessage()
 		if err != nil {
 			fmt.Printf("❌ User %d disconnected\n", userID)
-			// 5. ถ้าหลุด ให้ลบชื่อออก
 			services.RemoveClient(userID)
 			break
 		}

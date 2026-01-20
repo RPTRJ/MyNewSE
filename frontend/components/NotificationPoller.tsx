@@ -4,151 +4,121 @@ import { useEffect, useRef } from "react";
 import toast from 'react-hot-toast';
 import { markNotificationReadAPI } from "@/services/curriculum";
 
-/**
- * สร้าง WebSocket URL แบบ dynamic
- * - Development: ws://localhost:8080/ws
- * - Production: wss://sutportfolio.online/api/ws
- */
-function getWebSocketUrl(): string {
-  // 1. ถ้ามี environment variable ให้ใช้อันนั้น
-  if (process.env.NEXT_PUBLIC_WS_URL) {
-    return process.env.NEXT_PUBLIC_WS_URL;
-  }
-
-  // 2. Server-side: fallback
-  if (typeof window === 'undefined') {
-    return "ws://localhost:8080/ws";
-  }
-
-  // 3. Client-side: สร้าง URL แบบ dynamic จาก window.location
-  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const host = window.location.host;
-
-  // ตรวจสอบว่าเป็น production หรือ development
-  const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1');
-  
-  if (isLocalhost) {
-    // Development: connect to backend โดยตรง
-    return "ws://localhost:8080/ws";
-  } else {
-    // Production: connect ผ่าน nginx proxy
-    return `${protocol}//${host}/api/ws`;
-  }
-}
-
 export default function NotificationSocket() {
   const socketRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    let socket: WebSocket | null = null;
-    let reconnectTimeout: NodeJS.Timeout | null = null;
-    let isMounted = true;
-    let retryDelay = 3000;
+    // ใช้ Timeout 100ms เพื่อรอให้ Client Mount สมบูรณ์
+    const timeoutId = setTimeout(() => {
+        const connect = () => {
+          // 1. ดึง User ID จาก LocalStorage
+          let currentUserId = 0;
+          try {
+            const userStr = localStorage.getItem("user");
+            if (userStr) {
+                const u = JSON.parse(userStr);
+                currentUserId = u.ID || u.id || 0;
+            }
+          } catch (e) {
+            console.error("Error parsing user:", e);
+          }
 
-    const connect = () => {
-      if (!isMounted) return;
+          if (!currentUserId) {
+            return; // ไม่มี User ไม่ต้องเชื่อมต่อ
+          }
 
-      // 1. Get User ID from LocalStorage
-      let currentUserId = 0;
-      try {
-        const userStr = localStorage.getItem("user");
-        if (userStr) {
-          const u = JSON.parse(userStr);
-          currentUserId = u.ID || u.id || 0;
-        }
-      } catch (e) {
-        console.error("Error parsing user:", e);
-      }
+          // 2. กำหนด URL ตามสภาพแวดล้อม (Auto-detect Production)
+          let baseUrl = process.env.NEXT_PUBLIC_WS_URL;
 
-      if (!currentUserId) {
-        console.log("❌ No User ID found, skipping WebSocket connection.");
-        return;
-      }
+          if (!baseUrl) {
+             if (typeof window !== "undefined") {
+                 if (window.location.hostname === "sutportfolio.online") {
+                     // Production: ใช้ wss:// (Secure)
+                     baseUrl = "wss://sutportfolio.online/ws"; 
+                 } else {
+                     // Development: ใช้ ws:// (Local)
+                     baseUrl = "ws://localhost:8080/ws";
+                 }
+             }
+          }
 
-      // 2. Connect using dynamic URL
-      const baseUrl = getWebSocketUrl();
-      const wsUrl = `${baseUrl}?user_id=${currentUserId}`;
+          const wsUrl = `${baseUrl}?user_id=${currentUserId}`;
+          console.log("Connecting to WebSocket:", wsUrl);
+          
+          const socket = new WebSocket(wsUrl);
+          socketRef.current = socket;
 
-      console.log(`🔌 Connecting to WebSocket: ${baseUrl} (User: ${currentUserId})`);
+          socket.onopen = () => {
+            console.log("✅ WebSocket Connected");
+          };
 
-      socket = new WebSocket(wsUrl);
-      socketRef.current = socket;
+          socket.onmessage = (event) => {
+             try {
+                const data = JSON.parse(event.data);
+                // รองรับโครงสร้างข้อมูลที่หลากหลาย
+                const message = data.notification_message || data.message || data.Notification_Message || event.data;
+                const title = data.notification_title || data.title || data.Notification_Title || "แจ้งเตือนใหม่";
+                const id = data.ID || data.id;
 
-      socket.onopen = () => {
-        if (!isMounted) {
-          socket?.close();
-          return;
-        }
-        console.log("✅ WebSocket Connected");
-        retryDelay = 3000;
-      };
+                toast((t) => (
+                    <div className="flex flex-col relative pr-4 min-w-[250px]">
+                      <button 
+                          onClick={() => toast.dismiss(t.id)}
+                          className="absolute -top-1 -right-2 text-gray-400 hover:text-red-500 font-bold p-1 rounded-full"
+                      >✕</button>
+                      <span className="font-bold text-sm text-gray-800 mb-1">{title}</span>
+                      <span className="text-sm text-gray-600 leading-snug">{message}</span>
+                    </div>
+                  ), {
+                    id: `noti-${id || Date.now()}`,
+                    duration: Infinity, // ✅ แจ้งเตือนค้างจนกว่าจะกดปิด
+                    position: 'top-right',
+                    style: { 
+                        borderLeft: '4px solid #FFA500', 
+                        background: '#fff', 
+                        color: '#333', 
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)', 
+                        padding: '12px 16px' 
+                    },
+                });
+                
+                // Trigger ให้ Component อื่นรีเฟรชข้อมูล
+                window.dispatchEvent(new Event("refresh_data"));
+                
+                // ❌ ปิดการ Mark Read อัตโนมัติ (เพื่อให้ User เห็นจุดแดงค้างไว้)
+                // if (id) markNotificationReadAPI(id); 
 
-      socket.onmessage = (event) => {
-        if (!isMounted) return;
-        try {
-          const data = JSON.parse(event.data);
-          const message = data.notification_message || data.message || data.Notification_Message || event.data;
-          const title = data.notification_title || data.title || data.Notification_Title || "แจ้งเตือนใหม่";
-          const id = data.ID || data.id;
+            } catch (e) {
+                // กรณีข้อความไม่ใช่ JSON (Plain Text)
+                toast(event.data, { 
+                    icon: '🔔',
+                    duration: Infinity
+                });
+            }
+          };
 
-          toast((t) => (
-            <div className="flex flex-col relative pr-4 min-w-[250px]">
-              <button
-                onClick={() => toast.dismiss(t.id)}
-                className="absolute -top-1 -right-2 text-gray-400 hover:text-red-500 font-bold p-1 rounded-full"
-              >✕</button>
-              <span className="font-bold text-sm text-gray-800 mb-1">{title}</span>
-              <span className="text-sm text-gray-600 leading-snug">{message}</span>
-            </div>
-          ), {
-            id: `noti-${id || Date.now()}`,
-            duration: Infinity,
-            position: 'top-right',
-            style: {
-              borderLeft: '4px solid #FFA500',
-              background: '#fff',
-              color: '#333',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-              padding: '12px 16px'
-            },
-          });
+          socket.onclose = () => {
+            if (socketRef.current) {
+                // ลองต่อใหม่ใน 3 วินาที
+                setTimeout(() => connect(), 3000);
+            }
+          };
 
-          window.dispatchEvent(new Event("refresh_data"));
+          socket.onerror = (err) => {
+            socket.close();
+          };
+        };
+        
+        connect();
+    }, 100); 
 
-          if (id) markNotificationReadAPI(id);
-        } catch (e) {
-          toast(event.data, {
-            icon: '🔔',
-            duration: Infinity
-          });
-        }
-      };
-
-      socket.onclose = () => {
-        if (!isMounted) return;
-        console.log(`❌ WebSocket Disconnected. Retrying in ${retryDelay / 1000}s...`);
-
-        reconnectTimeout = setTimeout(() => {
-          retryDelay = Math.min(retryDelay * 1.5, 30000);
-          connect();
-        }, retryDelay);
-      };
-
-      socket.onerror = (err) => {
-        console.error("❌ WebSocket Error:", err);
-        socket?.close();
-      };
-    };
-
-    const timer = setTimeout(() => connect(), 100);
-
+    // Cleanup เมื่อ Component ถูกทำลาย
     return () => {
-      isMounted = false;
-      clearTimeout(timer);
-      if (reconnectTimeout) clearTimeout(reconnectTimeout);
+      clearTimeout(timeoutId);
       if (socketRef.current) {
-        socketRef.current.close();
-        socketRef.current = null;
+        const socket = socketRef.current;
+        socketRef.current = null; 
+        socket.close();
       }
     };
   }, []);

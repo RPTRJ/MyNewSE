@@ -13,7 +13,7 @@ import (
 func StartNotificationScheduler() {
 	fmt.Println("⏰ Notification Scheduler Started...")
 	// เช็คทุกๆ 10 วินาที เพื่อความแม่นยำในการจับนาทีสุดท้าย
-	ticker := time.NewTicker(10 * time.Second)
+	ticker := time.NewTicker(1 * time.Minute)
 	go func() {
 		for range ticker.C {
 			CheckApplicationDeadlines()

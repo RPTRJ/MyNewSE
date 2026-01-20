@@ -40,25 +40,23 @@ func SetupRoutes() *gin.Engine {
 		c.JSON(200, gin.H{"status": "ok"})
 	})
 
-	// --- CORS Config ---
+	// --- 🔒 CORS Config (Production Ready) ---
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowOriginFunc = func(origin string) bool {
-		if strings.HasPrefix(origin, "http://localhost") {
+		// 1. อนุญาต Localhost (สำหรับ Dev)
+		if strings.HasPrefix(origin, "http://localhost") || strings.HasPrefix(origin, "http://127.0.0.1") {
 			return true
 		}
-		if strings.HasPrefix(origin, "http://127.0.0.1") {
+		// 2. อนุญาต Local Network (สำหรับ Dev ผ่านวงแลน)
+		if strings.HasPrefix(origin, "http://192.168") || strings.HasPrefix(origin, "http://10.") || strings.HasPrefix(origin, "http://172.") {
 			return true
 		}
-		if strings.HasPrefix(origin, "http://192.168") {
+		// 3. ✅✅✅ อนุญาตโดเมนจริง (Production) ✅✅✅
+		if origin == "https://sutportfolio.online" || origin == "https://www.sutportfolio.online" {
 			return true
 		}
-		if strings.HasPrefix(origin, "http://10.") {
-			return true
-		}
-		if strings.HasPrefix(origin, "http://169.254") {
-			return true
-		}
-		return true // FOR DEBUGGING: Allow all origins to rule out CORS config issue temporarily
+		
+		return false // ❌ บล็อกเว็บอื่นๆ ที่ไม่ได้ระบุ
 	}
 	corsConfig.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}
 	corsConfig.AllowHeaders = []string{"Origin", "Content-Type", "Authorization", "Accept", "User-Agent", "Cache-Control", "Pragma"}
@@ -99,6 +97,20 @@ func SetupRoutes() *gin.Engine {
 	r.POST("/upload", uploadController.UploadFile)
 	r.DELETE("/upload/:filename", uploadController.DeleteFile)
 
+	// WebSocket Route (Public)
+	r.GET("/ws", controller.WebSocketHandler)
+	
+	// Test Notification (Dev Only - ลบออกได้ตอนขึ้น Production จริงๆ หรือจะเก็บไว้เทสก็ได้)
+	r.GET("/test-noti", func(c *gin.Context) {
+		userIDStr := c.Query("user_id")
+		uid, _ := strconv.Atoi(userIDStr)
+		services.SendNotificationToUser(uid, map[string]interface{}{
+			"notification_title":   "🔔 ทดสอบระบบ",
+			"notification_message": "ระบบแจ้งเตือน Real-time ใช้งานได้แล้ว!",
+		})
+		c.JSON(200, gin.H{"message": "Sent test notification"})
+	})
+
 	// --- Protected Routes (ต้อง Login) ---
 	protected := r.Group("")
 	protected.Use(middlewares.Authorization())
@@ -114,7 +126,7 @@ func SetupRoutes() *gin.Engine {
 	protected.GET("/users/me/onboarding", profileController.GetOnboardingStatus)
 
 	protected.PUT("/users/me", profileController.UpdateMe)
-	protected.PUT("/users/me/personal-info", profileController.UpdatePersonalInfo) // For updating personal info (post-onboarding)
+	protected.PUT("/users/me/personal-info", profileController.UpdatePersonalInfo)
 	protected.PUT("/users/me/profile-image", profileController.UpdateProfileImage)
 	protected.PUT("/users/me/education", profileController.UpsertEducation)
 	protected.PUT("/users/me/academic-score", profileController.UpsertAcademicScore)
@@ -125,7 +137,7 @@ func SetupRoutes() *gin.Engine {
 	protectedOnboarded := protected.Group("")
 	protectedOnboarded.Use(middlewares.RequireOnboarding())
 
-	// --- Teacher Protected Routes ---เฟื่องเพิ่มตรงนี้
+	// --- Teacher Protected Routes ---
 	teacher := protectedOnboarded.Group("/teacher")
 	{
 		teacher.GET("/users/:id/profile", profileController.GetUserProfile)
@@ -133,7 +145,7 @@ func SetupRoutes() *gin.Engine {
 
 	userController.RegisterRoutes(protectedOnboarded)
 
-	// Register Routes เดิมของคุณ
+	// Register Routes เดิม
 	curriculumController.RegisterRoutes(r, protectedOnboarded)
 	facultyController.RegisterRoutes(r, protected)
 	programController.RegisterRoutes(r, protected)
@@ -146,63 +158,39 @@ func SetupRoutes() *gin.Engine {
 	r.GET("/notifications", selectionController.GetNotifications)
 	r.PATCH("/notifications/:id/read", selectionController.MarkAsRead)
 
-	r.GET("/ws", controller.WebSocketHandler)
-
-	// เพิ่มใน router.go (Public Zone)
-	r.GET("/test-noti", func(c *gin.Context) {
-		userIDStr := c.Query("user_id")
-		uid, _ := strconv.Atoi(userIDStr)
-
-		// จำลองการส่งข้อมูล
-		services.SendNotificationToUser(uid, map[string]interface{}{
-			"notification_title":   "🔔 ทดสอบระบบ",
-			"notification_message": "ระบบแจ้งเตือน Real-time ใช้งานได้แล้ว!",
-		})
-
-		c.JSON(200, gin.H{"message": "Sent test notification"})
-	})
-
-	// ✅✅✅ Admin Routes Group  ✅✅✅
-	admin := r.Group("/admin")
+	// --- Admin Protected Routes (ย้ายมาไว้ในกลุ่มที่ต้อง Login) ---
+	adminProtected := protectedOnboarded.Group("/admin")
 	{
-		// API สำหรับดึงสถิติ
-		admin.GET("/curricula/stats", curriculumController.GetSelectionStats)
+		adminProtected.GET("/users/:id/profile", profileController.GetUserProfile)
+		// ✅ ย้าย Route สถิติมาไว้ตรงนี้ เพื่อความปลอดภัย
+		adminProtected.GET("/curricula/stats", curriculumController.GetSelectionStats)
 	}
 
-	// Other Routes
-	// เรียกใช้ฟังก์ชัน routes ต่างๆ ที่นี่
-	//ระบบเทมเพลต
+	// Education reference management (admin)
+	educationAdminController.RegisterRoutes(protectedOnboarded)
+
+	// Other Routes (บางอันอาจจะยัง Public อยู่ตามโค้ดเดิม ถ้าต้องการ Protect ให้ย้ายมาใส่ในกลุ่ม protected)
 	TemplateBlockRoutes(r)
 	TemplateSectionsRoutes(r)
 	SectionBlockRoutes(r)
 	TemplateRoutes(r)
 	CategoryTemplateRoutes(r)
 
-	//ระบบแฟ้มสะสมผลงาน (Portfolio)
+	// ระบบแฟ้มสะสมผลงาน (Portfolio)
 	PortfolioRoutes(protected)
 
 	ColorsRoutes(r)
-
 	WorkingRoutes(protected)
 	ActivityRoutes(protected)
 	FontRoutes(r)
 
-	//ของScorecard
+	// Scorecard & Feedback
 	RegisterFeedbackRoutes(r, db)
 	RegisterPortfolioSubmissionRoutes(r, db)
 	RegisterScoreCriteriaRoutes(r, db)
 	RegisterScorecardRoutes(r, db)
 
-	// --- Admin Protected Routes ---
-	adminProtected := protectedOnboarded.Group("/admin")
-	{
-		adminProtected.GET("/users/:id/profile", profileController.GetUserProfile)
-	}
-
-	// Education reference management (admin)
-	educationAdminController.RegisterRoutes(protectedOnboarded)
-
-	//ของประกาศ
+	// Announcement & Others
 	AnnouncementRouter(r)
 	CetagoryRouter(r)
 	AttachmentRouter(r)

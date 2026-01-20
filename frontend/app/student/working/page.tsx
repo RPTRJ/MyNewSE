@@ -17,6 +17,7 @@ import {
   Save,
   ChevronLeft,
   ChevronRight,
+  AlertCircle,
 } from "lucide-react";
 import {
   getWorkings,
@@ -52,7 +53,45 @@ export default function WorkingUI() {
   const [description, setDescription] = useState("");
   const [images, setImages] = useState<File[]>([]);
   const [links, setLinks] = useState<string[]>([]);
+  const [linkErrors, setLinkErrors] = useState<string[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  /* ================= URL VALIDATION ================= */
+  
+  const validateURL = (url: string): boolean => {
+    if (!url || url.trim() === "") return true; // Empty is OK, will be filtered out
+    
+    // Must start with http:// or https://
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      return false;
+    }
+    
+    try {
+      const urlObj = new URL(url);
+      // Check if hostname is valid (either localhost or a domain)
+      if (urlObj.hostname === 'localhost' || 
+          urlObj.hostname === '127.0.0.1' ||
+          urlObj.hostname.includes('.')) {
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  };
+
+  const validateAllLinks = (): boolean => {
+    const errors = links.map(link => {
+      if (link.trim() === "") return "";
+      if (!validateURL(link)) {
+        return "กรุณาใส่ URL ที่ถูกต้อง (เช่น https://example.com)";
+      }
+      return "";
+    });
+    
+    setLinkErrors(errors);
+    return errors.every(error => error === "");
+  };
 
   /* ================= LOAD ================= */
 
@@ -91,12 +130,19 @@ export default function WorkingUI() {
     setDate(working.working_detail?.working_at?.split('T')[0] || "");
     setDescription(working.working_detail?.description || "");
     setLinks(working.working_detail?.links?.map(l => l.working_link) || []);
+    setLinkErrors([]);
     setImages([]);
   };
 
   const handleSaveEdit = async () => {
     if (!editModal || !title || !typeId || !date) {
       alert("กรอกข้อมูลให้ครบ");
+      return;
+    }
+
+    // Validate links before saving
+    if (!validateAllLinks()) {
+      alert("กรุณาตรวจสอบ URL ที่ใส่ให้ถูกต้อง");
       return;
     }
 
@@ -114,7 +160,7 @@ export default function WorkingUI() {
       ];
 
       const linkPayload = links.filter(l => l.trim().length > 0).map(l => ({
-        working_link: l
+        working_link: l.trim()
       }));
 
       await updateWorking(editModal.ID, {
@@ -135,6 +181,8 @@ export default function WorkingUI() {
     } catch (error) {
       if (error instanceof Error && error.message.includes("duplicated")) {
         alert("ชื่อผลงานนี้มีอยู่แล้ว กรุณาใช้ชื่ออื่น");
+      } else if (error instanceof Error && error.message.includes("Link must be a valid URL")) {
+        alert("กรุณาใส่ URL ที่ถูกต้อง (ต้องขึ้นต้นด้วย http:// หรือ https://)");
       } else {
         console.error(error);
         alert(error instanceof Error ? error.message : "Error updating working");
@@ -145,6 +193,12 @@ export default function WorkingUI() {
   const handleCreate = async () => {
     if (!title || !typeId || !date) {
       alert("กรอกข้อมูลให้ครบ");
+      return;
+    }
+
+    // Validate links before creating
+    if (!validateAllLinks()) {
+      alert("กรุณาตรวจสอบ URL ที่ใส่ให้ถูกต้อง");
       return;
     }
 
@@ -160,7 +214,7 @@ export default function WorkingUI() {
       }));
 
       const linkPayload = links.filter(l => l.trim().length > 0).map(l => ({
-        working_link: l
+        working_link: l.trim()
       }));
 
       const userStr = localStorage.getItem("user");
@@ -186,6 +240,8 @@ export default function WorkingUI() {
     } catch (error) {
       if (error instanceof Error && error.message.includes("duplicated")) {
         alert("ชื่อผลงานนี้มีอยู่แล้ว กรุณาใช้ชื่ออื่น");
+      } else if (error instanceof Error && error.message.includes("Link must be a valid URL")) {
+        alert("กรุณาใส่ URL ที่ถูกต้อง (ต้องขึ้นต้นด้วย http:// หรือ https://)");
       } else {
         console.error(error);
         alert(error instanceof Error ? error.message : "Error creating working");
@@ -212,6 +268,7 @@ export default function WorkingUI() {
     setDescription("");
     setImages([]);
     setLinks([]);
+    setLinkErrors([]);
     if (fileRef.current) {
       fileRef.current.value = "";
     }
@@ -222,10 +279,74 @@ export default function WorkingUI() {
     setCurrentImageIndex(index);
   };
 
+  const handleLinkChange = (index: number, value: string) => {
+    const copy = [...links];
+    copy[index] = value;
+    setLinks(copy);
+    
+    // Clear error for this field when user types
+    const errorsCopy = [...linkErrors];
+    errorsCopy[index] = "";
+    setLinkErrors(errorsCopy);
+  };
+
+  const handleLinkBlur = (index: number) => {
+    const link = links[index];
+    if (link.trim() === "") {
+      return; // Empty is OK
+    }
+    
+    const errorsCopy = [...linkErrors];
+    if (!validateURL(link)) {
+      errorsCopy[index] = "กรุณาใส่ URL ที่ถูกต้อง (เช่น https://example.com)";
+    } else {
+      errorsCopy[index] = "";
+    }
+    setLinkErrors(errorsCopy);
+  };
+
   const statusConfig: Record<string, { bg: string; text: string; label: string }> = {
     completed: { bg: "bg-emerald-100", text: "text-emerald-700", label: "เสร็จสิ้น" },
     in_development: { bg: "bg-blue-100", text: "text-blue-700", label: "อยู่ในระหว่างพัฒนา" },
   };
+
+  /* ================= LINK INPUT COMPONENT ================= */
+  
+  const LinkInput = ({ index, value, error }: { index: number; value: string; error: string }) => (
+    <div className="space-y-1">
+      <div className="flex gap-2">
+        <div className="flex-1">
+          <input
+            className={`w-full px-4 py-3 border-2 rounded-xl outline-none transition-colors ${
+              error 
+                ? "border-red-300 focus:border-red-500" 
+                : "border-neutral-200 focus:border-orange-500"
+            }`}
+            placeholder="https://example.com"
+            value={value}
+            onChange={(e) => handleLinkChange(index, e.target.value)}
+            onBlur={() => handleLinkBlur(index)}
+          />
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            setLinks(links.filter((_, idx) => idx !== index));
+            setLinkErrors(linkErrors.filter((_, idx) => idx !== index));
+          }}
+          className="text-red-500 p-3 hover:bg-red-50 rounded-lg transition-colors"
+        >
+          <XCircle size={20} />
+        </button>
+      </div>
+      {error && (
+        <div className="flex items-center gap-1 text-red-600 text-xs px-1">
+          <AlertCircle size={12} />
+          <span>{error}</span>
+        </div>
+      )}
+    </div>
+  );
 
   /* ================= UI ================= */
 
@@ -530,6 +651,11 @@ export default function WorkingUI() {
                   </button>
                 </div>
               ))}
+              <div className="space-y-2">
+                {links.map((l, i) => (
+                  <LinkInput key={i} index={i} value={l} error={linkErrors[i] || ""} />
+                ))}
+              </div>
 
               <button
                 type="button"
@@ -539,8 +665,9 @@ export default function WorkingUI() {
                     return;
                   }
                   setLinks([...links, ""]);
+                  setLinkErrors([...linkErrors, ""]);
                 }}
-                className="text-[#FF6414] flex items-center gap-2 hover:bg-orange-50 px-4 py-2 rounded-lg transition-colors font-medium"
+                className="text-[#FF6414] flex items-center gap-2 hover:bg-orange-50 px-4 py-2 rounded-lg transition-colors font-medium mt-3"
               >
                 <Plus size={18} /> เพิ่มลิงก์
               </button>
@@ -837,27 +964,11 @@ export default function WorkingUI() {
                     <Link2 className="w-5 h-5" /> ลิงก์ผลงาน
                   </p>
 
-                  {links.map((l, i) => (
-                    <div key={i} className="flex gap-2 mb-2">
-                      <input
-                        className="flex-1 px-4 py-3 border-2 border-neutral-200 rounded-xl focus:border-orange-500 outline-none transition-colors"
-                        placeholder="https://..."
-                        value={l}
-                        onChange={(e) => {
-                          const copy = [...links];
-                          copy[i] = e.target.value;
-                          setLinks(copy);
-                        }}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setLinks(links.filter((_, idx) => idx !== i))}
-                        className="text-red-500 p-3 hover:bg-red-50 rounded-lg transition-colors"
-                      >
-                        <XCircle size={20} />
-                      </button>
-                    </div>
-                  ))}
+                  <div className="space-y-2">
+                    {links.map((l, i) => (
+                      <LinkInput key={i} index={i} value={l} error={linkErrors[i] || ""} />
+                    ))}
+                  </div>
 
                   <button
                     type="button"
@@ -867,8 +978,9 @@ export default function WorkingUI() {
                         return;
                       }
                       setLinks([...links, ""]);
+                      setLinkErrors([...linkErrors, ""]);
                     }}
-                    className="text-[#FF6414] flex items-center gap-2 hover:bg-orange-50 px-4 py-2 rounded-lg transition-colors font-medium"
+                    className="text-[#FF6414] flex items-center gap-2 hover:bg-orange-50 px-4 py-2 rounded-lg transition-colors font-medium mt-3"
                   >
                     <Plus size={18} /> เพิ่มลิงก์
                   </button>
@@ -962,6 +1074,7 @@ export default function WorkingUI() {
           </motion.div>
         )}
       </AnimatePresence>
+
       {/* Hidden File Input (Always Rendered) */}
       <input
         ref={fileRef}
@@ -986,7 +1099,6 @@ export default function WorkingUI() {
             setImages(p => [...p, ...files]);
           }
 
-          // Reset value to allow selecting same file again
           e.target.value = "";
         }}
       />
